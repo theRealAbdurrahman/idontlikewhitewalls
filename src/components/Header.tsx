@@ -1,0 +1,124 @@
+import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { SearchIcon, ArrowLeftIcon } from "lucide-react";
+import { Avatar } from "./ui/avatar";
+import { Button } from "./ui/button";
+import { useAuthStore } from "../stores/authStore";
+
+/**
+ * Header component that adapts based on current route
+ */
+export const Header: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuthStore();
+
+  // Determine header configuration based on route
+  const getHeaderConfig = () => {
+    const path = location.pathname;
+    
+    if (path.includes("/profile/") && path !== "/profile") {
+      return {
+        showBackButton: true,
+        title: "Profile",
+        showSearch: false,
+        showAvatar: false,
+      };
+    }
+    
+    if (path.includes("/events/")) {
+      return {
+        showBackButton: true,
+        title: "Event Details",
+        showSearch: false,
+        showAvatar: false,
+      };
+    }
+    
+    if (path.includes("/messages/") && path !== "/messages") {
+      return {
+        showBackButton: true,
+        title: "Chat",
+        showSearch: false,
+        showAvatar: false,
+      };
+    }
+    
+    // Default header for main screens
+    return {
+      showBackButton: false,
+      title: null,
+      showSearch: true,
+      showAvatar: true,
+    };
+  };
+
+  const config = getHeaderConfig();
+
+  const handleAvatarClick = () => {
+    navigate("/profile");
+  };
+
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
+  return (
+    <header className="flex w-full h-[90px] items-center justify-between pt-10 pb-0 px-3.5 fixed top-0 left-0 z-10 bg-[#f0efeb]">
+      {/* Left side */}
+      {config.showBackButton ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleBackClick}
+          className="w-[35px] h-[35px] rounded-full p-0"
+        >
+          <ArrowLeftIcon className="w-5 h-5" />
+        </Button>
+      ) : config.showAvatar ? (
+        <Avatar 
+          className="w-[35px] h-[35px] cursor-pointer" 
+          onClick={handleAvatarClick}
+        >
+          <img
+            src={user?.avatar || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1"}
+            alt="Profile"
+            className="w-full h-full object-cover"
+          />
+        </Avatar>
+      ) : (
+        <div className="w-[35px]" />
+      )}
+
+      {/* Center */}
+      {config.title ? (
+        <h1 className="text-lg font-semibold text-black">
+          {config.title}
+        </h1>
+      ) : (
+        <img
+          className="relative w-[320px] h-16"
+          alt="Meetball Logo"
+          src="/Meetball Logo.svg"
+        />
+      )}
+
+      {/* Right side */}
+      {config.showSearch ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-[46px] h-[46px] bg-[#e9e6d9] rounded-full p-0"
+          onClick={() => {
+            // TODO: Implement search functionality
+            console.log("Search clicked");
+          }}
+        >
+          <SearchIcon className="w-5 h-5" />
+        </Button>
+      ) : (
+        <div className="w-[46px]" />
+      )}
+    </header>
+  );
+};

@@ -1,0 +1,40 @@
+- use fontawesome for icons.
+
+use this css variables for the theme:
+ --ColorYellow_primary_colorYellow_100:#f0efeb;
+  --ColorGreyGrey300:#717171;
+  --ColorGreyGrey_400:#404040;
+  --ColorGreyGrey_450:#262626;
+  --ColorYellow_primary_colorYellow_50:#fbfbfb;
+  --ColorGreyGrey_200:#a6a6a6;
+  --ColorActionsBlue_100:#3c59ff;
+  --ColorYellow_primary_colorYellow_200:#f0eee4;
+  --ColorRed_SecondaryRed_100:#ffe5ea;
+  --ColorRed_SecondaryRed_200:#ffccd4;
+  --ColorRed_SecondaryRed_300:#ffb2bf;
+  --ColorYellow_primary_colorYellow_300:#f0eee4;
+  --ColorYellow_primary_colorYellow_400:#f0eee4;
+  --ColorYellow_primary_colorYellow_500:#f0ebd8;
+  --ColorYellow_primary_colorYellow_600:#e9dcbf;
+  --ColorYellow_primary_colorYellow_700:#f0d79c;
+  --ColorYellow_primary_colorYellow_800:#ffd580;
+  --ColorYellow_primary_colorYellow_900:#ffb300;
+  --ColorRed_SecondaryRed_400:#ff99aa;
+  --ColorRed_SecondaryRed_500:#f47a8e;
+  --ColorRed_SecondaryRed_600:#f44a66;
+  --ColorRed_SecondaryRed_700:#f03050;
+  --ColorRed_SecondaryRed_800:#cc1433;
+  --ColorRed_SecondaryRed_900:#990f26;
+  --ColorTurquoise_secondaryTurquoise_50:#c2f2f2;
+  --ColorTurquoise_secondaryTurquoise_100:#a8f0f0;
+  --ColorTurquoise_secondaryTurquoise_200:#8debeb;
+  --ColorTurquoise_secondaryTurquoise_300:#73e5e5;
+  --ColorTurquoise_secondaryTurquoise_400:#5ae0e0;
+  --ColorTurquoise_secondaryTurquoise_500:#5ae0e0;
+  --ColorTurquoise_secondaryTurquoise_600:#3ec6c6;
+  --ColorTurquoise_secondaryTurquoise_700:#3999a8;
+  --ColorTurquoise_secondaryTurquoise_800:#1c788c;
+  --ColorTurquoise_secondaryTurquoise_900:#1d5663;
+
+- use tailwindcss v4
+- use tanstack query
