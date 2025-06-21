@@ -84,7 +84,7 @@ export const OfferHelp: React.FC = () => {
       
       setMessages(threadId, [questionPreviewMessage]);
     }
-  }, [question, user, threadId, questionMessages.length, setMessages]);
+  }, [question, user, threadId, threadMessages.length, setMessages]);
 
   /**
    * Check if user has already offered help
