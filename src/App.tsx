@@ -17,9 +17,10 @@ import { useAuthStore } from "./stores/authStore";
 export const App = (): JSX.Element => {
   const { isAuthenticated } = useAuthStore();
 
-  if (!isAuthenticated) {
-    return <Login />;
-  }
+  // COMMENTED OUT: Login screen bypass for development
+  // if (!isAuthenticated) {
+  //   return <Login />;
+  // }
 
   return (
     <AuthProvider>

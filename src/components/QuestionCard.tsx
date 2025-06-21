@@ -1,11 +1,16 @@
 import React from "react";
 import { formatDistanceToNow } from "date-fns";
 import { MoreVerticalIcon, BookmarkIcon, ArrowUpIcon } from "lucide-react";
+import { 
+  useCreateInteractionApiV1InteractionsPost, 
+  useDeleteInteractionApiV1InteractionsInteractionIdDelete 
+} from "../api-client/api-client";
+import { InteractionTarget, InteractionType } from "../api-client/models";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
-import { useAppStore } from "../stores/appStore";
+import { useAuthStore } from "../stores/authStore";
 
 /**
  * Custom styles for SVG icon color filtering
@@ -53,23 +58,125 @@ interface QuestionCardProps {
  * Question card component displaying individual questions in the feed
  */
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
-  const { toggleUpvote, toggleMeToo, toggleBookmark } = useAppStore();
+  const { user } = useAuthStore();
+  
+  // API mutations for interactions
+  const createInteractionMutation = useCreateInteractionApiV1InteractionsPost();
+  const deleteInteractionMutation = useDeleteInteractionApiV1InteractionsInteractionIdDelete();
+  
+  // COMMENTED OUT: Local state management for future reference
+  // const { toggleUpvote, toggleMeToo, toggleBookmark } = useAppStore();
 
   const handleUpvote = () => {
-    toggleUpvote(question.id);
+    if (!user) return;
+    
+    // COMMENTED OUT: Local state update for future reference
+    // toggleUpvote(question.id);
+    
+    // Use API to toggle upvote
+    if (question.isUpvoted) {
+      // TODO: Need to track interaction IDs to delete specific interactions
+      console.log("Delete upvote interaction for question:", question.id);
+    } else {
+      createInteractionMutation.mutate({
+        data: {
+          user_id: user.id,
+          target_type: InteractionTarget.question,
+          target_id: question.id,
+          interaction_type: InteractionType.uplift,
+        }
+      }, {
+        onSuccess: () => {
+          console.log("Upvote created successfully");
+          // TODO: Refetch questions or update local state
+        },
+        onError: (error) => {
+          console.error("Failed to create upvote:", error);
+        }
+      });
+    }
   };
 
   const handleMeToo = () => {
-    toggleMeToo(question.id);
+    if (!user) return;
+    
+    // COMMENTED OUT: Local state update for future reference
+    // toggleMeToo(question.id);
+    
+    // Use API to toggle me too
+    if (question.isMeToo) {
+      // TODO: Need to track interaction IDs to delete specific interactions
+      console.log("Delete me too interaction for question:", question.id);
+    } else {
+      createInteractionMutation.mutate({
+        data: {
+          user_id: user.id,
+          target_type: InteractionTarget.question,
+          target_id: question.id,
+          interaction_type: InteractionType.mee_too,
+        }
+      }, {
+        onSuccess: () => {
+          console.log("Me too created successfully");
+          // TODO: Refetch questions or update local state
+        },
+        onError: (error) => {
+          console.error("Failed to create me too:", error);
+        }
+      });
+    }
   };
 
   const handleBookmark = () => {
-    toggleBookmark(question.id);
+    if (!user) return;
+    
+    // COMMENTED OUT: Local state update for future reference
+    // toggleBookmark(question.id);
+    
+    // Use API to toggle bookmark
+    if (question.isBookmarked) {
+      // TODO: Need to track interaction IDs to delete specific interactions
+      console.log("Delete bookmark interaction for question:", question.id);
+    } else {
+      createInteractionMutation.mutate({
+        data: {
+          user_id: user.id,
+          target_type: InteractionTarget.question,
+          target_id: question.id,
+          interaction_type: InteractionType.bookmark,
+        }
+      }, {
+        onSuccess: () => {
+          console.log("Bookmark created successfully");
+          // TODO: Refetch questions or update local state
+        },
+        onError: (error) => {
+          console.error("Failed to create bookmark:", error);
+        }
+      });
+    }
   };
 
   const handleCanHelp = () => {
-    // TODO: Navigate to messaging or show help modal
-    console.log("Can help clicked for question:", question.id);
+    if (!user) return;
+    
+    // Use API to create "I can help" interaction
+    createInteractionMutation.mutate({
+      data: {
+        user_id: user.id,
+        target_type: InteractionTarget.question,
+        target_id: question.id,
+        interaction_type: InteractionType.i_can_help,
+      }
+    }, {
+      onSuccess: () => {
+        console.log("I can help interaction created successfully");
+        // TODO: Navigate to messaging or show help modal
+      },
+      onError: (error) => {
+        console.error("Failed to create I can help interaction:", error);
+      }
+    });
   };
 
   // Format the time ago
@@ -178,6 +285,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
             <Button
               variant="outline"
               onClick={handleUpvote}
+              disabled={createInteractionMutation.isPending}
               className={`h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${
                 question.isUpvoted ? "bg-blue-50 border-blue-200 text-blue-600" : ""
               }`}
@@ -192,6 +300,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
             <Button
               variant="outline"
               onClick={handleMeToo}
+              disabled={createInteractionMutation.isPending}
               className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${
                 question.isMeToo ? "bg-orange-50 text-orange-600" : ""
               }`}
@@ -209,6 +318,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
             <Button
               variant="outline"
               onClick={handleCanHelp}
+              disabled={createInteractionMutation.isPending}
               className="h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors"
             >
               <img 

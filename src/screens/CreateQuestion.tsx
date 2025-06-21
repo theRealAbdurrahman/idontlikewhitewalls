@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { XIcon, ImageIcon, TagIcon } from "lucide-react";
+import { useCreateQuestionApiV1QuestionsPost } from "../api-client/api-client";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Switch } from "../components/ui/switch";
-import { useAppStore } from "../stores/appStore";
 import { useAuthStore } from "../stores/authStore";
 
 /**
@@ -14,7 +14,12 @@ import { useAuthStore } from "../stores/authStore";
 export const CreateQuestion: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { events, addQuestion } = useAppStore();
+  
+  // Use API mutation for creating questions
+  const createQuestionMutation = useCreateQuestionApiV1QuestionsPost();
+  
+  // COMMENTED OUT: Local state management for future reference
+  // const { events, addQuestion } = useAppStore();
   
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -25,8 +30,8 @@ export const CreateQuestion: React.FC = () => {
   const [currentTag, setCurrentTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get user's joined events
-  const joinedEvents = events.filter(event => event.isJoined || event.isCheckedIn);
+  // COMMENTED OUT: Filter joined events - will need to be replaced with API data
+  // const joinedEvents = events.filter(event => event.isJoined || event.isCheckedIn);
 
   const handleClose = () => {
     navigate(-1);
@@ -60,6 +65,8 @@ export const CreateQuestion: React.FC = () => {
 
     setIsSubmitting(true);
 
+    // COMMENTED OUT: Local question creation for future reference
+    /*
     try {
       const selectedEventData = selectedEvent && selectedEvent !== "no-event" ? events.find(e => e.id === selectedEvent) : undefined;
       
@@ -83,9 +90,34 @@ export const CreateQuestion: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+    */
+    
+    // Use API to create question
+    createQuestionMutation.mutate({
+      data: {
+        event_id: selectedEvent !== "no-event" ? selectedEvent : "", // Default to empty string if no event
+        user_id: user.id,
+        title: title.trim(),
+        content: description.trim(),
+        is_official: false,
+        isAnonymous,
+        is_featured: false,
+      }
+    }, {
+      onSuccess: () => {
+        console.log("Question created successfully");
+        navigate("/home");
+      },
+      onError: (error) => {
+        console.error("Failed to create question:", error);
+        setIsSubmitting(false);
+      },
+      onSettled: () => {
+        setIsSubmitting(false);
+      });
   };
 
-  const isFormValid = title.trim().length > 0 && description.trim().length > 0;
+  const isFormValid = title.trim().length > 0 && description.trim().length > 0 && !createQuestionMutation.isPending;
 
   return (
     <div className="bg-[#f0efeb] min-h-screen">
@@ -108,7 +140,7 @@ export const CreateQuestion: React.FC = () => {
           disabled={!isFormValid || isSubmitting}
           className="bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white px-4 py-2 rounded-full text-sm font-medium disabled:opacity-50"
         >
-          {isSubmitting ? "Posting..." : "Post"}
+          {isSubmitting || createQuestionMutation.isPending ? "Posting..." : "Post"}
         </Button>
       </header>
 
@@ -240,11 +272,12 @@ export const CreateQuestion: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="no-event">No specific event</SelectItem>
-                    {joinedEvents.map((event) => (
+                    {/* COMMENTED OUT: Event selection - will need to be replaced with API data */}
+                    {/* {joinedEvents.map((event) => (
                       <SelectItem key={event.id} value={event.id}>
                         {event.name}
                       </SelectItem>
-                    ))}
+                    ))} */}
                   </SelectContent>
                 </Select>
               </div>

@@ -2,17 +2,59 @@ import React from "react";
 import { CalendarIcon, MapPinIcon, UsersIcon, EuroIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { 
+  useReadEventsApiV1EventsGet, 
+  useCreateEventParticipantApiV1EventParticipantsPost 
+} from "../api-client/api-client";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { useAppStore } from "../stores/appStore";
+import { useAuthStore } from "../stores/authStore";
+import { ParticipantRole, ParticipantStatus } from "../api-client/models";
 
 /**
  * Events screen component displaying list of events
  */
 export const Events: React.FC = () => {
   const navigate = useNavigate();
-  const { events, joinEvent, checkInEvent } = useAppStore();
+  const { user } = useAuthStore();
+  
+  // Fetch events from API
+  const { 
+    data: eventsData, 
+    isLoading: eventsLoading, 
+    error: eventsError 
+  } = useReadEventsApiV1EventsGet();
+  
+  // Mutation for joining events
+  const joinEventMutation = useCreateEventParticipantApiV1EventParticipantsPost();
+
+  // Transform API data to component format
+  const events = React.useMemo(() => {
+    if (!eventsData?.data) return [];
+    
+    return eventsData.data.map((event) => ({
+      id: event.id,
+      name: event.name,
+      description: event.description || "",
+      location: event.location || "",
+      date: event.start_date,
+      endDate: event.end_date,
+      image: undefined, // API doesn't have image field yet
+      organizerId: event.creator_id,
+      organizerName: "Event Organizer", // Default for now
+      attendeeCount: 0, // Will be populated from event participants
+      isCheckedIn: false, // Will be determined from user's participation
+      isJoined: false, // Will be determined from user's participation
+      tags: [], // Default empty for now
+      category: "General", // Default category
+      website: undefined,
+      maxAttendees: undefined,
+      price: undefined,
+      currency: "EUR",
+      status: "upcoming" as const,
+    }));
+  }, [eventsData?.data]);
 
   const handleEventClick = (eventId: string) => {
     navigate(`/events/${eventId}`);
@@ -20,13 +62,63 @@ export const Events: React.FC = () => {
 
   const handleJoinEvent = (e: React.MouseEvent, eventId: string) => {
     e.stopPropagation();
-    joinEvent(eventId);
+    
+    if (!user) return;
+    
+    // COMMENTED OUT: Local state update for future reference
+    // joinEvent(eventId);
+    
+    // Use API to join event
+    joinEventMutation.mutate({
+      data: {
+        event_id: eventId,
+        user_id: user.id,
+        role: ParticipantRole.attendee,
+        status: ParticipantStatus.confirmed,
+      }
+    }, {
+      onSuccess: () => {
+        console.log("Successfully joined event:", eventId);
+        // TODO: Refetch events or update local state
+      },
+      onError: (error) => {
+        console.error("Failed to join event:", error);
+      }
+    });
   };
 
   const handleCheckIn = (e: React.MouseEvent, eventId: string) => {
     e.stopPropagation();
-    checkInEvent(eventId);
+    
+    // COMMENTED OUT: Local state update for future reference
+    // checkInEvent(eventId);
+    
+    // TODO: Implement check-in API call
+    console.log("Check in called for event:", eventId, "- API integration needed");
   };
+
+  // Handle loading and error states
+  if (eventsLoading) {
+    return (
+      <div className="px-4 py-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-black mb-2">Events</h1>
+          <p className="text-gray-600">Loading events...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (eventsError) {
+    return (
+      <div className="px-4 py-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-black mb-2">Events</h1>
+          <p className="text-red-500">Error loading events. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 py-6">

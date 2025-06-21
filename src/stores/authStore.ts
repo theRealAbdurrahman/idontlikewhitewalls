@@ -42,6 +42,7 @@ interface AuthActions {
   updateProfile: (updates: Partial<User>) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  initializeMockUser: () => void;
 }
 
 /**
@@ -51,13 +52,51 @@ export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
     (set, get) => ({
       // Initial state
-      isAuthenticated: false,
-      user: null,
+      isAuthenticated: true, // Skip authentication for now
+      user: {
+        // Default mock user for API calls
+        id: "user-123",
+        name: "Stuart Wilson",
+        email: "stuart@example.com",
+        avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
+        bio: "Tech enthusiast and startup founder",
+        title: "Senior Product Manager",
+        company: "TechCorp",
+        location: "Dublin, Ireland",
+        connections: 342,
+        meTooCount: 28,
+        canHelpCount: 45,
+        questionsCount: 12,
+        verified: true,
+        joinedAt: new Date().toISOString(),
+      },
       loading: false,
       error: null,
 
       // Actions
+      initializeMockUser: () => {
+        const mockUser: User = {
+          id: "user-123",
+          name: "Stuart Wilson",
+          email: "stuart@example.com",
+          avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
+          bio: "Tech enthusiast and startup founder",
+          title: "Senior Product Manager",
+          company: "TechCorp",
+          location: "Dublin, Ireland",
+          connections: 342,
+          meTooCount: 28,
+          canHelpCount: 45,
+          questionsCount: 12,
+          verified: true,
+          joinedAt: new Date().toISOString(),
+        };
+        set({ isAuthenticated: true, user: mockUser, loading: false });
+      },
+
       login: async (email: string, password: string) => {
+        // COMMENTED OUT: Original login implementation for future reference
+        /*
         set({ loading: true, error: null });
         
         try {
@@ -93,9 +132,31 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             loading: false 
           });
         }
+        */
+        
+        // Simplified login - just set mock user
+        const mockUser: User = {
+          id: "user-123",
+          name: "Stuart Wilson",
+          email: email,
+          avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
+          bio: "Tech enthusiast and startup founder",
+          title: "Senior Product Manager",
+          company: "TechCorp",
+          location: "Dublin, Ireland",
+          connections: 342,
+          meTooCount: 28,
+          canHelpCount: 45,
+          questionsCount: 12,
+          verified: true,
+          joinedAt: new Date().toISOString(),
+        };
+        set({ isAuthenticated: true, user: mockUser, loading: false, error: null });
       },
 
       loginWithLinkedIn: async () => {
+        // COMMENTED OUT: Original LinkedIn login implementation for future reference
+        /*
         set({ loading: true, error: null });
         
         try {
@@ -131,6 +192,27 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             loading: false 
           });
         }
+        */
+        
+        // Simplified LinkedIn login - just set mock user
+        const mockUser: User = {
+          id: "user-123",
+          name: "Stuart Wilson",
+          email: "stuart@example.com",
+          avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
+          linkedinId: "stuart-wilson-123",
+          bio: "Tech enthusiast and startup founder passionate about connecting people through technology",
+          title: "Senior Product Manager",
+          company: "TechCorp",
+          location: "Dublin, Ireland",
+          connections: 342,
+          meTooCount: 28,
+          canHelpCount: 45,
+          questionsCount: 12,
+          verified: true,
+          joinedAt: new Date().toISOString(),
+        };
+        set({ isAuthenticated: true, user: mockUser, loading: false, error: null });
       },
 
       logout: () => {

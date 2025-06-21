@@ -31,6 +31,9 @@ import type {
   AxiosResponse
 } from 'axios';
 
+// Configure axios base URL for API requests
+axios.defaults.baseURL = "http://localhost:8000";
+
 import type {
   AnswerCreate,
   AnswerRead,

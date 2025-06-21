@@ -136,12 +136,14 @@ interface AppActions {
   setNotifications: (notifications: Notification[]) => void;
   markNotificationRead: (notificationId: string) => void;
   markAllNotificationsRead: () => void;
+  setUnreadNotifications: (count: number) => void;
   
   // Messages
   setChatThreads: (threads: ChatThread[]) => void;
   setMessages: (threadId: string, messages: Message[]) => void;
   addMessage: (threadId: string, message: Omit<Message, "id" | "createdAt">) => void;
   markMessagesRead: (threadId: string) => void;
+  setUnreadMessages: (count: number) => void;
 }
 
 /**
@@ -163,6 +165,8 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
   setEvents: (events) => set({ events }),
   
   joinEvent: (eventId) => {
+    // COMMENTED OUT: Local state update for future reference
+    /*
     set((state) => ({
       events: state.events.map((event) =>
         event.id === eventId
@@ -170,20 +174,30 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
           : event
       ),
     }));
+    */
+    // TODO: Replace with API call to create event participant
+    console.log("joinEvent called for:", eventId, "- API integration needed");
   },
   
   checkInEvent: (eventId) => {
+    // COMMENTED OUT: Local state update for future reference
+    /*
     set((state) => ({
       events: state.events.map((event) =>
         event.id === eventId ? { ...event, isCheckedIn: true } : event
       ),
     }));
+    */
+    // TODO: Replace with API call to update event participant status
+    console.log("checkInEvent called for:", eventId, "- API integration needed");
   },
 
   // Question actions
   setQuestions: (questions) => set({ questions }),
   
   addQuestion: (questionData) => {
+    // COMMENTED OUT: Local question creation for future reference
+    /*
     const newQuestion: Question = {
       ...questionData,
       id: `question-${Date.now()}`,
@@ -200,6 +214,9 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     set((state) => ({
       questions: [newQuestion, ...state.questions],
     }));
+    */
+    // TODO: Replace with API call to create question
+    console.log("addQuestion called with:", questionData, "- API integration needed");
   },
   
   updateQuestion: (questionId, updates) => {
@@ -211,6 +228,8 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
   },
   
   toggleUpvote: (questionId) => {
+    // COMMENTED OUT: Local upvote toggle for future reference
+    /*
     set((state) => ({
       questions: state.questions.map((question) =>
         question.id === questionId
@@ -224,9 +243,14 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
           : question
       ),
     }));
+    */
+    // TODO: Replace with API call to create/delete interaction
+    console.log("toggleUpvote called for:", questionId, "- API integration needed");
   },
   
   toggleMeToo: (questionId) => {
+    // COMMENTED OUT: Local me too toggle for future reference
+    /*
     set((state) => ({
       questions: state.questions.map((question) =>
         question.id === questionId
@@ -240,9 +264,14 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
           : question
       ),
     }));
+    */
+    // TODO: Replace with API call to create/delete interaction
+    console.log("toggleMeToo called for:", questionId, "- API integration needed");
   },
   
   toggleBookmark: (questionId) => {
+    // COMMENTED OUT: Local bookmark toggle for future reference
+    /*
     set((state) => ({
       questions: state.questions.map((question) =>
         question.id === questionId
@@ -250,6 +279,9 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
           : question
       ),
     }));
+    */
+    // TODO: Replace with API call to create/delete interaction
+    console.log("toggleBookmark called for:", questionId, "- API integration needed");
   },
 
   // Filter and sort actions
@@ -261,6 +293,8 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     const unreadCount = notifications.filter((n) => !n.isRead).length;
     set({ notifications, unreadNotifications: unreadCount });
   },
+  
+  setUnreadNotifications: (count) => set({ unreadNotifications: count }),
   
   markNotificationRead: (notificationId) => {
     set((state) => ({
@@ -288,6 +322,8 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     const unreadCount = threads.reduce((sum, thread) => sum + thread.unreadCount, 0);
     set({ chatThreads: threads, unreadMessages: unreadCount });
   },
+  
+  setUnreadMessages: (count) => set({ unreadMessages: count }),
   
   setMessages: (threadId, messages) => {
     set((state) => ({
