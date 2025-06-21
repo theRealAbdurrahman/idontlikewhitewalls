@@ -38,7 +38,6 @@ export const OfferHelp: React.FC = () => {
   const [isPublicVisible, setIsPublicVisible] = useState(true); // Default: ON
   const [isLoading, setIsLoading] = useState(false);
   const [hasAlreadyOfferedHelp, setHasAlreadyOfferedHelp] = useState(false);
-  const [chatHeaderTitle, setChatHeaderTitle] = useState("I can help");
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -131,7 +130,6 @@ export const OfferHelp: React.FC = () => {
       // Update UI state
       setNewMessage("");
       setHasAlreadyOfferedHelp(true);
-      setChatHeaderTitle(question.authorName); // Change header to show author name
 
       // Show success feedback
       toast({
@@ -217,7 +215,7 @@ export const OfferHelp: React.FC = () => {
         </Button>
         
         <h1 className="text-lg font-semibold text-black">
-          {chatHeaderTitle}
+          I can help
         </h1>
         
         <div className="w-[35px]" />
@@ -318,7 +316,7 @@ export const OfferHelp: React.FC = () => {
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <p className="text-sm font-medium text-black mb-1">
-                  Others can see you offered to help
+                  Show others you said "I can Help".
                 </p>
                 <p className="text-xs text-gray-600">
                   Your message will always remain private.
@@ -333,46 +331,16 @@ export const OfferHelp: React.FC = () => {
           </div>
           
           {/* Message Composer */}
-          <div className="flex items-end gap-2">
-            {/* Rich Input Icons */}
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-10 h-10 rounded-full flex-shrink-0 text-gray-500"
-                onClick={() => console.log("Location sharing not implemented")}
-              >
-                <MapPinIcon className="w-5 h-5" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-10 h-10 rounded-full flex-shrink-0 text-gray-500"
-                onClick={() => console.log("Image upload not implemented")}
-              >
-                <ImageIcon className="w-5 h-5" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-10 h-10 rounded-full flex-shrink-0 text-gray-500"
-                onClick={() => console.log("Voice message not implemented")}
-              >
-                <MicIcon className="w-5 h-5" />
-              </Button>
-            </div>
-            
-            {/* Message Input */}
-            <div className="flex-1 relative">
+          <div className="flex flex-col gap-2">
+            {/* Text Input */}
+            <div className="relative">
               <textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={`This is how I can help ${question.isAnonymous ? 'them' : question.authorName}...`}
                 rows={1}
-                className="w-full p-3 pr-12 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_600)] focus:border-transparent resize-none max-h-24 bg-white"
+                className="w-full p-3 pr-12 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_600)] focus:border-transparent resize-none max-h-24 bg-white"
                 style={{ minHeight: "44px" }}
                 disabled={isLoading}
               />
@@ -383,6 +351,36 @@ export const OfferHelp: React.FC = () => {
                 className="absolute right-2 bottom-2 w-8 h-8 bg-[var(--ColorYellow_primary_colorYellow_800)] hover:bg-[var(--ColorYellow_primary_colorYellow_900)] text-black rounded-full p-0 disabled:opacity-50"
               >
                 <SendIcon className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {/* Rich Input Icons */}
+            <div className="flex gap-4 px-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="p-0 text-gray-500 hover:text-gray-700"
+                onClick={() => console.log("Location sharing not implemented")}
+              >
+                <MapPinIcon className="w-5 h-5" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="p-0 text-gray-500 hover:text-gray-700"
+                onClick={() => console.log("Image upload not implemented")}
+              >
+                <ImageIcon className="w-5 h-5" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="p-0 text-gray-500 hover:text-gray-700"
+                onClick={() => console.log("Voice message not implemented")}
+              >
+                <MicIcon className="w-5 h-5" />
               </Button>
             </div>
           </div>
