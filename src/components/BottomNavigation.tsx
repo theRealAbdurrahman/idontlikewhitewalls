@@ -61,11 +61,7 @@ export const BottomNavigation: React.FC = () => {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleNavigation(item.path)}
-                  className={`rounded-full p-0 transition-all duration-200 ${
-                    item.isCenter 
-                      ? 'w-28 h-14' // Larger center button
-                      : 'w-28 h-11' // Standard size for side buttons
-                  } ${
+                  className={`rounded-full p-0 transition-all duration-200 w-14 h-14 ${
                     isActive 
                       ? item.isCenter
                         ? "bg-[#F9DF8E] text-black shadow-lg scale-105" // Enhanced active state for center
