@@ -64,7 +64,7 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="flex w-full h-[90px] items-center justify-between pt-10 pb-0 px-3.5 fixed top-0 left-0 z-10 bg-[#f0efeb]">
+    <header className="flex w-full h-[90px] items-center justify-between pt-10 pb-0 px-3.5 bg-[#f0efeb]">
       {/* Left side */}
       {config.showBackButton ? (
         <Button

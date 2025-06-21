@@ -53,9 +53,6 @@ export const Home: React.FC = () => {
 
   return (
     <>
-      {/* Filter Bar */}
-      <FilterBar />
-
       {/* Question Feed */}
       <div className="px-2.5 py-2.5">
         <div className="flex flex-col gap-[15px]">
