@@ -78,7 +78,7 @@ interface Message {
   content: string;
   createdAt: string;
   isRead: boolean;
-  type: "text" | "image" | "file";
+  type: "text" | "image" | "file" | "preview";
 }
 
 /**

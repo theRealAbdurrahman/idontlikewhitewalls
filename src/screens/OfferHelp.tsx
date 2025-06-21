@@ -18,17 +18,9 @@ import { useAuthStore } from "../stores/authStore";
 import { useToast } from "../hooks/use-toast";
 
 /**
- * Interface for help message with visibility toggle
+ * Interface for help message with visibility toggle - extends base Message
  */
-interface HelpMessage {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  questionId: string;
-  content: string;
-  createdAt: string;
-  isRead: boolean;
-  type: "text" | "image" | "file";
+interface HelpMessage extends Message {
   isPublicVisible: boolean; // Whether others can see this user offered help
 }
 
