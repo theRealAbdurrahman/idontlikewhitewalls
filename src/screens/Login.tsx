@@ -27,7 +27,7 @@ export const Login: React.FC = () => {
 
   return (
     <div className="bg-[#f0efeb] flex flex-row justify-center w-full min-h-screen">
-      <div className="bg-[#f0efeb] overflow-hidden w-full max-w-[390px] relative min-h-screen flex flex-col items-center justify-center px-8">
+      <div className="bg-[#f0efeb] overflow-hidden w-full  relative min-h-screen flex flex-col items-center justify-center px-8">
         {/* Logo */}
         <div className="mb-12">
           <img

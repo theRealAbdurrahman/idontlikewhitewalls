@@ -44,7 +44,7 @@ export const BottomNavigation: React.FC = () => {
   };
 
   return (
-    <nav className="flex flex-col w-full max-w-[390px] h-28 items-center justify-center gap-2.5 px-2.5 py-[25px] fixed bottom-0 left-0 z-10">
+    <nav className="flex flex-col w-full  h-28 items-center justify-center gap-2.5 px-2.5 py-[25px] fixed bottom-0 left-0 z-10">
       <div className="flex h-[60px] items-center justify-around relative self-stretch w-full bg-[#ffffff80] rounded-[100px] overflow-hidden shadow-[0px_0px_4px_#0000001a] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)] px-4">
         {navItems.map((item) => {
           const Icon = item.icon;

@@ -11,7 +11,7 @@ import { useAppStore } from "../stores/appStore";
 export const FilterBar: React.FC = () => {
   const { events, activeFilters, sortBy, setActiveFilters, setSortBy } = useAppStore();
 
-  // Get active events for filter options
+  // Get active events for filter options  
   const activeEvents = events.filter(event => event.isJoined || event.isCheckedIn);
   
   // Create filter categories
@@ -21,7 +21,9 @@ export const FilterBar: React.FC = () => {
       label: "All",
       isActive: activeFilters.includes("all"),
     },
-    ...activeEvents.slice(0, 4).map(event => ({
+    // TODO: don't forget to use activeEvents to filter these categories
+    // use all events just for demo
+    ...events.map(event => ({
       id: event.id,
       label: event.name.length > 15 ? `${event.name.slice(0, 15)}...` : event.name,
       isActive: activeFilters.includes(event.id),

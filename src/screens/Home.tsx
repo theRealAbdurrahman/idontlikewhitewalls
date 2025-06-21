@@ -141,7 +141,7 @@ export const Home: React.FC = () => {
       </Button>
 
       {/* Bottom Gradient */}
-      <div className="fixed w-full max-w-[390px] h-[97px] bottom-0 left-0 bg-[linear-gradient(180deg,rgba(240,239,235,0)_0%,rgba(240,239,235,1)_100%)] pointer-events-none" />
+      <div className="fixed w-full  h-[97px] bottom-0 left-0 bg-[linear-gradient(180deg,rgba(240,239,235,0)_0%,rgba(240,239,235,1)_100%)] pointer-events-none" />
     </>
   );
 };

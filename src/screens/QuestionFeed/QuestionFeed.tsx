@@ -8,7 +8,7 @@ import { MarketplaceSection } from "./sections/MarketplaceSection";
 export const QuestionFeed = (): JSX.Element => {
   return (
     <div className="bg-[#f0efeb] flex flex-row justify-center w-full">
-      <div className="bg-[#f0efeb] overflow-hidden w-full max-w-[390px] relative min-h-screen">
+      <div className="bg-[#f0efeb] overflow-hidden w-full  relative min-h-screen">
         {/* Header */}
         <header className="flex w-full h-[90px] items-center justify-between pt-10 pb-0 px-3.5 fixed top-0 left-0 z-10 bg-[#f0efeb]">
           <Avatar className="w-[35px] h-[35px]">
@@ -50,10 +50,10 @@ export const QuestionFeed = (): JSX.Element => {
         </Button>
 
         {/* Bottom Gradient */}
-        <div className="fixed w-full max-w-[390px] h-[97px] bottom-0 left-0 bg-[linear-gradient(180deg,rgba(240,239,235,0)_0%,rgba(240,239,235,1)_100%)]" />
+        <div className="fixed w-full  h-[97px] bottom-0 left-0 bg-[linear-gradient(180deg,rgba(240,239,235,0)_0%,rgba(240,239,235,1)_100%)]" />
 
         {/* Navigation Bar */}
-        <nav className="flex flex-col w-full max-w-[390px] h-28 items-center justify-center gap-2.5 px-2.5 py-[25px] fixed bottom-0 left-0 z-10">
+        <nav className="flex flex-col w-full  h-28 items-center justify-center gap-2.5 px-2.5 py-[25px] fixed bottom-0 left-0 z-10">
           <div className="flex h-[60px] items-center justify-center relative self-stretch w-full bg-[#ffffff80] rounded-[100px] overflow-hidden shadow-[0px_0px_4px_#0000001a] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)]">
             <div className="flex flex-col items-center justify-center gap-[5px] px-0 py-2.5 relative flex-1 self-stretch grow">
               <Button

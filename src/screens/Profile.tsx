@@ -147,7 +147,7 @@ export const Profile: React.FC = () => {
       {/* Version Info */}
       <div className="text-center mt-6">
         <p className="text-xs text-gray-500">
-          Meetball v1.0.0 • Made with ❤️ in Dublin
+          Meetball v1.0.0 • Made with ❤️ in Lisbon
         </p>
       </div>
     </div>
