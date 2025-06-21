@@ -99,12 +99,15 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                   {question.isAnonymous ? "Anonymous" : question.authorName}
                 </span>
                 <div className="flex items-center gap-1 text-xs text-[#ababab]">
-                  <span>{timeAgo}</span>
                   {question.eventName && (
                     <>
-                      <span>•</span>
                       <span>{question.eventName}</span>
+                      <span>•</span>
+                      <span>{timeAgo}</span>
                     </>
+                  )}
+                  {!question.eventName && (
+                    <span>{timeAgo}</span>
                   )}
                 </div>
               </div>
