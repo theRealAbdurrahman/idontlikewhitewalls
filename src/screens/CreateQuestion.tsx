@@ -114,7 +114,8 @@ export const CreateQuestion: React.FC = () => {
       },
       onSettled: () => {
         setIsSubmitting(false);
-      });
+      }
+    });
   };
 
   const isFormValid = title.trim().length > 0 && description.trim().length > 0 && !createQuestionMutation.isPending;
