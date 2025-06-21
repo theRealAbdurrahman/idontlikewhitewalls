@@ -32,7 +32,7 @@ import type {
 } from 'axios';
 
 // Configure axios base URL for API requests
-axios.defaults.baseURL = "http://localhost:8000";
+axios.defaults.baseURL = "http://0.0.0.0:8000";
 
 import type {
   AnswerCreate,
