@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { MoreVerticalIcon, BookmarkIcon, ArrowUpIcon } from "lucide-react";
 import { 
@@ -59,6 +60,7 @@ interface QuestionCardProps {
  */
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   
   // API mutations for interactions
   const createInteractionMutation = useCreateInteractionApiV1InteractionsPost();
@@ -160,23 +162,9 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const handleCanHelp = () => {
     if (!user) return;
     
-    // Use API to create "I can help" interaction
-    createInteractionMutation.mutate({
-      data: {
-        user_id: user.id,
-        target_type: InteractionTarget.question,
-        target_id: question.id,
-        interaction_type: InteractionType.i_can_help,
-      }
-    }, {
-      onSuccess: () => {
-        console.log("I can help interaction created successfully");
-        // TODO: Navigate to messaging or show help modal
-      },
-      onError: (error) => {
-        console.error("Failed to create I can help interaction:", error);
-      }
-    });
+    // Navigate to offer help screen instead of creating interaction immediately
+    // The interaction will be created when the user actually sends a help message
+    navigate(`/offer-help/${question.id}`);
   };
 
   // Format the time ago

@@ -19,12 +19,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   
   // Determine if we should show the header/filter based on current route
   const showHeader = !location.pathname.includes("/create-question") && 
-                    !location.pathname.includes("/chat");
+                    !location.pathname.includes("/chat") &&
+                    !location.pathname.includes("/offer-help");
   const showFilterBar = location.pathname === "/home";
 
   // Determine if we should show bottom navigation
   const showBottomNav = !location.pathname.includes("/create-question") && 
-                       !location.pathname.includes("/chat");
+                       !location.pathname.includes("/chat") &&
+                       !location.pathname.includes("/offer-help");
 
   return (
     <div className="bg-[#f0efeb] flex flex-row justify-center w-full min-h-screen">

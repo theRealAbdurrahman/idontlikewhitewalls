@@ -97,6 +97,13 @@ interface ChatThread {
 }
 
 /**
+ * Help message interface for offering help to question authors
+ */
+interface HelpMessage extends Message {
+  isPublicVisible: boolean; // Whether others can see this user offered help
+}
+
+/**
  * App state interface
  */
 interface AppState {
@@ -141,9 +148,13 @@ interface AppActions {
   // Messages
   setChatThreads: (threads: ChatThread[]) => void;
   setMessages: (threadId: string, messages: Message[]) => void;
-  addMessage: (threadId: string, message: Omit<Message, "id" | "createdAt">) => void;
+  addMessage: (threadId: string, message: Omit<Message | HelpMessage, "id" | "createdAt">) => void;
   markMessagesRead: (threadId: string) => void;
   setUnreadMessages: (count: number) => void;
+  
+  // Help-specific actions
+  incrementQuestionHelpCount: (questionId: string, isPublicVisible: boolean) => void;
+  getUserHelpStatus: (questionId: string, userId: string) => boolean;
 }
 
 /**
@@ -332,7 +343,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
   },
   
   addMessage: (threadId, messageData) => {
-    const newMessage: Message = {
+    const newMessage: Message | HelpMessage = {
       ...messageData,
       id: `message-${Date.now()}`,
       createdAt: new Date().toISOString(),
@@ -358,5 +369,26 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
         unreadMessages: Math.max(0, state.unreadMessages - thread.unreadCount),
       };
     });
+  },
+  
+  // Help-specific actions
+  incrementQuestionHelpCount: (questionId, isPublicVisible) => {
+    if (isPublicVisible) {
+      set((state) => ({
+        questions: state.questions.map((question) =>
+          question.id === questionId
+            ? { ...question, canHelpCount: question.canHelpCount + 1 }
+            : question
+        ),
+      }));
+    }
+  },
+  
+  getUserHelpStatus: (questionId, userId) => {
+    const state = get();
+    // Check if user has already offered help for this question
+    const helpThreadId = `help-${questionId}-${userId}`;
+    const helpMessages = state.messages[helpThreadId] || [];
+    return helpMessages.some(msg => msg.senderId === userId && msg.type === "text");
   },
 }));
