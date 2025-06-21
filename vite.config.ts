@@ -16,7 +16,7 @@ export default defineConfig({
     proxy: {
       // Proxy all requests starting with /api to localhost:8000
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://0.0.0.0:8000',
         changeOrigin: true,
         secure: false,
         // Optional: Add logging to see what's being proxied
