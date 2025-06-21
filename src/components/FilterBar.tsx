@@ -47,7 +47,7 @@ export const FilterBar: React.FC = () => {
   };
 
   return (
-    <nav className="flex w-full items-center justify-between pt-2.5 pb-2.5 px-3.5 bg-[#f0efeb] border-b border-gray-200">
+    <nav className="flex w-full items-center justify-between pt-2.5 pb-2.5 px-3.5 bg-[#f0efeb]">
       {/* Filter Categories */}
       <div className="flex items-start gap-2 overflow-x-auto no-scrollbar flex-1">
         {filterCategories.map((category) => (
