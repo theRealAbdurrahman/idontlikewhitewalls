@@ -16,6 +16,7 @@ import { Switch } from "../components/ui/switch";
 import { useAppStore } from "../stores/appStore";
 import { useAuthStore } from "../stores/authStore";
 import { useToast } from "../hooks/use-toast";
+import { Message } from "../stores/appStore";
 
 /**
  * Interface for help message with visibility toggle - extends base Message

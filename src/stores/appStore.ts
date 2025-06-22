@@ -70,7 +70,7 @@ interface Notification {
 /**
  * Message interface for chat system
  */
-interface Message {
+export interface Message {
   id: string;
   senderId: string;
   receiverId: string;
