@@ -173,7 +173,7 @@ export const Chat: React.FC = () => {
 
       {/* Question Context */}
       {(thread?.questionTitle || 'title') && (
-        <Card className="mx-4 mt-4 mb-2 bg-[#fbfbfb}">
+        <Card className="mx-4 mt-4 mb-2 bg-[#fbfbfb]">
           <CardContent className="p-3">
             <p className="text-sm text-gray-600 mb-1">Question context:</p>
             <p className="text-sm font-medium text-black">{thread?.questionTitle || 'title'}</p>
@@ -227,7 +227,7 @@ export const Chat: React.FC = () => {
               onKeyPress={handleKeyPress}
               placeholder="Type a message..."
               rows={1}
-              className="w-full p-3 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[#5ae0e0] focus:border-transparent resize-none max-h-24 bg-[#fbfbfb}"
+              className="w-full p-3 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[#5ae0e0] focus:border-transparent resize-none max-h-24 bg-[#fbfbfb]"
               style={{ minHeight: "44px" }}
             />
           </div>
