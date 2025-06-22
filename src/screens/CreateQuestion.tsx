@@ -230,16 +230,16 @@ export const CreateQuestion: React.FC = () => {
 
   return (
     <div className="bg-[var(--ColorYellow_primary_colorYellow_50)] min-h-screen flex flex-col">
-      {/* Sticky Header */}
+      {/* Sticky Header - FIXED LAYOUT */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-4 bg-[var(--ColorYellow_primary_colorYellow_50)] border-b border-gray-200">
-        {/* Left Side - Events Dropdown */}
+        {/* Left Side - Events Dropdown ONLY */}
         <DropdownMenu open={isEventsDropdownOpen} onOpenChange={setIsEventsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
               className="flex items-center gap-2 px-4 py-2 rounded-full border-gray-300 bg-white hover:bg-gray-50 font-medium text-gray-900"
             >
-              <span className="truncate max-w-[180px]">
+              <span className="truncate max-w-[200px]">
                 {getSelectedEventsText()}
               </span>
               <ChevronDownIcon className="w-4 h-4 text-gray-500" />
@@ -290,26 +290,15 @@ export const CreateQuestion: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
         
-        {/* Right Side - Close Button and Post Button */}
-        <div className="flex items-center gap-3">
-          <Button
-            type="submit"
-            form="question-form"
-            disabled={!isFormValid}
-            className="bg-[var(--ColorYellow_primary_colorYellow_900)] hover:bg-[var(--ColorYellow_primary_colorYellow_800)] text-black px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? "Posting..." : "Post"}
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleClose}
-            className="w-8 h-8 p-0 text-gray-600 hover:text-gray-900"
-          >
-            <XIcon className="w-5 h-5" />
-          </Button>
-        </div>
+        {/* Right Side - Close Button ONLY */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleClose}
+          className="w-8 h-8 p-0 text-gray-600 hover:text-gray-900"
+        >
+          <XIcon className="w-5 h-5" />
+        </Button>
       </header>
 
       {/* Form Container */}
@@ -384,7 +373,7 @@ export const CreateQuestion: React.FC = () => {
               </div>
             </div>
 
-            {/* Action Buttons Row */}
+            {/* Action Buttons Row - FIXED LAYOUT */}
             <div className="flex items-center justify-between">
               {/* Left Side - Improve with AI */}
               <Dialog>
@@ -438,8 +427,9 @@ export const CreateQuestion: React.FC = () => {
                 </DialogContent>
               </Dialog>
 
-              {/* Right Side - Media Buttons */}
+              {/* Right Side - Media Buttons + Post Button */}
               <div className="flex items-center gap-3">
+                {/* Media Buttons */}
                 <Button
                   type="button"
                   variant="ghost"
@@ -458,6 +448,15 @@ export const CreateQuestion: React.FC = () => {
                   onClick={() => console.log("Voice input feature coming soon")}
                 >
                   <MicIcon className="w-5 h-5" />
+                </Button>
+
+                {/* Post Button - MOVED TO BOTTOM */}
+                <Button
+                  type="submit"
+                  disabled={!isFormValid}
+                  className="bg-[var(--ColorYellow_primary_colorYellow_900)] hover:bg-[var(--ColorYellow_primary_colorYellow_800)] text-black px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-2"
+                >
+                  {isSubmitting ? "Posting..." : "Post"}
                 </Button>
               </div>
             </div>
