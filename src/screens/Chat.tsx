@@ -173,7 +173,7 @@ export const Chat: React.FC = () => {
 
       {/* Question Context */}
       {(thread?.questionTitle || 'title') && (
-        <Card className="mx-4 mt-4 mb-2 bg-[var(--ColorYellow_primary_colorYellow_50)]">
+        <Card className="mx-4 mt-4 mb-2 bg-[#fbfbfb}">
           <CardContent className="p-3">
             <p className="text-sm text-gray-600 mb-1">Question context:</p>
             <p className="text-sm font-medium text-black">{thread?.questionTitle || 'title'}</p>
@@ -217,7 +217,7 @@ export const Chat: React.FC = () => {
       </div>
 
       {/* Message Input */}
-      <div className="p-4 bg-[var(--ColorYellow_primary_colorYellow_100)] border-t border-gray-200">
+      <div className="p-4 bg-[#f0efeb] border-t border-gray-200">
         <div className="flex flex-col gap-2">
           {/* Text Input */}
           <div className="relative">
@@ -227,7 +227,7 @@ export const Chat: React.FC = () => {
               onKeyPress={handleKeyPress}
               placeholder="Type a message..."
               rows={1}
-              className="w-full p-3 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_600)] focus:border-transparent resize-none max-h-24 bg-[var(--ColorYellow_primary_colorYellow_50)]"
+              className="w-full p-3 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[#5ae0e0] focus:border-transparent resize-none max-h-24 bg-[#fbfbfb}"
               style={{ minHeight: "44px" }}
             />
           </div>

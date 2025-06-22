@@ -223,7 +223,7 @@ export const OfferHelp: React.FC = () => {
       </header>
 
       {/* Question Preview Card */}
-      <Card className="mx-4 mt-4 mb-2 border-l-4 border-l-[var(--ColorTurquoise_secondaryTurquoise_600)] bg-[#FBFBFB]">
+      <Card className="mx-4 mt-4 mb-2 border-l-4 border-l-[#5ae0e0] bg-[#FBFBFB]">
         <CardContent className="p-4">
           <div className="flex items-start gap-3 mb-3">
             <Avatar className="w-10 h-10">
@@ -284,7 +284,7 @@ export const OfferHelp: React.FC = () => {
             .map((message) => (
               <div key={message.id} className="flex justify-end">
                 <div className="max-w-[80%]">
-                  <div className="bg-[var(--ColorTurquoise_secondaryTurquoise_600)] text-white p-3 rounded-2xl rounded-br-md">
+                  <div className="bg-[#5ae0e0] text-white p-3 rounded-2xl rounded-br-md">
                     <p className="text-sm leading-relaxed">{message.content}</p>
                   </div>
                   
@@ -343,7 +343,7 @@ export const OfferHelp: React.FC = () => {
                   onKeyPress={handleKeyPress}
                   placeholder={`This is how I can help ${question.isAnonymous ? 'them' : question.authorName}...`}
                   rows={1}
-                  className="w-full p-3 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_600)] focus:border-transparent resize-none max-h-24 bg-[#FBFBFB]"
+                  className="w-full p-3 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[#5ae0e0] focus:border-transparent resize-none max-h-24 bg-[#FBFBFB]"
                   style={{ minHeight: "44px" }}
                   disabled={isLoading}
                 />
