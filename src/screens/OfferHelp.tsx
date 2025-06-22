@@ -223,7 +223,7 @@ export const OfferHelp: React.FC = () => {
       </header>
 
       {/* Question Preview Card */}
-      <Card className="mx-4 mt-4 mb-2 border-l-4 border-l-[var(--ColorTurquoise_secondaryTurquoise_600)]">
+      <Card className="mx-4 mt-4 mb-2 border-l-4 border-l-[var(--ColorTurquoise_secondaryTurquoise_600)] bg-[#FBFBFB]">
         <CardContent className="p-4">
           <div className="flex items-start gap-3 mb-3">
             <Avatar className="w-10 h-10">
@@ -311,9 +311,9 @@ export const OfferHelp: React.FC = () => {
 
       {/* Message Input Section */}
       {!hasAlreadyOfferedHelp && (
-        <div className="p-4 bg-[#f0efeb] border-t border-gray-200">
+        <div className="p-4 bg-[#FBFBFB] border-t border-gray-200">
           {/* Visibility Toggle */}
-          <div className="mb-4 p-3 bg-white rounded-lg">
+          <div className="mb-4 p-3 bg-[#FBFBFB] rounded-lg border border-gray-200">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <p className="text-sm font-medium text-black mb-1">
@@ -341,7 +341,7 @@ export const OfferHelp: React.FC = () => {
                 onKeyPress={handleKeyPress}
                 placeholder={`This is how I can help ${question.isAnonymous ? 'them' : question.authorName}...`}
                 rows={1}
-                className="w-full p-3 pr-12 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_600)] focus:border-transparent resize-none max-h-24 bg-white"
+                className="w-full p-3 pr-12 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_600)] focus:border-transparent resize-none max-h-24 bg-[#FBFBFB]"
                 style={{ minHeight: "44px" }}
                 disabled={isLoading}
               />
@@ -390,7 +390,7 @@ export const OfferHelp: React.FC = () => {
       
       {/* Already Offered Help Message */}
       {hasAlreadyOfferedHelp && (
-        <div className="p-4 bg-[#f0efeb] border-t border-gray-200">
+        <div className="p-4 bg-[#FBFBFB] border-t border-gray-200">
           <Card>
             <CardContent className="p-3 text-center">
               <p className="text-sm text-gray-600">
