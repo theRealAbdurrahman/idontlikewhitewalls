@@ -326,7 +326,7 @@ export const OfferHelp: React.FC = () => {
               <Switch
                 checked={isPublicVisible}
                 onCheckedChange={setIsPublicVisible}
-                className="data-[state=checked]:bg-[var(--ColorTurquoise_secondaryTurquoise_600)]"
+                className="data-[state=checked]:bg-[#34C759]"
               />
             </div>
           </div>
