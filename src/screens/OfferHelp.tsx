@@ -135,10 +135,10 @@ export const OfferHelp: React.FC = () => {
       setHasAlreadyOfferedHelp(true);
 
       // Show success feedback
-      toast({
-        title: "Message sent!",
-        description: `Your help offer has been sent to ${question.authorName}.`,
-      });
+      // toast({
+      //   title: "Message sent!",
+      //   description: `Your help offer has been sent to ${question.authorName}.`,
+      // });
 
       // Navigate to regular chat after sending
       setTimeout(() => {
@@ -328,7 +328,7 @@ export const OfferHelp: React.FC = () => {
             {hasAlreadyOfferedHelp && <Switch
                 checked={isPublicVisible}
                 onCheckedChange={setIsPublicVisible}
-                className="data-[state=checked]:bg-[#34C759]"
+                className="data-[state=checked]:bg-[#34C759] is-public-visible-switch"
               />}  
             </div>
           </div>
