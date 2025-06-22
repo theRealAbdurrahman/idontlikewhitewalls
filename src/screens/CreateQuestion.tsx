@@ -170,6 +170,11 @@ export const CreateQuestion: React.FC = () => {
     e.preventDefault();
     
     if (!title.trim() || !user) {
+      toast({
+        title: "Missing information",
+        description: "Please enter a question title and make sure you're logged in.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -183,41 +188,68 @@ export const CreateQuestion: React.FC = () => {
       return;
     }
 
+    // Validation: check title length
+    if (title.trim().length < 10) {
+      toast({
+        title: "Title too short",
+        description: "Please provide a more descriptive title (at least 10 characters).",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // For now, create question with the first selected event
-      // In a real implementation, you might want to create multiple question instances
-      // or have a different API endpoint that accepts multiple events
-      const primaryEventId = selectedEvents[0];
-      
-      await createQuestionMutation.mutateAsync({
-        data: {
-          event_id: primaryEventId,
-          user_id: user.id,
-          title: title.trim(),
-          content: description.trim() || title.trim(),
-          is_official: false,
-          is_anonymous: isAnonymous,
-          is_featured: false,
-        }
+      // Create questions for each selected event
+      const questionPromises = selectedEvents.map(async (eventId) => {
+        return createQuestionMutation.mutateAsync({
+          data: {
+            event_id: eventId,
+            user_id: user.id,
+            title: title.trim(),
+            content: description.trim() || title.trim(),
+            is_official: false,
+            is_anonymous: isAnonymous,
+            is_featured: false,
+          }
+        });
       });
+      
+      // Wait for all questions to be created
+      const createdQuestions = await Promise.all(questionPromises);
+      
+      console.log("Questions created successfully:", createdQuestions);
 
       // Show success message
       toast({
         title: "Question posted!",
-        description: `Your question has been posted to ${selectedEvents.length} event${selectedEvents.length > 1 ? 's' : ''} successfully.`,
+        description: `Your question has been posted to ${selectedEvents.length} event${selectedEvents.length > 1 ? 's' : ''}.`,
       });
 
       // Navigate back to home
       navigate("/home");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create question:", error);
       
-      // Show error message for network issues
+      // Handle specific error types
+      let errorMessage = "Please check your connection and try again.";
+      
+      if (error?.response?.status === 400) {
+        errorMessage = "Please check your question details and try again.";
+      } else if (error?.response?.status === 401) {
+        errorMessage = "Please log in again to post your question.";
+      } else if (error?.response?.status === 403) {
+        errorMessage = "You don't have permission to post to this event.";
+      } else if (error?.response?.status >= 500) {
+        errorMessage = "Server error. Please try again in a moment.";
+      } else if (!navigator.onLine) {
+        errorMessage = "No internet connection. Please check your connection and try again.";
+      }
+      
       toast({
-        title: "Couldn't post your question",
-        description: "Couldn't post your question because of internet issues. Try again.",
+        title: "Failed to post question",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -226,7 +258,11 @@ export const CreateQuestion: React.FC = () => {
   };
 
   // Form validation - title is required
-  const isFormValid = title.trim().length > 0 && selectedEvents.length > 0 && !createQuestionMutation.isPending && !isSubmitting;
+  const isFormValid = 
+    title.trim().length >= 10 && 
+    selectedEvents.length > 0 && 
+    !createQuestionMutation.isPending && 
+    !isSubmitting;
 
   return (
     <div className="bg-[var(--ColorYellow_primary_colorYellow_50)] min-h-screen flex flex-col">
@@ -315,7 +351,11 @@ export const CreateQuestion: React.FC = () => {
                 placeholder="Unable to find the room for Contum computing session with Dr. Drako. Does anybody know?"
                 className="w-full text-xl font-semibold placeholder-gray-400 border-none bg-transparent focus:outline-none resize-none leading-tight"
                 maxLength={200}
+                disabled={isSubmitting}
               />
+              <div className="text-right text-xs text-gray-500 mt-1">
+                {title.length}/200 characters {title.trim().length < 10 && title.length > 0 && "(minimum 10)"}
+              </div>
             </div>
 
             {/* Description Textarea */}
@@ -326,7 +366,11 @@ export const CreateQuestion: React.FC = () => {
                 placeholder="Briefly describe what you need help with (optional)"
                 className="w-full h-40 text-base placeholder-gray-400 border-none bg-transparent focus:outline-none resize-none leading-relaxed"
                 maxLength={1000}
+                disabled={isSubmitting}
               />
+              <div className="text-right text-xs text-gray-500 mt-1">
+                {description.length}/1000 characters
+              </div>
             </div>
           </div>
 
@@ -343,6 +387,7 @@ export const CreateQuestion: React.FC = () => {
                     checked={visibility === "anyone"}
                     onChange={() => setVisibility("anyone")}
                     className="w-4 h-4 text-[var(--ColorTurquoise_secondaryTurquoise_600)]"
+                    disabled={isSubmitting}
                   />
                   <span className="text-sm font-medium text-gray-900">Public</span>
                 </label>
@@ -355,6 +400,7 @@ export const CreateQuestion: React.FC = () => {
                     checked={visibility === "network"}
                     onChange={() => setVisibility("network")}
                     className="w-4 h-4 text-[var(--ColorTurquoise_secondaryTurquoise_600)]"
+                    disabled={isSubmitting}
                   />
                   <span className="text-sm font-medium text-gray-900">My network</span>
                 </label>
@@ -367,10 +413,28 @@ export const CreateQuestion: React.FC = () => {
                     checked={visibility === "event"}
                     onChange={() => setVisibility("event")}
                     className="w-4 h-4 text-[var(--ColorTurquoise_secondaryTurquoise_600)]"
+                    disabled={isSubmitting}
                   />
                   <span className="text-sm font-medium text-gray-900">This event only</span>
                 </label>
               </div>
+            </div>
+
+            {/* Anonymous Toggle */}
+            <div className="mb-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAnonymous}
+                  onChange={(e) => setIsAnonymous(e.target.checked)}
+                  className="w-4 h-4 text-[var(--ColorTurquoise_secondaryTurquoise_600)]"
+                  disabled={isSubmitting}
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900">Post anonymously</span>
+                  <p className="text-xs text-gray-600">Your name won't be shown with this question</p>
+                </div>
+              </label>
             </div>
 
             {/* Action Buttons Row - FIXED LAYOUT */}
@@ -436,6 +500,7 @@ export const CreateQuestion: React.FC = () => {
                   size="icon"
                   className="w-10 h-10 p-0 text-gray-500 hover:text-gray-700"
                   onClick={() => console.log("Image upload feature coming soon")}
+                  disabled={isSubmitting}
                 >
                   <ImageIcon className="w-5 h-5" />
                 </Button>
@@ -446,6 +511,7 @@ export const CreateQuestion: React.FC = () => {
                   size="icon"
                   className="w-10 h-10 p-0 text-gray-500 hover:text-gray-700"
                   onClick={() => console.log("Voice input feature coming soon")}
+                  disabled={isSubmitting}
                 >
                   <MicIcon className="w-5 h-5" />
                 </Button>
@@ -456,7 +522,14 @@ export const CreateQuestion: React.FC = () => {
                   disabled={!isFormValid}
                   className="bg-[var(--ColorYellow_primary_colorYellow_900)] hover:bg-[var(--ColorYellow_primary_colorYellow_800)] text-black px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-2"
                 >
-                  {isSubmitting ? "Posting..." : "Post"}
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Posting...
+                    </>
+                  ) : (
+                    "Post"
+                  )}
                 </Button>
               </div>
             </div>
