@@ -5,44 +5,9 @@
  * API for Meetball - The Summeet's event networking platform
  * OpenAPI spec version: 0.1.0
  */
-import Axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { useMutation, useQuery, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
 import { apiConfig, shouldLogApiRequests } from '../config/api';
-
-/**
- * Enhanced error handling for API requests
- */
-const handleApiError = (error: AxiosError): AxiosError => {
-  if (error.response) {
-    // Server responded with error status
-    console.error('❌ API HTTP Error:', {
-      status: error.response.status,
-      statusText: error.response.statusText,
-      data: error.response.data,
-      url: error.config?.url,
-    });
-  } else if (error.request) {
-    // Network error - request was made but no response received
-    console.error('❌ API Network Error:', {
-      message: 'Backend server is unreachable',
-      baseURL: error.config?.baseURL,
-      url: error.config?.url,
-      timeout: error.config?.timeout,
-      details: 'Please check if the backend service is running and accessible',
-    });
-    
-    // Add user-friendly error message
-    error.message = `Network Error: Unable to reach the backend server at ${error.config?.baseURL}. Please check your internet connection or try again later.`;
-  } else {
-    // Request setup error
-    console.error('❌ API Setup Error:', {
-      message: error.message,
-      url: error.config?.url,
-    });
-  }
-  
-  return error;
-};
 
 /**
  * Configure axios instance with base URL and interceptors
@@ -60,7 +25,6 @@ if (shouldLogApiRequests) {
       console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
         data: config.data,
         params: config.params,
-        baseURL: config.baseURL,
       });
       return config;
     },
@@ -70,47 +34,25 @@ if (shouldLogApiRequests) {
     }
   );
 
-  // Enhanced response interceptor for debugging in development
+  // Response interceptor for debugging in development
   axiosInstance.interceptors.response.use(
     (response) => {
       console.log(`✅ API Response: ${response.status} ${response.config.url}`, response.data);
       return response;
     },
-    (error: AxiosError) => {
-      const enhancedError = handleApiError(error);
-      return Promise.reject(enhancedError);
-    }
-  );
-} else {
-  // Production error handling (no debug logs)
-  axiosInstance.interceptors.response.use(
-    (response) => response,
-    (error: AxiosError) => {
-      const enhancedError = handleApiError(error);
-      return Promise.reject(enhancedError);
+    (error) => {
+      console.error('❌ API Response Error:', error.response?.status, error.response?.data);
+      return Promise.reject(error);
     }
   );
 }
 
 /**
- * Custom axios instance for API calls with enhanced error handling
+ * Custom axios instance for API calls
  */
 export const customInstance = <T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
   return axiosInstance({
     ...config,
-  }).catch((error: AxiosError) => {
-    // Additional error context for debugging
-    if (shouldLogApiRequests) {
-      console.error('❌ API Call Failed:', {
-        url: config.url,
-        method: config.method,
-        baseURL: axiosInstance.defaults.baseURL,
-        isNetworkError: !error.response,
-        errorCode: error.code,
-      });
-    }
-    
-    throw error;
   });
 };
 
@@ -278,7 +220,7 @@ export const createUserApiV1UsersPost = (
   });
 };
 
-// React Query hooks with enhanced error handling
+// React Query hooks
 export const useReadEventsApiV1EventsGet = (
   params?: { skip?: number; limit?: number },
   options?: UseQueryOptions<AxiosResponse<{ data: EventRead[] }>, Error>
@@ -286,15 +228,6 @@ export const useReadEventsApiV1EventsGet = (
   return useQuery({
     queryKey: ['events', params],
     queryFn: () => readEventsApiV1EventsGet(params),
-    retry: (failureCount, error) => {
-      // Don't retry on network errors (backend unreachable)
-      if ((error as AxiosError)?.code === 'NETWORK_ERROR' || !(error as AxiosError)?.response) {
-        return failureCount < 1; // Only retry once for network errors
-      }
-      return failureCount < 3; // Retry up to 3 times for other errors
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
 };
@@ -306,14 +239,6 @@ export const useReadQuestionsApiV1QuestionsGet = (
   return useQuery({
     queryKey: ['questions', params],
     queryFn: () => readQuestionsApiV1QuestionsGet(params),
-    retry: (failureCount, error) => {
-      if ((error as AxiosError)?.code === 'NETWORK_ERROR' || !(error as AxiosError)?.response) {
-        return failureCount < 1;
-      }
-      return failureCount < 3;
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 5 * 60 * 1000,
     ...options,
   });
 };
@@ -325,14 +250,6 @@ export const useReadInteractionsApiV1InteractionsGet = (
   return useQuery({
     queryKey: ['interactions', params],
     queryFn: () => readInteractionsApiV1InteractionsGet(params),
-    retry: (failureCount, error) => {
-      if ((error as AxiosError)?.code === 'NETWORK_ERROR' || !(error as AxiosError)?.response) {
-        return failureCount < 1;
-      }
-      return failureCount < 3;
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 5 * 60 * 1000,
     ...options,
   });
 };
@@ -407,14 +324,6 @@ export const useReadAnswersApiV1AnswersGet = (
   return useQuery({
     queryKey: ['answers', params],
     queryFn: () => readAnswersApiV1AnswersGet(params),
-    retry: (failureCount, error) => {
-      if ((error as AxiosError)?.code === 'NETWORK_ERROR' || !(error as AxiosError)?.response) {
-        return failureCount < 1;
-      }
-      return failureCount < 3;
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 5 * 60 * 1000,
     ...options,
   });
 };
@@ -426,14 +335,6 @@ export const useReadUsersApiV1UsersGet = (
   return useQuery({
     queryKey: ['users', params],
     queryFn: () => readUsersApiV1UsersGet(params),
-    retry: (failureCount, error) => {
-      if ((error as AxiosError)?.code === 'NETWORK_ERROR' || !(error as AxiosError)?.response) {
-        return failureCount < 1;
-      }
-      return failureCount < 3;
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 5 * 60 * 1000,
     ...options,
   });
 };
