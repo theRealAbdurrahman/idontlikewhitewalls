@@ -343,47 +343,50 @@ export const OfferHelp: React.FC = () => {
                   onKeyPress={handleKeyPress}
                   placeholder={`This is how I can help ${question.isAnonymous ? 'them' : question.authorName}...`}
                   rows={1}
-                  className="w-full p-3 pr-12 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_600)] focus:border-transparent resize-none max-h-24 bg-[#FBFBFB]"
+                  className="w-full p-3 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_600)] focus:border-transparent resize-none max-h-24 bg-[#FBFBFB]"
                   style={{ minHeight: "44px" }}
                   disabled={isLoading}
                 />
-                
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim() || isLoading}
-                  className="absolute right-2 bottom-2 w-8 h-8 bg-[var(--ColorYellow_primary_colorYellow_800)] hover:bg-[var(--ColorYellow_primary_colorYellow_900)] text-black rounded-full p-0 disabled:opacity-50"
-                >
-                  <SendIcon className="w-4 h-4" />
-                </Button>
               </div>
               
               {/* Rich Input Icons */}
-              <div className="flex gap-4 px-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="p-0 text-gray-500 hover:text-gray-700"
-                  onClick={() => console.log("Location sharing not implemented")}
-                >
-                  <MapPinIcon className="w-5 h-5" />
-                </Button>
+              <div className="flex items-center justify-between px-2">
+                <div className="flex gap-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="p-0 text-gray-500 hover:text-gray-700"
+                    onClick={() => console.log("Location sharing not implemented")}
+                  >
+                    <MapPinIcon className="w-5 h-5" />
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="p-0 text-gray-500 hover:text-gray-700"
+                    onClick={() => console.log("Image upload not implemented")}
+                  >
+                    <ImageIcon className="w-5 h-5" />
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="p-0 text-gray-500 hover:text-gray-700"
+                    onClick={() => console.log("Voice message not implemented")}
+                  >
+                    <MicIcon className="w-5 h-5" />
+                  </Button>
+                </div>
                 
+                {/* Send Button - moved to right side of icons row */}
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="p-0 text-gray-500 hover:text-gray-700"
-                  onClick={() => console.log("Image upload not implemented")}
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim() || isLoading}
+                  className="px-6 py-2 h-10 bg-[var(--ColorYellow_primary_colorYellow_800)] hover:bg-[var(--ColorYellow_primary_colorYellow_900)] text-black rounded-full font-medium disabled:opacity-50"
                 >
-                  <ImageIcon className="w-5 h-5" />
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="p-0 text-gray-500 hover:text-gray-700"
-                  onClick={() => console.log("Voice message not implemented")}
-                >
-                  <MicIcon className="w-5 h-5" />
+                  {isLoading ? "Sending..." : "Send"}
                 </Button>
               </div>
             </div>
