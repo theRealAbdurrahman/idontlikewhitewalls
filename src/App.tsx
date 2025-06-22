@@ -32,7 +32,7 @@ export const App = (): JSX.Element => {
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetails />} />
           <Route path="/messages" element={<Messages />} />
-          <Route path="/messages/:id" element={<Chat />} />
+          <Route path="/chat/:id" element={<Chat />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<UserProfile />} />

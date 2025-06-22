@@ -19,7 +19,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   
   // Determine if we should show the header/filter based on current route
   const showHeader = !location.pathname.includes("/create-question") && 
-                    !location.pathname.includes("/messages") &&
+                    !location.pathname.includes("/chat") &&
                     !location.pathname.includes("/offer-help");
                     console.log("Current Path:", location.pathname);
                     
@@ -27,7 +27,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Determine if we should show bottom navigation
   const showBottomNav = !location.pathname.includes("/create-question") && 
-                       !location.pathname.includes("/messages") &&
+                       !location.pathname.includes("/chat") &&
                        !location.pathname.includes("/offer-help");
 
   return (

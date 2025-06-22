@@ -16,7 +16,7 @@ export const Messages: React.FC = () => {
 
   const handleThreadClick = (threadId: string) => {
     markMessagesRead(threadId);
-    navigate(`/messages/${threadId}`);
+    navigate(`/chat/${threadId}`);
   };
 
   if (chatThreads.length === 0) {

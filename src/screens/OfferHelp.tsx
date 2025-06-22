@@ -142,7 +142,7 @@ export const OfferHelp: React.FC = () => {
 
       // Navigate to regular chat after sending
       setTimeout(() => {
-        navigate(`/messages/${threadId}`);
+        navigate(`/chat/${threadId}`);
       }, 1000);
 
     } catch (error) {
@@ -279,7 +279,7 @@ export const OfferHelp: React.FC = () => {
       </Card>
 
       {/* Messages Area */}
-      <div className="flex-1 px-4 py-2 overflow-y-auto">
+      <div className="flex-1 px-4 py-2 overflow-y-auto max-h-[500px]">
         <div className="space-y-4">
           {threadMessages
             .filter(msg => msg.type !== "preview" && msg.senderId === user.id)
