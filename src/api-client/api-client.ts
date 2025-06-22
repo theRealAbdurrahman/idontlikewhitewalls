@@ -8,6 +8,7 @@
 import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { useMutation, useQuery, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
 import { apiConfig, shouldLogApiRequests } from '../config/api';
+import type * from './models';
 
 /**
  * Configure axios instance with base URL and interceptors
