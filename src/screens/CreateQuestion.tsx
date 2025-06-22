@@ -47,7 +47,7 @@ export const CreateQuestion: React.FC = () => {
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedEvents, setSelectedEvents] = useState<string[]>(["event-1"]); // Default to first event
+  const [selectedEvents, setSelectedEvents] = useState<string[]>(['']); // Default to first event
   const [visibility, setVisibility] = useState<"anyone" | "network" | "event">("anyone");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -159,7 +159,7 @@ export const CreateQuestion: React.FC = () => {
     if (selectedEvents.length === 0) return "Select events";
     if (selectedEvents.length === 1) {
       const event = events.find(e => e.id === selectedEvents[0]);
-      return event?.name || "Unknown Event";
+      return event?.name || "All events";
     }
     return `${selectedEvents.length} events selected`;
   };
@@ -276,7 +276,7 @@ export const CreateQuestion: React.FC = () => {
 
   // Form validation - title is required
   const isFormValid = 
-    title.trim().length >= 10 && 
+    title.trim().length >= 3 && 
     selectedEvents.length > 0 && 
     !createQuestionMutation.isPending && 
     !isSubmitting;
@@ -331,12 +331,12 @@ export const CreateQuestion: React.FC = () => {
                   ))
                 )}
               </div>
-              <div className="mt-4 pt-3 border-t border-gray-200">
+              <div className="mt-4 pt-3">
                 <Button 
                   onClick={() => setIsEventsDropdownOpen(false)}
                   className="w-full bg-[#3ec6c6] hover:bg-[#3999a8] text-white"
                 >
-                  Save Selection ({selectedEvents.length})
+                  Save Selection
                 </Button>
               </div>
             </div>
@@ -365,14 +365,11 @@ export const CreateQuestion: React.FC = () => {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Unable to find the room for Contum computing session with Dr. Drako. Does anybody know?"
+                placeholder="I need help with..."
                 className="w-full text-xl font-semibold placeholder-gray-400 border-none bg-transparent focus:outline-none resize-none leading-tight"
                 maxLength={200}
                 disabled={isSubmitting}
               />
-              <div className="text-right text-xs text-gray-500 mt-1">
-                {title.length}/200 characters {title.trim().length < 10 && title.length > 0 && "(minimum 10)"}
-              </div>
             </div>
 
             {/* Description Textarea */}
@@ -380,22 +377,18 @@ export const CreateQuestion: React.FC = () => {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Briefly describe what you need help with (optional)"
+                placeholder="Briefly describe what you need help with (optional)  #tags"
                 className="w-full h-40 text-base placeholder-gray-400 border-none bg-transparent focus:outline-none resize-none leading-relaxed"
                 maxLength={1000}
                 disabled={isSubmitting}
               />
-              <div className="text-right text-xs text-gray-500 mt-1">
-                {description.length}/1000 characters
-              </div>
             </div>
           </div>
 
           {/* Bottom Section */}
-          <div className="px-4 py-4 border-t border-gray-200 bg-[#fbfbfb]">
+          <div className="px-4 py-4 border-gray-200 bg-[#fbfbfb]">
             {/* Visibility Selection */}
             <div className="mb-4 flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-900">Visibility:</span>
               <DropdownMenu open={isVisibilityDropdownOpen} onOpenChange={setIsVisibilityDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -445,11 +438,10 @@ export const CreateQuestion: React.FC = () => {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-              </div>
             </div>
 
             {/* Anonymous Toggle */}
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -463,7 +455,7 @@ export const CreateQuestion: React.FC = () => {
                   <p className="text-xs text-gray-600">Your name won't be shown with this question</p>
                 </div>
               </label>
-            </div>
+            </div> */}
 
             {/* Action Buttons Row - FIXED LAYOUT */}
             <div className="flex items-center justify-between">
