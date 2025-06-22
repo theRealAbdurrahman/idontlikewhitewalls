@@ -21,8 +21,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const showHeader = !location.pathname.includes("/create-question") && 
                     !location.pathname.includes("/chat") &&
                     !location.pathname.includes("/offer-help");
-                    console.log("Current Path:", location.pathname);
-                    
   const showFilterBar = location.pathname === "/home";
 
   // Determine if we should show bottom navigation

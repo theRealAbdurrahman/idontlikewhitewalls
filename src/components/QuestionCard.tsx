@@ -183,11 +183,18 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   // Format the time ago
   const timeAgo = formatDistanceToNow(new Date(question.createdAt), { addSuffix: true });
 
+  /**
+   * Handle clicking on the question content area
+   */
+  const handleQuestionClick = () => {
+    navigate(`/questions/${question.id}`);
+  };
+
   return (
     <>
       <style>{customStyles}</style>
       <Card className="w-full bg-neutral-50 rounded-[20px] border-none shadow-sm">
-        <CardContent className="p-5 space-y-5">
+        <CardContent className="p-5 space-y-5 cursor-pointer" onClick={handleQuestionClick}>
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">

@@ -10,6 +10,7 @@ import { Profile } from "./screens/Profile";
 import { Login } from "./screens/Login";
 import { CreateQuestion } from "./screens/CreateQuestion";
 import { EventDetails } from "./screens/EventDetails";
+import { QuestionDetails } from "./screens/QuestionDetails";
 import { UserProfile } from "./screens/UserProfile";
 import { Chat } from "./screens/Chat";
 import { OfferHelp } from "./screens/OfferHelp";
@@ -31,6 +32,7 @@ export const App = (): JSX.Element => {
           <Route path="/home" element={<Home />} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetails />} />
+          <Route path="/questions/:id" element={<QuestionDetails />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/chat/:id" element={<Chat />} />
           <Route path="/notifications" element={<Notifications />} />
