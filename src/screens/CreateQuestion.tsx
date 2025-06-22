@@ -52,6 +52,7 @@ export const CreateQuestion: React.FC = () => {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEventsDropdownOpen, setIsEventsDropdownOpen] = useState(false);
+  const [isVisibilityDropdownOpen, setIsVisibilityDropdownOpen] = useState(false);
 
   // Transform API events data for the component
   const events = React.useMemo(() => {
@@ -161,6 +162,22 @@ export const CreateQuestion: React.FC = () => {
       return event?.name || "Unknown Event";
     }
     return `${selectedEvents.length} events selected`;
+  };
+
+  /**
+   * Get display text for selected visibility option
+   */
+  const getVisibilityText = () => {
+    switch (visibility) {
+      case "anyone":
+        return "Public";
+      case "network":
+        return "My network";
+      case "event":
+        return "This event only";
+      default:
+        return "Public";
+    }
   };
 
   /**
@@ -377,46 +394,57 @@ export const CreateQuestion: React.FC = () => {
           {/* Bottom Section */}
           <div className="px-4 py-4 border-t border-gray-200 bg-[#fbfbfb]">
             {/* Visibility Selection */}
-            <div className="mb-4">
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="visibility"
-                    value="anyone"
-                    checked={visibility === "anyone"}
-                    onChange={() => setVisibility("anyone")}
-                    className="w-4 h-4 text-[#3ec6c6]"
+            <div className="mb-4 flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-900">Visibility:</span>
+              <DropdownMenu open={isVisibilityDropdownOpen} onOpenChange={setIsVisibilityDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full border-gray-300 bg-white hover:bg-gray-50 font-medium text-gray-900"
                     disabled={isSubmitting}
-                  />
-                  <span className="text-sm font-medium text-gray-900">Public</span>
-                </label>
-                
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="visibility"
-                    value="network"
-                    checked={visibility === "network"}
-                    onChange={() => setVisibility("network")}
-                    className="w-4 h-4 text-[#3ec6c6]"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-sm font-medium text-gray-900">My network</span>
-                </label>
-                
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="visibility"
-                    value="event"
-                    checked={visibility === "event"}
-                    onChange={() => setVisibility("event")}
-                    className="w-4 h-4 text-[#3ec6c6]"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-sm font-medium text-gray-900">This event only</span>
-                </label>
+                  >
+                    <span>{getVisibilityText()}</span>
+                    <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 p-2" align="start">
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => {
+                        setVisibility("anyone");
+                        setIsVisibilityDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
+                        visibility === "anyone" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
+                      }`}
+                    >
+                      Public
+                    </button>
+                    <button
+                      onClick={() => {
+                        setVisibility("network");
+                        setIsVisibilityDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
+                        visibility === "network" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
+                      }`}
+                    >
+                      My network
+                    </button>
+                    <button
+                      onClick={() => {
+                        setVisibility("event");
+                        setIsVisibilityDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
+                        visibility === "event" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
+                      }`}
+                    >
+                      This event only
+                    </button>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               </div>
             </div>
 
