@@ -26,6 +26,7 @@ export const Home: React.FC = () => {
   // Transform API data to component format
   const questions = React.useMemo(() => {
     if (!questionsData?.data) return [];
+    console.log("Questions Data:", questionsData.data);
     
     return questionsData.data.map((question) => ({
       id: question.id,

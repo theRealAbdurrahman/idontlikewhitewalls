@@ -313,7 +313,7 @@ export const OfferHelp: React.FC = () => {
       {!hasAlreadyOfferedHelp && (
         <>
           {/* Visibility Toggle Section - Separated */}
-          <div className="p-4 bg-[#FBFBFB]">
+          <div className="p-4 m-3 rounded-xl bg-[#FBFBFB]">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <p className="text-sm font-medium text-black mb-1">
