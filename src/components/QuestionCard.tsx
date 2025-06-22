@@ -12,6 +12,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { useAuthStore } from "../stores/authStore";
+import { useAppStore } from "../stores/appStore";
 
 /**
  * Custom styles for SVG icon color filtering
@@ -60,6 +61,7 @@ interface QuestionCardProps {
  */
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const { user } = useAuthStore();
+  const { chatThreads } = useAppStore();
   const navigate = useNavigate();
   
   // API mutations for interactions
@@ -162,9 +164,20 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const handleCanHelp = () => {
     if (!user) return;
     
-    // Navigate to offer help screen instead of creating interaction immediately
-    // The interaction will be created when the user actually sends a help message
-    navigate(`/offer-help/${question.id}`);
+    // Check if there's already a chat thread between the user and question author
+    const existingThread = chatThreads.find(thread => 
+      thread.participants.includes(user.id) && 
+      thread.participants.includes(question.authorId) &&
+      thread.questionId === question.id
+    );
+    
+    if (existingThread) {
+      // Navigate to existing chat thread
+      navigate(`/messages/${existingThread.id}`);
+    } else {
+      // Navigate to offer help screen to start a new conversation
+      navigate(`/offer-help/${question.id}`);
+    }
   };
 
   // Format the time ago
