@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/tabs";
 import { useAuthStore } from "../stores/authStore";
 import { useAppStore } from "../stores/appStore";
 
