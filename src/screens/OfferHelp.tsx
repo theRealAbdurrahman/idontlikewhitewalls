@@ -34,10 +34,12 @@ export const OfferHelp: React.FC = () => {
   const { user } = useAuthStore();
   const { questions, chatThreads, messages, addMessage, setMessages } = useAppStore();
   const { toast } = useToast();
+  console.log({chatThreads, messages});
   
   const [newMessage, setNewMessage] = useState("");
   const [isPublicVisible, setIsPublicVisible] = useState(true); // Default: ON
   const [isLoading, setIsLoading] = useState(false);
+  // TODO: this should be if there's already a chat thread between the user and question author
   const [hasAlreadyOfferedHelp, setHasAlreadyOfferedHelp] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -310,7 +312,7 @@ export const OfferHelp: React.FC = () => {
       </div>
 
       {/* Message Input Section */}
-      {!hasAlreadyOfferedHelp && (
+      { (
         <>
           {/* Visibility Toggle Section - Separated */}
           <div className="p-4 m-3 rounded-xl bg-[#FBFBFB]">
@@ -323,11 +325,11 @@ export const OfferHelp: React.FC = () => {
                   Your message will always remain private.
                 </p>
               </div>
-              <Switch
+            {hasAlreadyOfferedHelp && <Switch
                 checked={isPublicVisible}
                 onCheckedChange={setIsPublicVisible}
                 className="data-[state=checked]:bg-[#34C759]"
-              />
+              />}  
             </div>
           </div>
           
@@ -395,7 +397,7 @@ export const OfferHelp: React.FC = () => {
       )}
       
       {/* Already Offered Help Message */}
-      {hasAlreadyOfferedHelp && (
+      {/* {hasAlreadyOfferedHelp && (
         <div className="p-4 bg-[#FBFBFB] border-t border-gray-200">
           <Card>
             <CardContent className="p-3 text-center">
@@ -406,7 +408,7 @@ export const OfferHelp: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
