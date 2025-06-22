@@ -265,9 +265,9 @@ export const CreateQuestion: React.FC = () => {
     !isSubmitting;
 
   return (
-    <div className="bg-[var(--ColorYellow_primary_colorYellow_50)] min-h-screen flex flex-col">
+    <div className="bg-[#fbfbfb] min-h-screen flex flex-col">
       {/* Sticky Header - FIXED LAYOUT */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-4 bg-[var(--ColorYellow_primary_colorYellow_50)] border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-4 bg-[#fbfbfb] border-b border-gray-200">
         {/* Left Side - Events Dropdown ONLY */}
         <DropdownMenu open={isEventsDropdownOpen} onOpenChange={setIsEventsDropdownOpen}>
           <DropdownMenuTrigger asChild>
@@ -317,7 +317,7 @@ export const CreateQuestion: React.FC = () => {
               <div className="mt-4 pt-3 border-t border-gray-200">
                 <Button 
                   onClick={() => setIsEventsDropdownOpen(false)}
-                  className="w-full bg-[var(--ColorTurquoise_secondaryTurquoise_600)] hover:bg-[var(--ColorTurquoise_secondaryTurquoise_700)] text-white"
+                  className="w-full bg-[#3ec6c6] hover:bg-[#3999a8] text-white"
                 >
                   Save Selection ({selectedEvents.length})
                 </Button>
@@ -375,7 +375,7 @@ export const CreateQuestion: React.FC = () => {
           </div>
 
           {/* Bottom Section */}
-          <div className="px-4 py-4 border-t border-gray-200 bg-[var(--ColorYellow_primary_colorYellow_50)]">
+          <div className="px-4 py-4 border-t border-gray-200 bg-[#fbfbfb]">
             {/* Visibility Selection */}
             <div className="mb-4">
               <div className="flex items-center gap-4">
@@ -386,7 +386,7 @@ export const CreateQuestion: React.FC = () => {
                     value="anyone"
                     checked={visibility === "anyone"}
                     onChange={() => setVisibility("anyone")}
-                    className="w-4 h-4 text-[var(--ColorTurquoise_secondaryTurquoise_600)]"
+                    className="w-4 h-4 text-[#3ec6c6]"
                     disabled={isSubmitting}
                   />
                   <span className="text-sm font-medium text-gray-900">Public</span>
@@ -399,7 +399,7 @@ export const CreateQuestion: React.FC = () => {
                     value="network"
                     checked={visibility === "network"}
                     onChange={() => setVisibility("network")}
-                    className="w-4 h-4 text-[var(--ColorTurquoise_secondaryTurquoise_600)]"
+                    className="w-4 h-4 text-[#3ec6c6]"
                     disabled={isSubmitting}
                   />
                   <span className="text-sm font-medium text-gray-900">My network</span>
@@ -412,7 +412,7 @@ export const CreateQuestion: React.FC = () => {
                     value="event"
                     checked={visibility === "event"}
                     onChange={() => setVisibility("event")}
-                    className="w-4 h-4 text-[var(--ColorTurquoise_secondaryTurquoise_600)]"
+                    className="w-4 h-4 text-[#3ec6c6]"
                     disabled={isSubmitting}
                   />
                   <span className="text-sm font-medium text-gray-900">This event only</span>
@@ -454,7 +454,7 @@ export const CreateQuestion: React.FC = () => {
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                      <SparklesIcon className="w-5 h-5 text-[var(--ColorTurquoise_secondaryTurquoise_600)]" />
+                      <SparklesIcon className="w-5 h-5 text-[#3ec6c6]" />
                       AI Question Enhancement
                     </DialogTitle>
                     <DialogDescription className="text-left space-y-3">
@@ -477,7 +477,7 @@ export const CreateQuestion: React.FC = () => {
                   <DialogFooter className="flex-col sm:flex-col space-y-2">
                     <Button
                       onClick={handleSuggestFeature}
-                      className="w-full bg-[var(--ColorTurquoise_secondaryTurquoise_600)] hover:bg-[var(--ColorTurquoise_secondaryTurquoise_700)] text-white"
+                      className="w-full bg-[#3ec6c6] hover:bg-[#3999a8] text-white"
                     >
                       <MessageCircleIcon className="w-4 h-4 mr-2" />
                       Suggest a Feature
@@ -520,7 +520,7 @@ export const CreateQuestion: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={!isFormValid}
-                  className="bg-[var(--ColorYellow_primary_colorYellow_900)] hover:bg-[var(--ColorYellow_primary_colorYellow_800)] text-black px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-2"
+                  className="bg-[#ffb300] hover:bg-[#ffd580] text-black px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-2"
                 >
                   {isSubmitting ? (
                     <>

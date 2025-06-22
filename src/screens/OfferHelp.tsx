@@ -267,7 +267,7 @@ export const OfferHelp: React.FC = () => {
                 {question.tags.map((tag, index) => (
                   <span 
                     key={index}
-                    className="text-xs text-[var(--ColorTurquoise_secondaryTurquoise_700)] font-medium"
+                    className="text-xs text-[#3999a8] font-medium"
                   >
                     {tag}
                   </span>
