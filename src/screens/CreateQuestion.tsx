@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { XIcon, ImageIcon, TagIcon, SparklesIcon, MessageCircleIcon } from "lucide-react";
+import { XIcon, ImageIcon, MicIcon, SparklesIcon, MessageCircleIcon } from "lucide-react";
 import { useCreateQuestionApiV1QuestionsPost, useReadEventsApiV1EventsGet } from "../api-client/api-client";
 import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Switch } from "../components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +17,7 @@ import { useAuthStore } from "../stores/authStore";
 import { useToast } from "../hooks/use-toast";
 
 /**
- * Create Question screen component implementing the complete question composer
+ * Create Question screen component matching the Figma design
  */
 export const CreateQuestion: React.FC = () => {
   const navigate = useNavigate();
@@ -35,16 +33,32 @@ export const CreateQuestion: React.FC = () => {
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState<string>("no-event");
+  const [selectedEvent, setSelectedEvent] = useState<string>("event-1"); // Default to first event
   const [visibility, setVisibility] = useState<"anyone" | "network" | "event">("anyone");
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [tags, setTags] = useState<string[]>([]);
-  const [currentTag, setCurrentTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Transform API events data for the component
   const events = React.useMemo(() => {
-    if (!eventsData?.data) return [];
+    if (!eventsData?.data) {
+      // Fallback to mock event if API data not available
+      return [{
+        id: "event-1",
+        name: "The Summeet 2025",
+        description: "The ultimate tech conference",
+        location: "Dublin Convention Centre",
+        date: "2025-03-15T09:00:00Z",
+        endDate: "2025-03-17T18:00:00Z",
+        organizerId: "organizer-1",
+        organizerName: "Tech Events Ireland",
+        attendeeCount: 1250,
+        isCheckedIn: true,
+        isJoined: true,
+        tags: ["#Tech", "#Innovation", "#Networking"],
+        category: "Technology",
+        status: "upcoming" as const,
+      }];
+    }
     
     return eventsData.data.map((event) => ({
       id: event.id,
@@ -57,7 +71,7 @@ export const CreateQuestion: React.FC = () => {
       organizerName: "Event Organizer",
       attendeeCount: 0,
       isCheckedIn: false,
-      isJoined: true, // For now, assume user can post to all events
+      isJoined: true,
       tags: [],
       category: "General",
       status: "upcoming" as const,
@@ -69,34 +83,6 @@ export const CreateQuestion: React.FC = () => {
    */
   const handleClose = () => {
     navigate(-1);
-  };
-
-  /**
-   * Handle adding a new tag to the question
-   */
-  const handleAddTag = () => {
-    if (currentTag.trim() && !tags.includes(currentTag.trim()) && tags.length < 5) {
-      const newTag = currentTag.trim().startsWith("#") ? currentTag.trim() : `#${currentTag.trim()}`;
-      setTags([...tags, newTag]);
-      setCurrentTag("");
-    }
-  };
-
-  /**
-   * Handle removing a tag from the question
-   */
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-
-  /**
-   * Handle key press for adding tags
-   */
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddTag();
-    }
   };
 
   /**
@@ -120,16 +106,26 @@ export const CreateQuestion: React.FC = () => {
       return;
     }
 
+    // Validation: check if event is selected when required
+    if (visibility === "event" && (!selectedEvent || selectedEvent === "no-event")) {
+      toast({
+        title: "Event required",
+        description: "Please select at least one event to post this question.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       // Create question using API
       await createQuestionMutation.mutateAsync({
         data: {
-          event_id: selectedEvent !== "no-event" ? selectedEvent : "",
+          event_id: selectedEvent && selectedEvent !== "no-event" ? selectedEvent : events[0]?.id || "",
           user_id: user.id,
           title: title.trim(),
-          content: description.trim() || title.trim(), // Use title as content if description is empty
+          content: description.trim() || title.trim(),
           is_official: false,
           is_anonymous: isAnonymous,
           is_featured: false,
@@ -147,7 +143,7 @@ export const CreateQuestion: React.FC = () => {
     } catch (error) {
       console.error("Failed to create question:", error);
       
-      // Show error message based on network connectivity
+      // Show error message for network issues
       toast({
         title: "Couldn't post your question",
         description: "Couldn't post your question because of internet issues. Try again.",
@@ -158,87 +154,114 @@ export const CreateQuestion: React.FC = () => {
     }
   };
 
-  // Form validation - title is required, description is optional
+  // Form validation - title is required
   const isFormValid = title.trim().length > 0 && !createQuestionMutation.isPending && !isSubmitting;
 
   return (
-    <div className="bg-[var(--ColorYellow_primary_colorYellow_100)] min-h-screen">
+    <div className="bg-[var(--ColorYellow_primary_colorYellow_50)] min-h-screen flex flex-col">
       {/* Header */}
-      <header className="flex w-full h-[90px] items-center justify-between pt-10 pb-0 px-3.5 sticky top-0 bg-[var(--ColorYellow_primary_colorYellow_100)] z-10">
+      <header className="flex items-center justify-between px-4 py-3 bg-[var(--ColorYellow_primary_colorYellow_50)]">
         <Button
           variant="ghost"
           size="icon"
           onClick={handleClose}
-          className="w-[35px] h-[35px] rounded-full p-0"
+          className="w-8 h-8 p-0"
         >
           <XIcon className="w-5 h-5" />
         </Button>
-        
-        <h1 className="text-lg font-semibold text-black">Ask a Question</h1>
         
         <Button
           type="submit"
           form="question-form"
           disabled={!isFormValid}
-          className="bg-[var(--ColorTurquoise_secondaryTurquoise_600)] hover:bg-[var(--ColorTurquoise_secondaryTurquoise_700)] text-white px-4 py-2 rounded-full text-sm font-medium disabled:opacity-50"
+          className="bg-[var(--ColorYellow_primary_colorYellow_900)] hover:bg-[var(--ColorYellow_primary_colorYellow_800)] text-black px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50"
         >
           {isSubmitting ? "Posting..." : "Post"}
         </Button>
       </header>
 
-      {/* Form */}
-      <div className="px-4 py-6">
-        <form id="question-form" onSubmit={handleSubmit} className="space-y-6">
-          {/* Main Question Card */}
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              {/* Title */}
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                  Question Title *
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="I need help with..."
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_400)] focus:border-transparent"
-                  maxLength={200}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {title.length}/200 characters
-                </p>
-              </div>
+      {/* Form Container */}
+      <div className="flex-1 flex flex-col">
+        <form id="question-form" onSubmit={handleSubmit} className="flex-1 flex flex-col">
+          {/* Event Selection */}
+          <div className="px-4 py-3 border-b border-gray-200">
+            <Select value={selectedEvent} onValueChange={setSelectedEvent}>
+              <SelectTrigger className="w-full border-none bg-transparent p-0 h-auto text-left font-medium text-gray-900">
+                <SelectValue placeholder="Select an event..." />
+              </SelectTrigger>
+              <SelectContent>
+                {eventsLoading ? (
+                  <SelectItem value="loading" disabled>Loading events...</SelectItem>
+                ) : (
+                  events.map((event) => (
+                    <SelectItem key={event.id} value={event.id}>
+                      {event.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
 
-              {/* Description */}
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Briefly describe what you need help with (optional)"
-                  rows={4}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_400)] focus:border-transparent resize-none"
-                  maxLength={1000}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {description.length}/1000 characters
-                </p>
-              </div>
+          {/* Main Content Area */}
+          <div className="flex-1 px-4 py-4 space-y-4">
+            {/* Title Input */}
+            <div>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="I need help with..."
+                className="w-full text-lg font-medium placeholder-gray-500 border-none bg-transparent focus:outline-none resize-none"
+                maxLength={200}
+              />
+            </div>
 
-              {/* Improve with AI Button */}
+            {/* Description Textarea */}
+            <div className="flex-1">
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Briefly describe what you need help with (optional)"
+                className="w-full h-48 text-base placeholder-gray-400 border-none bg-transparent focus:outline-none resize-none"
+                maxLength={1000}
+              />
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className="px-4 py-4 space-y-4">
+            {/* Visibility Selection */}
+            <div>
+              <Select value={visibility} onValueChange={(value: "anyone" | "network" | "event") => setVisibility(value)}>
+                <SelectTrigger className="w-full border-none bg-transparent p-0 h-auto text-left">
+                  <SelectValue>
+                    <span className="font-medium text-gray-900">
+                      {visibility === "anyone" && "Public"}
+                      {visibility === "network" && "My network"}
+                      {visibility === "event" && "This event only"}
+                    </span>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="anyone">Public (visible in all feeds)</SelectItem>
+                  <SelectItem value="network">My network (only visible to known contacts)</SelectItem>
+                  <SelectItem value="event">This event only (visible only while the event is active)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Action Buttons Row */}
+            <div className="flex items-center justify-between">
+              {/* Left Side - Improve with AI */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full h-12 border border-gray-300 text-gray-600 hover:text-gray-700 hover:border-gray-400"
+                    className="rounded-full bg-gray-100 border-gray-300 text-gray-700 px-4 py-2 text-sm"
                   >
-                    <SparklesIcon className="w-5 h-5 mr-2" />
+                    <SparklesIcon className="w-4 h-4 mr-2" />
                     Improve with AI?
                   </Button>
                 </DialogTrigger>
@@ -282,143 +305,30 @@ export const CreateQuestion: React.FC = () => {
                 </DialogContent>
               </Dialog>
 
-              {/* Image Upload Placeholder */}
-              <div>
+              {/* Right Side - Media Buttons */}
+              <div className="flex items-center gap-3">
                 <Button
                   type="button"
-                  variant="outline"
-                  className="w-full h-12 border-dashed border-2 border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-600"
+                  variant="ghost"
+                  size="icon"
+                  className="w-10 h-10 p-0 text-gray-500 hover:text-gray-700"
                   onClick={() => console.log("Image upload feature coming soon")}
                 >
-                  <ImageIcon className="w-5 h-5 mr-2" />
-                  Add Image (Optional)
+                  <ImageIcon className="w-5 h-5" />
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tags */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <TagIcon className="w-4 h-4 text-gray-600" />
-                <label htmlFor="tags" className="text-sm font-medium text-gray-700">
-                  Tags (Optional)
-                </label>
-              </div>
-              
-              <div className="flex flex-wrap gap-2 mb-3">
-                {tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <XIcon className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-              
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={currentTag}
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Add a tag..."
-                  className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--ColorTurquoise_secondaryTurquoise_400)] focus:border-transparent text-sm"
-                  maxLength={30}
-                />
+                
                 <Button
                   type="button"
-                  onClick={handleAddTag}
-                  disabled={!currentTag.trim() || tags.length >= 5}
-                  className="bg-[var(--ColorTurquoise_secondaryTurquoise_600)] hover:bg-[var(--ColorTurquoise_secondaryTurquoise_700)] text-white px-4 py-2 rounded-md text-sm"
+                  variant="ghost"
+                  size="icon"
+                  className="w-10 h-10 p-0 text-gray-500 hover:text-gray-700"
+                  onClick={() => console.log("Voice input feature coming soon")}
                 >
-                  Add
+                  <MicIcon className="w-5 h-5" />
                 </Button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Maximum 5 tags
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Settings */}
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Question Settings</h3>
-              
-              {/* Event Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Associated Event (Optional)
-                </label>
-                <Select value={selectedEvent} onValueChange={setSelectedEvent}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select an event..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no-event">No specific event</SelectItem>
-                    {eventsLoading ? (
-                      <SelectItem value="loading" disabled>Loading events...</SelectItem>
-                    ) : (
-                      events.map((event) => (
-                        <SelectItem key={event.id} value={event.id}>
-                          {event.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                {events.length === 0 && !eventsLoading && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    No events available. Join events to post questions to them.
-                  </p>
-                )}
-              </div>
-
-              {/* Visibility */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Who can see this question?
-                </label>
-                <Select value={visibility} onValueChange={(value: "anyone" | "network" | "event") => setVisibility(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="anyone">Public (visible in all feeds)</SelectItem>
-                    <SelectItem value="network">My network (only visible to known contacts)</SelectItem>
-                    <SelectItem value="event">This event only (visible only while the event is active)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Anonymous Option */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <label htmlFor="anonymous" className="text-sm font-medium text-gray-700">
-                    Post anonymously
-                  </label>
-                  <p className="text-xs text-gray-500">
-                    Your name won't be shown with this question
-                  </p>
-                </div>
-                <Switch
-                  id="anonymous"
-                  checked={isAnonymous}
-                  onCheckedChange={setIsAnonymous}
-                />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </form>
       </div>
     </div>
