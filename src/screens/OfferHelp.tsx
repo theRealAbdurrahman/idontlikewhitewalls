@@ -336,7 +336,7 @@ export const OfferHelp: React.FC = () => {
             {/* Message Composer */}
             <div className="flex flex-col gap-2">
               {/* Text Input */}
-              <div className="relative">
+              <div className="sticky bottom-0 z-10">
                 <textarea
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
@@ -384,11 +384,11 @@ export const OfferHelp: React.FC = () => {
                 <Button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim() || isLoading}
-                  className="px-6 py-2 h-10 bg-[var(--ColorYellow_primary_colorYellow_900)] hover:bg-[var(--ColorYellow_primary_colorYellow_800)] text-black rounded-full font-medium disabled:opacity-50"
+                  className="px-6 py-2 h-10 bg-[#FFCA28] hover:bg-[var(--ColorYellow_primary_colorYellow_900)] text-black rounded-full font-medium disabled:opacity-50"
                 >
                   {isLoading ? "Sending..." : "Send"}
                 </Button>
-              </div>
+              </div>  
             </div>
           </div>
         </>

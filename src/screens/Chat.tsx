@@ -113,25 +113,25 @@ export const Chat: React.FC = () => {
   };
 
   // Handle edge cases
-  if (!thread || !user) {
-    return (
-      <div className="bg-[var(--ColorYellow_primary_colorYellow_100)] min-h-screen flex items-center justify-center p-4">
-        <Card>
-          <CardContent className="p-6 text-center">
-            <h1 className="text-xl font-bold text-black mb-2">Chat Not Found</h1>
-            <p className="text-gray-600 mb-4">This conversation doesn't exist or has been removed.</p>
-            <Button onClick={() => navigate("/messages")}>
-              Back to Messages
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // if (!thread || !user) {
+  //   return (
+  //     <div className="bg-[var(--ColorYellow_primary_colorYellow_100)] min-h-screen flex items-center justify-center p-4">
+  //       <Card>
+  //         <CardContent className="p-6 text-center">
+  //           <h1 className="text-xl font-bold text-black mb-2">Chat Not Found</h1>
+  //           <p className="text-gray-600 mb-4">This conversation doesn't exist or has been removed.</p>
+  //           <Button onClick={() => navigate("/messages")}>
+  //             Back to Messages
+  //           </Button>
+  //         </CardContent>
+  //       </Card>
+  //     </div>
+  //   );
+  // }
 
-  const otherParticipantIndex = thread.participantNames.findIndex(name => name !== "You");
-  const otherParticipantName = thread.participantNames[otherParticipantIndex] || "Unknown";
-  const otherParticipantAvatar = thread.participantAvatars[otherParticipantIndex];
+  const otherParticipantIndex = (thread?.participantNames || ['Dexter', 'You']).findIndex(name => name !== "You");
+  const otherParticipantName = thread?.participantNames[otherParticipantIndex] || "Unknown";
+  const otherParticipantAvatar = thread?.participantAvatars[otherParticipantIndex];
 
   return (
     <div className="bg-[var(--ColorYellow_primary_colorYellow_100)] min-h-screen flex flex-col">
@@ -154,9 +154,9 @@ export const Chat: React.FC = () => {
           
           <div className="flex-1">
             <h1 className="font-semibold text-black">{otherParticipantName}</h1>
-            {thread.questionTitle && (
+            {(thread?.questionTitle || 'title') && (
               <p className="text-xs text-gray-500 truncate">
-                Re: {thread.questionTitle}
+                Re: {thread?.questionTitle || 'title'}
               </p>
             )}
           </div>
@@ -172,11 +172,11 @@ export const Chat: React.FC = () => {
       </header>
 
       {/* Question Context */}
-      {thread.questionTitle && (
+      {(thread?.questionTitle || 'title') && (
         <Card className="mx-4 mt-4 mb-2 bg-[var(--ColorYellow_primary_colorYellow_50)]">
           <CardContent className="p-3">
             <p className="text-sm text-gray-600 mb-1">Question context:</p>
-            <p className="text-sm font-medium text-black">{thread.questionTitle}</p>
+            <p className="text-sm font-medium text-black">{thread?.questionTitle || 'title'}</p>
           </CardContent>
         </Card>
       )}
@@ -185,7 +185,7 @@ export const Chat: React.FC = () => {
       <div className="flex-1 px-4 py-2 overflow-y-auto">
         <div className="space-y-4">
           {threadMessages.map((message) => {
-            const isOwnMessage = message.senderId === user.id;
+            const isOwnMessage = message.senderId === user?.id;
             
             return (
               <div
@@ -196,8 +196,8 @@ export const Chat: React.FC = () => {
                   <div
                     className={`p-3 rounded-2xl ${
                       isOwnMessage
-                        ? "bg-[var(--ColorTurquoise_secondaryTurquoise_600)] text-white rounded-br-md"
-                        : "bg-[var(--ColorYellow_primary_colorYellow_50)] text-black rounded-bl-md shadow-sm"
+                        ? "bg-[#3ec6c6] text-white rounded-br-md"
+                        : "bg-[#fbfbfb] text-black rounded-bl-md shadow-sm"
                     }`}
                   >
                     <p className="text-sm leading-relaxed">{message.content}</p>
@@ -267,7 +267,7 @@ export const Chat: React.FC = () => {
             <Button
               onClick={handleSendMessage}
               disabled={!newMessage.trim()}
-              className="px-6 py-2 h-10 bg-[var(--ColorYellow_primary_colorYellow_900)] hover:bg-[var(--ColorYellow_primary_colorYellow_800)] text-black rounded-full font-medium disabled:opacity-50"
+              className="px-6 py-2 h-10 bg-[#ffb300] hover:bg-[#ffd580] text-black rounded-full font-medium disabled:opacity-50"
             >
               <SendIcon className="w-4 h-4 mr-2" />
               Send
