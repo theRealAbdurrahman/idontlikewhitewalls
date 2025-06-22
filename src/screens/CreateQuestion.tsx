@@ -455,7 +455,7 @@ export const CreateQuestion: React.FC = () => {
                   type="checkbox"
                   checked={isAnonymous}
                   onChange={(e) => setIsAnonymous(e.target.checked)}
-                  className="w-4 h-4 text-[var(--ColorTurquoise_secondaryTurquoise_600)]"
+                  className="w-4 h-4 text-[#3ec6c6]"
                   disabled={isSubmitting}
                 />
                 <div>
