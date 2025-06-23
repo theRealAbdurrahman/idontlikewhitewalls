@@ -152,6 +152,9 @@ export const CreateEvent: React.FC = () => {
     },
   });
 
+  // Watch the event name field for dynamic header updates
+  const eventName = form.watch("name");
+
   /**
    * Handle image upload
    */
@@ -385,7 +388,9 @@ export const CreateEvent: React.FC = () => {
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-4 bg-[#f0efeb]/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
         <div className="flex items-center gap-3">
           <BuildingIcon className="w-6 h-6 text-[#3ec6c6]" />
-          <h1 className="text-lg font-semibold text-black">Create Event</h1>
+          <h1 className="text-lg font-semibold text-black">
+            {eventName && eventName.trim() ? eventName : "Create Event"}
+          </h1>
         </div>
         
         <Button
