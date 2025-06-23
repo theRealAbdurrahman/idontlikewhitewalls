@@ -21,6 +21,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const showHeader = !location.pathname.includes("/create-question") && 
                     !location.pathname.includes("/chat") &&
                     !location.pathname.includes("/questions/") &&
+                    !location.pathname.includes("/create-event") &&
                     !location.pathname.includes("/offer-help");
   const showFilterBar = location.pathname === "/home";
 
@@ -28,6 +29,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const showBottomNav = !location.pathname.includes("/create-question") && 
                        !location.pathname.includes("/chat") &&
                        !location.pathname.includes("/questions/") &&
+                       !location.pathname.includes("/create-event") &&
                        !location.pathname.includes("/offer-help");
 
   return (

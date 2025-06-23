@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,9 +12,11 @@ import {
   BuildingIcon,
   TagIcon,
   EyeIcon,
-  BellIcon,
   LockIcon,
-  PlusIcon
+  PlusIcon,
+  UploadIcon,
+  SearchIcon,
+  LinkIcon
 } from "lucide-react";
 import { useCreateEventApiV1EventsPost } from "../api-client/api-client";
 import { Button } from "../components/ui/button";
@@ -38,14 +40,25 @@ import {
   FormLabel,
   FormMessage,
 } from "../components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
 import { Badge } from "../components/ui/badge";
 import { useAuthStore } from "../stores/authStore";
+import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
 
 /**
  * Form validation schema using Zod
  */
 const eventFormSchema = z.object({
+  bannerImage: z.string().optional(),
   name: z.string().min(3, "Event name must be at least 3 characters").max(100, "Event name too long"),
   startDateTime: z.string().min(1, "Start date and time is required"),
   endDateTime: z.string().min(1, "End date and time is required"),
@@ -53,12 +66,11 @@ const eventFormSchema = z.object({
   location: z.string().min(3, "Location is required").max(200, "Location too long"),
   eventType: z.string().min(1, "Event type is required"),
   community: z.string().min(1, "Community selection is required"),
-  bannerImage: z.string().optional(),
   tags: z.array(z.string()).max(10, "Maximum 10 tags allowed").optional(),
+  taggedEvents: z.array(z.string()).max(5, "Maximum 5 events can be tagged").optional(),
   coHost: z.string().optional(),
   isPrivate: z.boolean().default(false),
   allowCrossTagging: z.boolean().default(false),
-  enableNotifications: z.boolean().default(false),
 }).refine((data) => {
   const start = new Date(data.startDateTime);
   const end = new Date(data.endDateTime);
@@ -100,6 +112,7 @@ const communities = [
 export const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { events } = useAppStore();
   const { toast } = useToast();
   
   // Local state
@@ -107,6 +120,14 @@ export const CreateEvent: React.FC = () => {
   const [generatedPin, setGeneratedPin] = useState<string>("");
   const [tagInput, setTagInput] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedBannerImage, setSelectedBannerImage] = useState<string>("");
+  const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
+  const [isTagEventDialogOpen, setIsTagEventDialogOpen] = useState(false);
+  const [eventSearchQuery, setEventSearchQuery] = useState("");
+  const [selectedTaggedEvents, setSelectedTaggedEvents] = useState<string[]>([]);
+  
+  // Refs
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // API mutation
   const createEventMutation = useCreateEventApiV1EventsPost();
@@ -115,6 +136,7 @@ export const CreateEvent: React.FC = () => {
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
+      bannerImage: "",
       name: "",
       startDateTime: "",
       endDateTime: "",
@@ -122,14 +144,69 @@ export const CreateEvent: React.FC = () => {
       location: "",
       eventType: "",
       community: "planet-earth",
-      bannerImage: "",
       tags: [],
+      taggedEvents: [],
       coHost: "",
       isPrivate: false,
       allowCrossTagging: false,
-      enableNotifications: false,
     },
   });
+
+  /**
+   * Handle image upload
+   */
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image under 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file (PNG, JPG, etc.).",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setBannerImageFile(file);
+
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setSelectedBannerImage(result);
+        form.setValue("bannerImage", result);
+      };
+      reader.readAsDataURL(file);
+
+      toast({
+        title: "Image uploaded",
+        description: "Banner image has been added to your event.",
+      });
+    }
+  };
+
+  /**
+   * Remove banner image
+   */
+  const removeBannerImage = () => {
+    setSelectedBannerImage("");
+    setBannerImageFile(null);
+    form.setValue("bannerImage", "");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   /**
    * Generate 3-digit PIN when private event is enabled
@@ -185,6 +262,42 @@ export const CreateEvent: React.FC = () => {
   };
 
   /**
+   * Filter events for tagging
+   */
+  const filteredEvents = events.filter(event => 
+    event.name.toLowerCase().includes(eventSearchQuery.toLowerCase()) &&
+    !selectedTaggedEvents.includes(event.id)
+  );
+
+  /**
+   * Add tagged event
+   */
+  const addTaggedEvent = (eventId: string) => {
+    if (selectedTaggedEvents.length < 5) {
+      const newTaggedEvents = [...selectedTaggedEvents, eventId];
+      setSelectedTaggedEvents(newTaggedEvents);
+      form.setValue("taggedEvents", newTaggedEvents);
+      setEventSearchQuery("");
+    }
+  };
+
+  /**
+   * Remove tagged event
+   */
+  const removeTaggedEvent = (eventId: string) => {
+    const newTaggedEvents = selectedTaggedEvents.filter(id => id !== eventId);
+    setSelectedTaggedEvents(newTaggedEvents);
+    form.setValue("taggedEvents", newTaggedEvents);
+  };
+
+  /**
+   * Get event name by ID
+   */
+  const getEventName = (eventId: string) => {
+    return events.find(event => event.id === eventId)?.name || "Unknown Event";
+  };
+
+  /**
    * Handle form submission
    */
   const onSubmit = async (data: EventFormData) => {
@@ -220,11 +333,11 @@ export const CreateEvent: React.FC = () => {
       console.log("Event created successfully:", response);
 
       // TODO: In a real app, you would also:
-      // - Upload banner image if provided
+      // - Upload banner image to storage service
       // - Create event tags
+      // - Create event relationships for tagged events
       // - Send invitations to co-hosts
       // - Handle private event PIN storage
-      // - Set up community notifications
 
       toast({
         title: "Event created!",
@@ -290,6 +403,84 @@ export const CreateEvent: React.FC = () => {
         <div className="max-w-2xl mx-auto p-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Banner Image - Moved to top */}
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                    <ImageIcon className="w-5 h-5" />
+                    Event Banner
+                  </h2>
+
+                  <FormField
+                    control={form.control}
+                    name="bannerImage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="space-y-4">
+                            {selectedBannerImage ? (
+                              <div className="relative">
+                                <img
+                                  src={selectedBannerImage}
+                                  alt="Event banner preview"
+                                  className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={removeBannerImage}
+                                  className="absolute top-2 right-2"
+                                >
+                                  <XIcon className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div 
+                                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
+                                onClick={() => fileInputRef.current?.click()}
+                              >
+                                <UploadIcon className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                                <p className="text-sm text-gray-600 mb-2">
+                                  Click to upload or drag and drop
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  PNG, JPG up to 5MB • Recommended: 1200x630px
+                                </p>
+                              </div>
+                            )}
+                            
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              className="hidden"
+                              disabled={isSubmitting}
+                            />
+                            
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={isSubmitting}
+                              className="w-full"
+                            >
+                              <UploadIcon className="w-4 h-4 mr-2" />
+                              {selectedBannerImage ? "Change Image" : "Upload Banner Image"}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Add an eye-catching banner to make your event stand out
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
               {/* Basic Information */}
               <Card>
                 <CardContent className="p-6 space-y-4">
@@ -481,42 +672,13 @@ export const CreateEvent: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Optional Information */}
+              {/* Tags and Related Events */}
               <Card>
                 <CardContent className="p-6 space-y-4">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <TagIcon className="w-5 h-5" />
-                    Optional Information
+                    Tags & Related Events
                   </h2>
-
-                  {/* Banner Image */}
-                  <FormField
-                    control={form.control}
-                    name="bannerImage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Banner Image</FormLabel>
-                        <FormControl>
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-                            <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-600 mb-2">
-                              Click to upload or drag and drop
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              PNG, JPG up to 5MB (Coming soon)
-                            </p>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              disabled
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   {/* Tags */}
                   <FormItem>
@@ -566,6 +728,104 @@ export const CreateEvent: React.FC = () => {
                     </div>
                     <FormDescription>
                       Use tags to help people discover your event
+                    </FormDescription>
+                  </FormItem>
+
+                  {/* Tag Other Events */}
+                  <FormItem>
+                    <FormLabel>Tag Other Events (Max 5)</FormLabel>
+                    <div className="space-y-2">
+                      <Dialog open={isTagEventDialogOpen} onOpenChange={setIsTagEventDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full justify-start"
+                            disabled={isSubmitting || selectedTaggedEvents.length >= 5}
+                          >
+                            <LinkIcon className="w-4 h-4 mr-2" />
+                            Tag related events
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px]">
+                          <DialogHeader>
+                            <DialogTitle>Tag Related Events</DialogTitle>
+                            <DialogDescription>
+                              Connect your event with other related events in the community.
+                            </DialogDescription>
+                          </DialogHeader>
+                          
+                          <div className="space-y-4">
+                            <div className="relative">
+                              <SearchIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                              <Input
+                                placeholder="Search events..."
+                                value={eventSearchQuery}
+                                onChange={(e) => setEventSearchQuery(e.target.value)}
+                                className="pl-10"
+                              />
+                            </div>
+                            
+                            <div className="max-h-60 overflow-y-auto space-y-2">
+                              {filteredEvents.length > 0 ? (
+                                filteredEvents.slice(0, 10).map((event) => (
+                                  <div
+                                    key={event.id}
+                                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                                    onClick={() => addTaggedEvent(event.id)}
+                                  >
+                                    <div>
+                                      <p className="font-medium text-sm">{event.name}</p>
+                                      <p className="text-xs text-gray-500">{event.location}</p>
+                                    </div>
+                                    <PlusIcon className="w-4 h-4 text-[#3ec6c6]" />
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-center text-gray-500 py-4">
+                                  {eventSearchQuery ? "No events found" : "Start typing to search events"}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <DialogFooter>
+                            <Button
+                              type="button"
+                              onClick={() => setIsTagEventDialogOpen(false)}
+                            >
+                              Done
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+
+                      {selectedTaggedEvents.length > 0 && (
+                        <div className="space-y-2">
+                          {selectedTaggedEvents.map((eventId) => (
+                            <div
+                              key={eventId}
+                              className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded-lg"
+                            >
+                              <span className="text-sm font-medium text-blue-900">
+                                {getEventName(eventId)}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeTaggedEvent(eventId)}
+                                className="h-auto w-auto p-1 text-blue-700 hover:text-red-600"
+                              >
+                                <XIcon className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <FormDescription>
+                      Help attendees discover related events and build connections
                     </FormDescription>
                   </FormItem>
 
@@ -637,29 +897,6 @@ export const CreateEvent: React.FC = () => {
                           <FormLabel>Allow Event Cross-tagging</FormLabel>
                           <FormDescription>
                             Let attendees tag this event in their posts
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            disabled={isSubmitting}
-                          />
-                        </FormControl>
-                      </div>
-                    )}
-                  />
-
-                  {/* Community Notifications */}
-                  <FormField
-                    control={form.control}
-                    name="enableNotifications"
-                    render={({ field }) => (
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <FormLabel>Community Notifications</FormLabel>
-                          <FormDescription>
-                            Send push and email notifications to community
                           </FormDescription>
                         </div>
                         <FormControl>
