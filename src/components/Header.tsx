@@ -17,6 +17,15 @@ export const Header: React.FC = () => {
   const getHeaderConfig = () => {
     const path = location.pathname;
     
+    if (path.includes("/user/")) {
+      return {
+        showBackButton: false, // ProfilePage handles its own header
+        title: null,
+        showSearch: false,
+        showAvatar: false,
+      };
+    }
+    
     if (path.includes("/profile/") && path !== "/profile") {
       return {
         showBackButton: true,

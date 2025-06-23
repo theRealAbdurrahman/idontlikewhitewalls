@@ -190,6 +190,16 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
     navigate(`/questions/${question.id}`);
   };
 
+  /**
+   * Handle clicking on the author's profile
+   */
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent question click event
+    if (!question.isAnonymous) {
+      navigate(`/user/${question.authorId}`);
+    }
+  };
+
   return (
     <>
       <style>{customStyles}</style>
@@ -198,7 +208,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <Avatar className="w-[35px] h-[35px]">
+              <Avatar 
+                className={`w-[35px] h-[35px] ${!question.isAnonymous ? 'cursor-pointer hover:ring-2 hover:ring-gray-200 transition-all' : ''}`}
+                onClick={handleAuthorClick}
+              >
                 <AvatarImage
                   src={question.isAnonymous ? undefined : question.authorAvatar}
                   alt={question.isAnonymous ? "Anonymous" : question.authorName}
@@ -210,7 +223,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
               </Avatar>
 
               <div className="flex flex-col">
-                <span className="font-medium text-[#484848] text-base">
+                <span 
+                  className={`font-medium text-[#484848] text-base ${!question.isAnonymous ? 'cursor-pointer hover:text-gray-600 transition-colors' : ''}`}
+                  onClick={handleAuthorClick}
+                >
                   {question.isAnonymous ? "Anonymous" : question.authorName}
                 </span>
                 <div className="flex items-center gap-1 text-xs text-[#ababab]">

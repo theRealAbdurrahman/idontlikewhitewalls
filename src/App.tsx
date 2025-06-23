@@ -12,6 +12,7 @@ import { CreateQuestion } from "./screens/CreateQuestion";
 import { EventDetails } from "./screens/EventDetails";
 import { QuestionDetails } from "./screens/QuestionDetails";
 import { UserProfile } from "./screens/UserProfile";
+import { ProfilePage } from "./screens/ProfilePage";
 import { Chat } from "./screens/Chat";
 import { OfferHelp } from "./screens/OfferHelp";
 import { useAuthStore } from "./stores/authStore";
@@ -38,6 +39,7 @@ export const App = (): JSX.Element => {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<UserProfile />} />
+          <Route path="/user/:id" element={<ProfilePage />} />
           <Route path="/create-question" element={<CreateQuestion />} />
           <Route path="/offer-help/:questionId" element={<OfferHelp />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
