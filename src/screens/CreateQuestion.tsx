@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { XIcon, ImageIcon, MicIcon, SparklesIcon, MessageCircleIcon, ChevronDownIcon } from "lucide-react";
+import { ArrowLeftIcon, BookmarkIcon, MoreVerticalIcon, ImageIcon, MicIcon, SparklesIcon, MessageCircleIcon, ChevronDownIcon, FlagIcon } from "lucide-react";
 import { useCreateQuestionApiV1QuestionsPost, useReadEventsApiV1EventsGet } from "../api-client/api-client";
 import { Button } from "../components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { Checkbox } from "../components/ui/checkbox";
@@ -53,6 +54,8 @@ export const CreateQuestion: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEventsDropdownOpen, setIsEventsDropdownOpen] = useState(false);
   const [isVisibilityDropdownOpen, setIsVisibilityDropdownOpen] = useState(false);
+ const [isBookmarked, setIsBookmarked] = useState(false);
+ const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
 
   // Transform API events data for the component
   const events = React.useMemo(() => {
@@ -116,9 +119,30 @@ export const CreateQuestion: React.FC = () => {
    * Handle closing the create question screen
    */
   const handleClose = () => {
-    navigate("/home");
+    navigate(-1);
   };
 
+  /**
+   * Handle bookmark toggle
+   */
+  const handleBookmarkToggle = () => {
+    setIsBookmarked(!isBookmarked);
+    toast({
+      title: isBookmarked ? "Bookmark removed" : "Bookmarked",
+      description: isBookmarked ? "Question draft removed from bookmarks" : "Question draft saved to bookmarks",
+    });
+  };
+
+  /**
+   * Handle report action
+   */
+  const handleReport = () => {
+    setIsOptionsMenuOpen(false);
+    toast({
+      title: "Report submitted",
+      description: "Thank you for helping us improve the platform.",
+    });
+  };
   /**
    * Handle navigating to suggest a feature (AI feature)
    */
@@ -283,9 +307,19 @@ export const CreateQuestion: React.FC = () => {
 
   return (
     <div className="bg-[#fbfbfb] min-h-screen flex flex-col">
-      {/* Sticky Header - FIXED LAYOUT */}
+      {/* Header - FIXED LAYOUT */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-4 bg-[#fbfbfb] border-b border-gray-200">
-        {/* Left Side - Events Dropdown ONLY */}
+        {/* Left Side - Back Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleClose}
+          className="w-[35px] h-[35px] rounded-full p-0 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeftIcon className="w-5 h-5" />
+        </Button>
+        
+        {/* Center - Events Dropdown */}
         <DropdownMenu open={isEventsDropdownOpen} onOpenChange={setIsEventsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <Button
@@ -298,7 +332,7 @@ export const CreateQuestion: React.FC = () => {
               <ChevronDownIcon className="w-4 h-4 text-gray-500" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-80 p-0" align="start">
+          <DropdownMenuContent className="w-80 p-0" align="center">
             <div className="p-4">
               <h3 className="font-semibold text-gray-900 mb-3">Select Events</h3>
               <div className="space-y-3 max-h-60 overflow-y-auto">
@@ -343,15 +377,45 @@ export const CreateQuestion: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
         
-        {/* Right Side - Close Button ONLY */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleClose}
-          className="w-8 h-8 p-0 text-gray-600 hover:text-gray-900"
-        >
-          <XIcon className="w-5 h-5" />
-        </Button>
+        {/* Right Side - Bookmark and Options Menu */}
+        <div className="flex items-center gap-2">
+          {/* Bookmark Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBookmarkToggle}
+            className={`w-[35px] h-[35px] rounded-full p-0 ${
+              isBookmarked ? "text-yellow-500" : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <BookmarkIcon 
+              className="w-5 h-5" 
+              fill={isBookmarked ? "currentColor" : "none"} 
+            />
+          </Button>
+          
+          {/* Options Menu */}
+          <DropdownMenu open={isOptionsMenuOpen} onOpenChange={setIsOptionsMenuOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-[35px] h-[35px] rounded-full p-0 text-gray-600 hover:text-gray-900"
+              >
+                <MoreVerticalIcon className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48" align="end">
+              <DropdownMenuItem 
+                onClick={handleReport}
+                className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <FlagIcon className="w-4 h-4" />
+                Report
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </header>
 
       {/* Form Container */}
