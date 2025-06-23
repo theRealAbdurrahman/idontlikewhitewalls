@@ -10,6 +10,8 @@ import { Profile } from "./screens/Profile";
 import { Login } from "./screens/Login";
 import { CreateQuestion } from "./screens/CreateQuestion";
 import { CreateEvent } from "./screens/CreateEvent";
+import { CreateCommunity } from "./screens/CreateCommunity";
+import { Communities } from "./screens/Communities";
 import { EventDetails } from "./screens/EventDetails";
 import { QuestionDetails } from "./screens/QuestionDetails";
 import { UserProfile } from "./screens/UserProfile";
@@ -43,6 +45,8 @@ export const App = (): JSX.Element => {
           <Route path="/user/:id" element={<ProfilePage />} />
           <Route path="/create-question" element={<CreateQuestion />} />
           <Route path="/create-event" element={<CreateEvent />} />
+          <Route path="/create-community" element={<CreateCommunity />} />
+          <Route path="/communities" element={<Communities />} />
           <Route path="/offer-help/:questionId" element={<OfferHelp />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>

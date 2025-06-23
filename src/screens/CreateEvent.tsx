@@ -732,7 +732,7 @@ export const CreateEvent: React.FC = () => {
                             type="button"
                             variant="link"
                             className="h-auto p-0 text-sm text-[#3ec6c6]"
-                            onClick={() => toast({ title: "Coming soon", description: "Community creation will be available soon." })}
+                            onClick={() => navigate("/create-community")}
                           >
                             + Create New Community
                           </Button>
