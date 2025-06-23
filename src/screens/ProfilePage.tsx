@@ -174,7 +174,6 @@ export const ProfilePage: React.FC = () => {
           "user-101": {
             id: "user-101",
             name: "Adrian Silva",
-            title: "Creative Director",
             company: "Funky Digital",
             location: "Porto, Portugal",
             bio: "🎨 Digital artist mixing reality with dreams ✨ Creating weird and wonderful experiences that make people smile 🌈",
@@ -186,7 +185,7 @@ export const ProfilePage: React.FC = () => {
             mutualConnections: 8,
             joinedAt: "2024-01-20T10:00:00Z",
             profileVersion: "funky",
-            virtues: ["Creative", "Innovative", "Collaborative", "Authentic"],
+            virtues: ["Creative", "Innovative", "Collaborative", "Authentic", "Creative", "Innovative", "Collaborative", "Authentic", "Creative", "Innovative", "Collaborative", "Authentic"],
           },
         };
         
@@ -597,7 +596,7 @@ export const ProfilePage: React.FC = () => {
                   </div>
                   
                   <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{profileUser.name}</h1>
-                  <p className="text-purple-600 font-semibold mb-4">{profileUser.title}</p>
+                  <p className="text-purple-600 font-semibold mb-4">What lights you up outside of work?</p>
                   
                   {/* Social Media Links */}
                   <div className="flex justify-center gap-3 mb-6">
