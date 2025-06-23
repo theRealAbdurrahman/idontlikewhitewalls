@@ -65,6 +65,24 @@ const eventFormSchema = z.object({
   endDateTime: z.string().min(1, "End date and time is required"),
   description: z.string().min(10, "Description must be at least 10 characters").max(1000, "Description too long"),
   location: z.string().min(3, "Location is required").max(200, "Location too long"),
+  eventUrl: z.string().optional().refine((val) => {
+    if (!val || val.trim() === "") return true;
+    try {
+      new URL(val);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Please enter a valid URL"),
+  googleMapsUrl: z.string().optional().refine((val) => {
+    if (!val || val.trim() === "") return true;
+    try {
+      new URL(val);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Please enter a valid Google Maps URL"),
   eventType: z.string().min(1, "Event type is required"),
   community: z.string().min(1, "Community selection is required"),
   tags: z.array(z.string()).max(10, "Maximum 10 tags allowed").optional(),
@@ -143,6 +161,8 @@ export const CreateEvent: React.FC = () => {
       endDateTime: "",
       description: "",
       location: "",
+      eventUrl: "",
+      googleMapsUrl: "",
       eventType: "",
       community: "planet-earth",
       tags: [],
@@ -322,7 +342,7 @@ export const CreateEvent: React.FC = () => {
         name: data.name,
         description: data.description,
         location: data.location,
-        google_maps_url: null, // TODO: Implement Google Maps integration
+        google_maps_url: data.googleMapsUrl || null,
         start_date: data.startDateTime,
         end_date: data.endDateTime,
         parent_event_id: null,
@@ -588,8 +608,57 @@ export const CreateEvent: React.FC = () => {
                             />
                           </div>
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Event URL */}
+                  <FormField
+                    control={form.control}
+                    name="eventUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event URL</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                            <Input
+                              placeholder="e.g., https://yourevent.com"
+                              className="pl-10"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                        </FormControl>
                         <FormDescription>
-                          Google Maps integration coming soon
+                          Optional: Link to your event website or registration page
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Google Maps URL */}
+                  <FormField
+                    control={form.control}
+                    name="googleMapsUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Google Maps URL</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <MapPinIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                            <Input
+                              placeholder="e.g., https://maps.app.goo.gl/eventlocation"
+                              className="pl-10"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Optional: Direct link to the event location on Google Maps
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
