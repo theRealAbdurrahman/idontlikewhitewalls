@@ -555,8 +555,8 @@ export const Events: React.FC = () => {
                 >
                   <CardContent className="p-0">
                     <div className="flex h-32">
-                      {/* Event Image - 25% width */}
-                      <div className="w-1/4 relative overflow-hidden">
+                      {/* Event Image - 33% width */}
+                      <div className="w-1/3 relative overflow-hidden">
                         <img
                           src={event.bannerImage || `https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1`}
                           alt={event.name}
@@ -596,7 +596,7 @@ export const Events: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Event Content - 75% width */}
+                      {/* Event Content - 67% width */}
                       <div className="flex-1 p-4 relative">
                         {/* Check-in Toggle - positioned in top right */}
                         {event.isJoined && eventStatus !== "completed" && (
