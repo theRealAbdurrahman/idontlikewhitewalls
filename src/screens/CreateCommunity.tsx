@@ -67,7 +67,8 @@ const communityFormSchema = z.object({
       return false;
     }
   }, "Please enter a valid URL"),
-  host: z.string().min(1, "Host is required"),
+  manager: z.string().min(1, "Manager is required"),
+  coHost: z.string().optional(),
   isOpen: z.boolean().default(true),
 });
 
@@ -135,7 +136,8 @@ export const CreateCommunity: React.FC = () => {
       location: "",
       description: "",
       communityUrl: "",
-      host: user?.name || "",
+      manager: user?.name || "",
+      coHost: "",
       isOpen: true,
     },
   });
@@ -318,11 +320,6 @@ export const CreateCommunity: React.FC = () => {
               {/* Community Logo */}
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                    <ImageIcon className="w-5 h-5" />
-                    Community Logo
-                  </h2>
-
                   <FormField
                     control={form.control}
                     name="logo"
@@ -396,11 +393,6 @@ export const CreateCommunity: React.FC = () => {
               {/* Basic Information */}
               <Card>
                 <CardContent className="p-6 space-y-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <UsersIcon className="w-5 h-5" />
-                    Community Details
-                  </h2>
-
                   {/* Community Name */}
                   <FormField
                     control={form.control}
@@ -568,13 +560,13 @@ export const CreateCommunity: React.FC = () => {
                     )}
                   />
 
-                  {/* Community Host */}
+                  {/* Community Manager */}
                   <FormField
                     control={form.control}
-                    name="host"
+                    name="manager"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Community Host</FormLabel>
+                        <FormLabel>Community Manager</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -583,7 +575,29 @@ export const CreateCommunity: React.FC = () => {
                           />
                         </FormControl>
                         <FormDescription>
-                          You will be the primary host of this community
+                          You will be the primary manager of this community
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Co-Host */}
+                  <FormField
+                    control={form.control}
+                    name="coHost"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Co-Host</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Search and invite co-hosts (Coming soon)"
+                            {...field}
+                            disabled
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Optional: Add a co-host to help manage this community
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -595,11 +609,6 @@ export const CreateCommunity: React.FC = () => {
               {/* Community Settings */}
               <Card>
                 <CardContent className="p-6 space-y-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <GlobeIcon className="w-5 h-5" />
-                    Community Settings
-                  </h2>
-
                   {/* Open/Closed Community */}
                   <FormField
                     control={form.control}
