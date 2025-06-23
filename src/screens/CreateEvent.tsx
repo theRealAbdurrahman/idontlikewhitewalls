@@ -121,7 +121,7 @@ export const CreateEvent: React.FC = () => {
   const [generatedPin, setGeneratedPin] = useState<string>("");
   const [tagInput, setTagInput] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedBannerImage, setSelectedBannerImage] = useState<string>("");
+  const [selectedBannerImage, setSelectedBannerImage] = useState<string>("https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&dpr=1");
   const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
   const [isTagEventDialogOpen, setIsTagEventDialogOpen] = useState(false);
   const [eventSearchQuery, setEventSearchQuery] = useState("");
@@ -137,7 +137,7 @@ export const CreateEvent: React.FC = () => {
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      bannerImage: "",
+      bannerImage: "https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&dpr=1",
       name: "",
       startDateTime: "",
       endDateTime: "",
@@ -477,9 +477,6 @@ export const CreateEvent: React.FC = () => {
                             </Button>
                           </div>
                         </FormControl>
-                        <FormDescription>
-                          Add an eye-catching banner to make your event stand out
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
