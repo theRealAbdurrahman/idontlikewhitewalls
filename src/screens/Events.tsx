@@ -599,26 +599,7 @@ export const Events: React.FC = () => {
                       {/* Event Content - 67% width */}
                       <div className="flex-1 p-4 relative">
                         {/* Check-in Toggle - positioned in top right */}
-                        {event.isJoined && eventStatus !== "completed" && (
-                          <div className="absolute top-2 right-2">
-                            <div 
-                              className="checkin-toggle rounded-full px-3 py-1 shadow-md backdrop-blur-sm"
-                              onClick={(e) => handleCheckIn(e, event.id, event.isCheckedIn)}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-gray-800">
-                                  Check-in
-                                </span>
-                                <Switch
-                                  checked={event.isCheckedIn}
-                                  className="scale-75"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex flex-col justify-between h-full pr-16">
+                        <div className="flex flex-col justify-between h-full">
                           {/* Top Section */}
                           <div>
                             {/* Community Name */}
@@ -646,63 +627,6 @@ export const Events: React.FC = () => {
                               <MapPinIcon className="w-3 h-3 flex-shrink-0" />
                               <span className="truncate">{event.location}</span>
                             </div>
-                          </div>
-
-                          {/* Bottom Section - Action Buttons */}
-                          <div className="flex gap-2 mt-2">
-                            {event.isJoined ? (
-                              <>
-                                {!event.isCheckedIn && eventStatus !== "completed" && (
-                                  <Button
-                                    onClick={(e) => handleCheckIn(e, event.id, event.isCheckedIn)}
-                                    className="text-xs px-3 py-1 h-7 bg-green-600 hover:bg-green-700 text-white"
-                                  >
-                                    Check In
-                                  </Button>
-                                )}
-                                <Button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEventClick(event.id);
-                                  }}
-                                  variant="outline"
-                                  className="text-xs px-3 py-1 h-7"
-                                >
-                                  Details
-                                </Button>
-                              </>
-                            ) : eventStatus === "completed" ? (
-                              <Button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEventClick(event.id);
-                                }}
-                                variant="outline"
-                                className="text-xs px-3 py-1 h-7"
-                              >
-                                View Details
-                              </Button>
-                            ) : (
-                              <>
-                                <Button
-                                  onClick={(e) => handleJoinEvent(e, event.id)}
-                                  className="text-xs px-3 py-1 h-7 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-                                  disabled={joinEventMutation.isPending}
-                                >
-                                  {joinEventMutation.isPending ? "Joining..." : "Join"}
-                                </Button>
-                                <Button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEventClick(event.id);
-                                  }}
-                                  variant="outline"
-                                  className="text-xs px-3 py-1 h-7"
-                                >
-                                  Details
-                                </Button>
-                              </>
-                            )}
                           </div>
                         </div>
                       </div>
