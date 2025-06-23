@@ -47,6 +47,14 @@ module.exports = {
         "text-main": "var(--text-main-font-family)",
         "text-medium": "var(--text-medium-font-family)",
         "text-name": "var(--text-name-font-family)",
+        "handwriting": [
+          "Comic Sans MS",
+          "Marker Felt",
+          "Bradley Hand",
+          "Brush Script MT",
+          "cursive",
+          "sans-serif"
+        ],
         sans: [
           "ui-sans-serif",
           "system-ui",

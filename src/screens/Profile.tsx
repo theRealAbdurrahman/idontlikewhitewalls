@@ -4,6 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { StickyNote } from "../components/ui/sticky-note";
 import { useAuthStore } from "../stores/authStore";
 import { useAppStore } from "../stores/appStore";
 
@@ -71,6 +72,18 @@ export const Profile: React.FC = () => {
           {user.bio && (
             <p className="text-gray-700 text-sm mt-4 leading-relaxed">{user.bio}</p>
           )}
+          
+          {/* Sticky Note */}
+          <div className="flex justify-end mt-4">
+            <StickyNote
+              content="Remember to follow up on networking connections from The Summeet 2025! 💡"
+              backgroundColor="#FFE066"
+              width={180}
+              height={160}
+              rotation={3}
+              className="hover:rotate-0 transition-transform duration-300"
+            />
+          </div>
         </CardContent>
       </Card>
 
