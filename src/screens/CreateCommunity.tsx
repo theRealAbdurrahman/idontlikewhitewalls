@@ -628,8 +628,8 @@ export const CreateCommunity: React.FC = () => {
                           </div>
                           <FormDescription className="text-sm">
                             {field.value 
-                              ? "Anyone can discover and join this community"
-                              : "Only invited members can join this community"
+                              ? "Anyone can create events for this community"
+                              : "Only hosts can create events for this community"
                             }
                           </FormDescription>
                         </div>
