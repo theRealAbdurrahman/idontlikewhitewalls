@@ -8,7 +8,8 @@ import {
   ArrowUpIcon,
   MessageCircleIcon,
   HandIcon,
-  UsersIcon 
+  UsersIcon,
+  FlagIcon 
 } from "lucide-react";
 import { 
   useCreateInteractionApiV1InteractionsPost, 
@@ -18,8 +19,8 @@ import { InteractionTarget, InteractionType } from "../api-client/models";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
-import { Card, CardContent } from "@/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/tabs";
+import { Card, CardContent } from "../components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -47,24 +48,59 @@ interface QuestionInteraction {
   userName: string;
   userAvatar?: string;
   interactionType: "me_too" | "can_help";
-  isPublicVisible: boolean; // For "can_help" interactions
+  isPublicVisible: boolean;
   allowsContact: boolean;
   isConnected: boolean;
-  labels: string[]; // e.g., ["#WeMet", "#Remember"]
+  labels: string[];
   createdAt: string;
 }
 
 /**
- * Custom styles for SVG icon color filtering
+ * Custom styles for enhanced visual effects
  */
 const customStyles = `
   .filter-orange {
     filter: brightness(0) saturate(100%) invert(63%) sepia(38%) saturate(5084%) hue-rotate(6deg) brightness(101%) contrast(103%);
   }
+  
+  .gradient-fade {
+    background: linear-gradient(180deg, rgba(240,239,235,0) 0%, rgba(240,239,235,1) 100%);
+  }
+  
+  .interaction-card {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .interaction-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  
+  .action-button {
+    transition: all 0.15s ease-out;
+  }
+  
+  .action-button:hover {
+    transform: scale(1.02);
+  }
+  
+  .action-button:active {
+    transform: scale(0.98);
+  }
+  
+  .sticky-tabs {
+    backdrop-filter: blur(20px);
+    background: rgba(240, 239, 235, 0.95);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  
+  .question-content-shadow {
+    box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+  }
 `;
 
 /**
- * QuestionDetails screen component for viewing full question content and interactions
+ * QuestionDetails screen component with pixel-perfect design implementation
  */
 export const QuestionDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -90,7 +126,7 @@ export const QuestionDetails: React.FC = () => {
   // Find the question
   const question = questions.find(q => q.id === id);
 
-  // Mock interaction data - in a real app, this would come from the API
+  // Enhanced mock interaction data
   const mockInteractions: QuestionInteraction[] = [
     {
       id: "int-1",
@@ -107,7 +143,7 @@ export const QuestionDetails: React.FC = () => {
     {
       id: "int-2", 
       userId: "user-101",
-      userName: "Adrian",
+      userName: "Adrian Silva",
       userAvatar: "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
       interactionType: "me_too",
       isPublicVisible: true,
@@ -131,11 +167,11 @@ export const QuestionDetails: React.FC = () => {
     {
       id: "int-4",
       userId: "user-303",
-      userName: "Eric M",
+      userName: "Eric Martinez",
       userAvatar: "https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
       interactionType: "can_help",
       isPublicVisible: true,
-      allowsContact: false, // This user doesn't allow contact
+      allowsContact: false,
       isConnected: false,
       labels: ["#Remember", "#WeMet"],
       createdAt: "2025-01-15T08:15:00Z",
@@ -154,8 +190,8 @@ export const QuestionDetails: React.FC = () => {
     },
   ];
 
-  // Count of private help offers (users who selected isPublicVisible: false)
-  const privateHelpCount = 3; // Mock data
+  // Count of private help offers
+  const privateHelpCount = 3;
 
   // Filter interactions by type
   const meTooInteractions = mockInteractions.filter(
@@ -167,13 +203,13 @@ export const QuestionDetails: React.FC = () => {
   );
 
   /**
-   * Handle scroll to make tabs sticky
+   * Enhanced scroll handling for sticky tabs
    */
   useEffect(() => {
     const handleScroll = () => {
       if (tabsRef.current && tabsPlaceholderRef.current) {
         const tabsTop = tabsPlaceholderRef.current.getBoundingClientRect().top;
-        const shouldBeSticky = tabsTop <= 90; // Account for header height
+        const shouldBeSticky = tabsTop <= 100; // Account for header height + padding
         
         if (shouldBeSticky !== isTabsSticky) {
           setIsTabsSticky(shouldBeSticky);
@@ -186,7 +222,47 @@ export const QuestionDetails: React.FC = () => {
   }, [isTabsSticky]);
 
   /**
-   * Handle interaction buttons (same logic as QuestionCard)
+   * Handle back navigation
+   */
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
+  /**
+   * Handle report submission
+   */
+  const handleReportSubmit = async () => {
+    if (!reportText.trim()) return;
+    
+    setIsSubmittingReport(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log("Report submitted:", {
+        questionId: question?.id,
+        reportText: reportText.trim(),
+        reportedBy: user?.id,
+        timestamp: new Date().toISOString(),
+      });
+      
+      setReportText("");
+      setIsReportDialogOpen(false);
+      
+      // TODO: Show toast notification instead of alert
+      alert("Report submitted successfully. Thank you for helping keep our community safe.");
+      
+    } catch (error) {
+      console.error("Failed to submit report:", error);
+      alert("Failed to submit report. Please try again.");
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+  /**
+   * Enhanced interaction handlers with animations
    */
   const handleUpvote = () => {
     if (!user || !question) return;
@@ -242,7 +318,6 @@ export const QuestionDetails: React.FC = () => {
   const handleCanHelp = () => {
     if (!user || !question) return;
     
-    // Check if there's already a chat thread between the user and question author
     const existingThread = chatThreads.find(thread => 
       thread.participants.includes(user.id) && 
       thread.participants.includes(question.authorId) &&
@@ -257,60 +332,15 @@ export const QuestionDetails: React.FC = () => {
   };
 
   /**
-   * Handle user profile navigation
+   * Handle user interactions
    */
   const handleUserProfileClick = (userId: string) => {
     navigate(`/profile/${userId}`);
   };
 
-  /**
-   * Handle back navigation
-   */
-  const handleBackClick = () => {
-    navigate(-1);
-  };
-
-  /**
-   * Handle report submission
-   */
-  const handleReportSubmit = async () => {
-    if (!reportText.trim()) return;
-    
-    setIsSubmittingReport(true);
-    
-    try {
-      // TODO: Implement actual report submission to API
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      console.log("Report submitted:", {
-        questionId: question?.id,
-        reportText: reportText.trim(),
-        reportedBy: user?.id,
-        timestamp: new Date().toISOString(),
-      });
-      
-      // Reset form and close dialog
-      setReportText("");
-      setIsReportDialogOpen(false);
-      
-      // Show success feedback (you could use a toast here)
-      alert("Report submitted successfully. Thank you for helping keep our community safe.");
-      
-    } catch (error) {
-      console.error("Failed to submit report:", error);
-      alert("Failed to submit report. Please try again.");
-    } finally {
-      setIsSubmittingReport(false);
-    }
-  };
-
-  /**
-   * Handle chat navigation
-   */
   const handleChatClick = (interaction: QuestionInteraction) => {
     if (!user || !question) return;
     
-    // Check if there's already a chat thread
     const existingThread = chatThreads.find(thread => 
       thread.participants.includes(user.id) && 
       thread.participants.includes(interaction.userId)
@@ -319,55 +349,63 @@ export const QuestionDetails: React.FC = () => {
     if (existingThread) {
       navigate(`/chat/${existingThread.id}`);
     } else {
-      // Create new chat thread - in a real app, this would be an API call
       const newThreadId = `thread-${Date.now()}`;
       navigate(`/chat/${newThreadId}`);
     }
   };
 
   /**
-   * Render user interaction item
+   * Enhanced user interaction item renderer
    */
   const renderUserInteraction = (interaction: QuestionInteraction) => (
     <div 
       key={interaction.id}
-      className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors"
+      className="interaction-card flex items-center justify-between p-4 hover:bg-gray-50/80 transition-all duration-200 ease-out border-b border-gray-100/50 last:border-b-0"
     >
       <div 
-        className="flex items-center gap-3 flex-1 cursor-pointer"
+        className="flex items-center gap-3 flex-1 cursor-pointer group"
         onClick={() => handleUserProfileClick(interaction.userId)}
       >
-        <Avatar className="w-12 h-12">
-          <AvatarImage src={interaction.userAvatar} alt={interaction.userName} />
-          <AvatarFallback>{interaction.userName[0]}</AvatarFallback>
-        </Avatar>
+        <div className="relative">
+          <Avatar className="w-12 h-12 ring-2 ring-transparent group-hover:ring-gray-200 transition-all duration-200">
+            <AvatarImage src={interaction.userAvatar} alt={interaction.userName} />
+            <AvatarFallback className="bg-gradient-to-br from-gray-100 to-gray-200">
+              {interaction.userName[0]}
+            </AvatarFallback>
+          </Avatar>
+          {interaction.isConnected && (
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+          )}
+        </div>
         
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-medium text-black">{interaction.userName}</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="font-semibold text-gray-900 group-hover:text-gray-700 transition-colors truncate">
+              {interaction.userName}
+            </span>
             {interaction.labels.map((label, index) => (
               <Badge 
                 key={index}
                 variant="outline" 
-                className="text-xs bg-transparent border-gray-300 text-gray-600"
+                className="text-xs bg-blue-50 border-blue-200 text-blue-700 px-2 py-0.5"
               >
                 {label}
               </Badge>
             ))}
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 font-medium">
             {formatDistanceToNow(new Date(interaction.createdAt), { addSuffix: true })}
           </p>
         </div>
       </div>
       
-      {/* Chat icon - only show if user allows contact */}
+      {/* Enhanced chat button */}
       {interaction.allowsContact && (
         <Button
           variant="ghost"
           size="icon"
           onClick={() => handleChatClick(interaction)}
-          className="w-10 h-10 rounded-full text-[#3ec6c6] hover:bg-[#3ec6c6] hover:text-white"
+          className="w-10 h-10 rounded-full text-[#3ec6c6] hover:bg-[#3ec6c6]/10 hover:text-[#2ea5a5] transition-all duration-200 hover:scale-105"
         >
           <MessageCircleIcon className="w-5 h-5" />
         </Button>
@@ -378,102 +416,112 @@ export const QuestionDetails: React.FC = () => {
   // Handle edge cases
   if (!question) {
     return (
-      <div className="px-4 py-6">
-        <Card>
-          <CardContent className="p-6 text-center">
-            <h2 className="text-lg font-semibold text-black mb-2">
-              Question not available
+      <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageCircleIcon className="w-8 h-8 text-gray-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Question not found
             </h2>
-            <p className="text-gray-600 mb-4">
-              It may have been removed.
+            <p className="text-gray-600 mb-6">
+              This question may have been removed or doesn't exist.
             </p>
-            <Button onClick={() => navigate(-1)}>Go Back</Button>
+            <Button 
+              onClick={handleBackClick}
+              className="w-full bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+            >
+              Go Back
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Format the time ago
   const timeAgo = formatDistanceToNow(new Date(question.createdAt), { addSuffix: true });
 
   return (
     <>
       <style>{customStyles}</style>
       <div className="bg-[#f0efeb] min-h-screen">
-        {/* Custom Header */}
-        <header className="fixed top-0 left-0 right-0 z-30 flex w-full h-[90px] items-center justify-between pt-10 pb-0 px-3.5 bg-[#f0efeb] border-b border-gray-200">
-          {/* Back Button */}
+        {/* Enhanced Header with better shadows and typography */}
+        <header className="fixed top-0 left-0 right-0 z-40 flex w-full h-[100px] items-center justify-between pt-12 pb-4 px-4 bg-[#f0efeb]/95 backdrop-blur-lg border-b border-gray-200/50">
           <Button
             variant="ghost"
             size="icon"
             onClick={handleBackClick}
-            className="w-[35px] h-[35px] rounded-full p-0"
+            className="w-10 h-10 rounded-full p-0 hover:bg-gray-100/80 transition-all duration-200"
           >
-            <ArrowLeftIcon className="w-5 h-5" />
+            <ArrowLeftIcon className="w-5 h-5 text-gray-700" />
           </Button>
           
-          {/* Center - Empty for spacing */}
           <div className="flex-1" />
           
-          {/* Right Side Actions */}
-          <div className="flex items-center gap-3">
-            {/* Bookmark Button */}
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={handleBookmark}
-              className={`w-[35px] h-[35px] rounded-full p-0 ${
-                question?.isBookmarked ? "text-yellow-500" : "text-gray-600"
+              className={`w-10 h-10 rounded-full p-0 transition-all duration-200 ${
+                question?.isBookmarked 
+                  ? "text-yellow-600 bg-yellow-50 hover:bg-yellow-100" 
+                  : "text-gray-600 hover:bg-gray-100/80"
               }`}
             >
               <BookmarkIcon className="w-5 h-5" fill={question?.isBookmarked ? "currentColor" : "none"} />
             </Button>
             
-            {/* More Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-[35px] h-[35px] rounded-full p-0 text-gray-600"
+                  className="w-10 h-10 rounded-full p-0 text-gray-600 hover:bg-gray-100/80 transition-all duration-200"
                 >
                   <MoreVerticalIcon className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 shadow-lg border-gray-200">
                 <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
                   <DialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <span className="text-red-600">Report Question</span>
+                    <DropdownMenuItem 
+                      onSelect={(e) => e.preventDefault()}
+                      className="text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer"
+                    >
+                      <FlagIcon className="w-4 h-4 mr-2" />
+                      Report Question
                     </DropdownMenuItem>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Report Question</DialogTitle>
-                      <DialogDescription>
-                        Please provide details about why you're reporting this question. 
-                        Our team will review your report and take appropriate action.
+                  <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
+                    <DialogHeader className="p-6 pb-4">
+                      <DialogTitle className="text-xl font-semibold">Report Question</DialogTitle>
+                      <DialogDescription className="text-gray-600 leading-relaxed">
+                        Help us maintain a safe and respectful community. Please provide details about why you're reporting this question.
                       </DialogDescription>
                     </DialogHeader>
                     
-                    <div className="py-4">
+                    <div className="px-6 pb-4">
                       <textarea
                         value={reportText}
                         onChange={(e) => setReportText(e.target.value)}
                         placeholder="Please describe the issue with this question..."
-                        className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent resize-none"
+                        className="w-full h-32 p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent resize-none text-sm leading-relaxed"
                         maxLength={500}
                         disabled={isSubmittingReport}
                       />
-                      <div className="text-right mt-1">
+                      <div className="flex justify-between items-center mt-2">
                         <span className="text-xs text-gray-500">
+                          Be specific and constructive in your feedback
+                        </span>
+                        <span className="text-xs text-gray-500 font-medium">
                           {reportText.length}/500
                         </span>
                       </div>
                     </div>
                     
-                    <DialogFooter>
+                    <DialogFooter className="px-6 py-4 bg-gray-50 border-t border-gray-100 gap-3">
                       <Button
                         variant="outline"
                         onClick={() => {
@@ -481,15 +529,23 @@ export const QuestionDetails: React.FC = () => {
                           setIsReportDialogOpen(false);
                         }}
                         disabled={isSubmittingReport}
+                        className="px-6"
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={handleReportSubmit}
                         disabled={!reportText.trim() || isSubmittingReport}
-                        className="bg-red-600 hover:bg-red-700 text-white"
+                        className="bg-red-600 hover:bg-red-700 text-white px-6"
                       >
-                        {isSubmittingReport ? "Submitting..." : "Submit Report"}
+                        {isSubmittingReport ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            Submitting...
+                          </>
+                        ) : (
+                          "Submit Report"
+                        )}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -499,63 +555,60 @@ export const QuestionDetails: React.FC = () => {
           </div>
         </header>
 
-        {/* Question Content */}
+        {/* Enhanced Question Content with better spacing and shadows */}
         <div className="px-4 py-6 pt-[120px]">
-          <Card className="w-full bg-neutral-50 rounded-[20px] border-none shadow-sm">
-            <CardContent className="p-5 space-y-5">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <Avatar className="w-[35px] h-[35px]">
+          <Card className="w-full bg-white rounded-2xl border-none question-content-shadow">
+            <CardContent className="p-6 space-y-6">
+              {/* Enhanced Header with better typography */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3 flex-1">
+                  <Avatar className="w-12 h-12 ring-2 ring-gray-100">
                     <AvatarImage
                       src={question.isAnonymous ? undefined : question.authorAvatar}
                       alt={question.isAnonymous ? "Anonymous" : question.authorName}
                       className="object-cover"
                     />
-                    <AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 font-semibold">
                       {question.isAnonymous ? "?" : question.authorName[0]}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="flex flex-col">
-                    <span className="font-medium text-[#484848] text-base">
+                    <span className="font-semibold text-gray-900 text-base">
                       {question.isAnonymous ? "Anonymous" : question.authorName}
                     </span>
-                    <div className="flex items-center gap-1 text-xs text-[#ababab]">
+                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
                       {question.eventName && (
                         <>
-                          <span>{question.eventName}</span>
+                          <span className="font-medium">{question.eventName}</span>
                           <span>•</span>
-                          <span>{timeAgo}</span>
                         </>
                       )}
-                      {!question.eventName && (
-                        <span>{timeAgo}</span>
-                      )}
+                      <span>{timeAgo}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="space-y-2.5">
-                <div className="space-y-2">
-                  <h2 className="font-semibold text-black text-base leading-tight">
+              {/* Enhanced Content with better typography and spacing */}
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <h1 className="font-semibold text-gray-900 text-lg leading-tight">
                     {question.title}
-                  </h2>
-                  <p className="text-black text-sm leading-relaxed">
+                  </h1>
+                  <p className="text-gray-700 text-base leading-relaxed">
                     {question.description}
                   </p>
                 </div>
 
-                {/* Tags */}
+                {/* Enhanced Tags */}
                 {question.tags.length > 0 && (
-                  <div className="flex items-start gap-2 flex-wrap">
+                  <div className="flex items-start gap-2 flex-wrap pt-2">
                     {question.tags.map((tag, index) => (
                       <Badge
                         key={index}
                         variant="outline"
-                        className="bg-transparent border-0 p-0 font-medium text-[#5b5b5b] text-xs"
+                        className="bg-blue-50 border-blue-200 text-blue-700 font-medium text-sm px-3 py-1 hover:bg-blue-100 transition-colors cursor-pointer"
                       >
                         {tag}
                       </Badge>
@@ -563,11 +616,11 @@ export const QuestionDetails: React.FC = () => {
                   </div>
                 )}
 
-                {/* Image */}
+                {/* Enhanced Image with better aspect ratio and shadows */}
                 {question.image && (
-                  <div className="relative h-[160px] w-full rounded-lg overflow-hidden">
+                  <div className="relative h-64 w-full rounded-xl overflow-hidden shadow-md">
                     <img
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                       alt="Question attachment"
                       src={question.image}
                     />
@@ -575,92 +628,94 @@ export const QuestionDetails: React.FC = () => {
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-between gap-2">
-                {/* Upvote */}
+              {/* Enhanced Actions with better spacing and animations */}
+              <div className="flex items-center justify-between gap-3 pt-2">
                 <Button
                   variant="outline"
                   onClick={handleUpvote}
                   disabled={createInteractionMutation.isPending}
-                  className={`h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${
-                    question.isUpvoted ? "bg-blue-50 border-blue-200 text-blue-600" : ""
+                  className={`action-button h-10 px-4 py-2 rounded-full border-2 transition-all duration-200 ${
+                    question.isUpvoted 
+                      ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100" 
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                   }`}
                 >
-                  <ArrowUpIcon className={`w-4 h-4 mr-2 ${question.isUpvoted ? "text-blue-600" : ""}`} />
-                  <span className="font-medium text-sm">
-                    {question.upvotes}
-                  </span>
+                  <ArrowUpIcon className={`w-4 h-4 mr-2 transition-colors ${question.isUpvoted ? "text-blue-600" : ""}`} />
+                  <span className="font-semibold text-sm">{question.upvotes}</span>
                 </Button>
 
-                {/* Me Too */}
                 <Button
                   variant="outline"
                   onClick={handleMeToo}
                   disabled={createInteractionMutation.isPending}
-                  className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${
-                    question.isMeToo ? "bg-orange-50 text-orange-600" : ""
+                  className={`action-button h-10 px-4 py-2 rounded-full bg-white shadow-sm border-0 transition-all duration-200 hover:shadow-md ${
+                    question.isMeToo ? "bg-orange-50 text-orange-700 shadow-orange-100" : "hover:bg-gray-50"
                   }`}
                 >
-                  <HandIcon className={`w-4 h-4 mr-2 ${question.isMeToo ? "text-orange-600" : ""}`} />
-                  <span className="font-normal text-sm mr-1">Me too</span>
-                  <span className="font-medium text-sm">{question.meTooCount}</span>
+                  <HandIcon className={`w-4 h-4 mr-2 transition-colors ${question.isMeToo ? "text-orange-600" : ""}`} />
+                  <span className="font-medium text-sm mr-1">Me too</span>
+                  <span className="font-semibold text-sm">{question.meTooCount}</span>
                 </Button>
 
-                {/* I Can Help */}
                 <Button
                   variant="outline"
                   onClick={handleCanHelp}
                   disabled={createInteractionMutation.isPending}
-                  className="h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors"
+                  className="action-button h-10 px-4 py-2 rounded-full bg-white shadow-sm border-0 hover:bg-green-50 hover:text-green-700 hover:shadow-md transition-all duration-200"
                 >
                   <UsersIcon className="w-4 h-4 mr-2" />
-                  <span className="font-normal text-sm mr-1">I can help</span>
-                  <span className="font-medium text-sm">{question.canHelpCount}</span>
+                  <span className="font-medium text-sm mr-1">I can help</span>
+                  <span className="font-semibold text-sm">{question.canHelpCount}</span>
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Tabs placeholder for sticky positioning */}
+        {/* Enhanced Tabs with better sticky behavior and design */}
         <div ref={tabsPlaceholderRef} className="h-0" />
 
-        {/* Tabs - becomes sticky */}
         <div 
           ref={tabsRef}
           className={`${
             isTabsSticky 
-              ? 'fixed top-[90px] left-0 right-0 z-20 bg-[#f0efeb] shadow-sm' 
-              : 'relative'
-          } transition-all duration-200`}
+              ? 'fixed top-[100px] left-0 right-0 z-30 sticky-tabs shadow-sm' 
+              : 'relative bg-[#f0efeb]'
+          } transition-all duration-300`}
         >
           <Tabs 
             value={activeTab} 
             onValueChange={(value) => setActiveTab(value as "me_too" | "can_help")}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-2 bg-white mx-4 rounded-lg">
+            <TabsList className="grid w-full grid-cols-2 bg-white mx-4 rounded-xl shadow-sm border border-gray-100 p-1">
               <TabsTrigger 
                 value="me_too" 
-                className="flex items-center gap-2 data-[state=active]:bg-[#F9DF8E]"
+                className="flex items-center gap-2 data-[state=active]:bg-[#F9DF8E] data-[state=active]:text-gray-900 data-[state=active]:shadow-sm rounded-lg font-semibold transition-all duration-200"
               >
                 <HandIcon className="w-4 h-4" />
-                Me too {meTooInteractions.length}
+                <span>Me too</span>
+                <Badge variant="secondary" className="ml-1 bg-gray-100 text-gray-700 text-xs px-2">
+                  {meTooInteractions.length}
+                </Badge>
               </TabsTrigger>
               <TabsTrigger 
                 value="can_help"
-                className="flex items-center gap-2 data-[state=active]:bg-[#F9DF8E]"
+                className="flex items-center gap-2 data-[state=active]:bg-[#F9DF8E] data-[state=active]:text-gray-900 data-[state=active]:shadow-sm rounded-lg font-semibold transition-all duration-200"
               >
                 <UsersIcon className="w-4 h-4" />
-                I can help {canHelpInteractions.length + privateHelpCount}
+                <span>I can help</span>
+                <Badge variant="secondary" className="ml-1 bg-gray-100 text-gray-700 text-xs px-2">
+                  {canHelpInteractions.length + privateHelpCount}
+                </Badge>
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
-        {/* Content based on active tab */}
-        <div className="px-4 pb-6">
-          <Card className="mt-4">
+        {/* Enhanced Content with better empty states and animations */}
+        <div className="px-4 pb-8">
+          <Card className="mt-4 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <CardContent className="p-0">
               {activeTab === "me_too" && (
                 <div>
@@ -669,11 +724,14 @@ export const QuestionDetails: React.FC = () => {
                       {meTooInteractions.map(renderUserInteraction)}
                     </div>
                   ) : (
-                    <div className="p-8 text-center">
-                      <HandIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-600">
+                    <div className="p-12 text-center">
+                      <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <HandIcon className="w-8 h-8 text-orange-500" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Be the first to relate</h3>
+                      <p className="text-gray-600 max-w-sm mx-auto leading-relaxed">
                         It only takes one person to show up. For{" "}
-                        <span className="font-medium">
+                        <span className="font-semibold text-gray-900">
                           {question.isAnonymous ? "them" : question.authorName}
                         </span>
                         , that might be you.
@@ -693,21 +751,26 @@ export const QuestionDetails: React.FC = () => {
                         </div>
                       )}
                       
-                      {/* Private help offers message */}
                       {privateHelpCount > 0 && (
-                        <div className="p-4 border-t border-gray-100 bg-gray-50">
-                          <p className="text-sm text-gray-600 text-center">
-                            and <span className="font-medium">{privateHelpCount} others</span> who reached out privately
-                          </p>
+                        <div className="p-4 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-gray-50/50">
+                          <div className="flex items-center justify-center gap-2">
+                            <UsersIcon className="w-4 h-4 text-gray-500" />
+                            <p className="text-sm text-gray-600 font-medium">
+                              and <span className="font-semibold text-gray-900">{privateHelpCount} others</span> reached out privately
+                            </p>
+                          </div>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="p-8 text-center">
-                      <UsersIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-600">
+                    <div className="p-12 text-center">
+                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <UsersIcon className="w-8 h-8 text-green-500" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Be the first to help</h3>
+                      <p className="text-gray-600 max-w-sm mx-auto leading-relaxed">
                         It only takes one person to show up. For{" "}
-                        <span className="font-medium">
+                        <span className="font-semibold text-gray-900">
                           {question.isAnonymous ? "them" : question.authorName}
                         </span>
                         , that might be you.
@@ -720,15 +783,19 @@ export const QuestionDetails: React.FC = () => {
           </Card>
         </div>
 
-        {/* Suggest a feature section */}
-        <div className="px-4 pb-6">
+        {/* Enhanced Feature Suggestion Section */}
+        <div className="px-4 pb-8">
           <div className="flex flex-col items-center py-8">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4 shadow-lg">
               <span className="text-white text-xl">✨</span>
             </div>
-            <button className="text-sm text-gray-600 hover:text-gray-800 transition-colors">
+            <Button 
+              variant="ghost"
+              className="text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 px-4 py-2 rounded-full transition-all duration-200"
+              onClick={() => navigate("/messages")}
+            >
               Suggest a feature
-            </button>
+            </Button>
           </div>
         </div>
       </div>
