@@ -382,7 +382,7 @@ export const CreateEvent: React.FC = () => {
   return (
     <div className="bg-[#f0efeb] min-h-screen flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-4 bg-[#f0efeb] border-b border-gray-200">
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-4 bg-[#f0efeb]/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
         <div className="flex items-center gap-3">
           <BuildingIcon className="w-6 h-6 text-[#3ec6c6]" />
           <h1 className="text-lg font-semibold text-black">Create Event</h1>
@@ -399,7 +399,7 @@ export const CreateEvent: React.FC = () => {
       </header>
 
       {/* Form Container */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pt-20">
         <div className="max-w-2xl mx-auto p-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -913,7 +913,7 @@ export const CreateEvent: React.FC = () => {
               </Card>
 
               {/* Submit Section */}
-              <div className="sticky bottom-4 bg-[#f0efeb] p-4 rounded-xl shadow-lg border border-gray-200">
+              <div className="sticky bottom-4 bg-[#f0efeb]/95 backdrop-blur-lg p-4 rounded-xl shadow-lg border border-gray-200">
                 <div className="flex gap-3">
                   <Button
                     type="button"
