@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { 
-  MoreVerticalIcon, 
+  MoreVerticalIcon,
+  ArrowLeftIcon,
   BookmarkIcon, 
   ArrowUpIcon,
   MessageCircleIcon,
@@ -19,6 +20,21 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "@/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
 import { useAuthStore } from "../stores/authStore";
 import { useAppStore } from "../stores/appStore";
 
@@ -59,6 +75,9 @@ export const QuestionDetails: React.FC = () => {
   // Local state
   const [activeTab, setActiveTab] = useState<"me_too" | "can_help">("me_too");
   const [isTabsSticky, setIsTabsSticky] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [reportText, setReportText] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   
   // Refs for sticky functionality
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -245,6 +264,47 @@ export const QuestionDetails: React.FC = () => {
   };
 
   /**
+   * Handle back navigation
+   */
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
+  /**
+   * Handle report submission
+   */
+  const handleReportSubmit = async () => {
+    if (!reportText.trim()) return;
+    
+    setIsSubmittingReport(true);
+    
+    try {
+      // TODO: Implement actual report submission to API
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
+      console.log("Report submitted:", {
+        questionId: question?.id,
+        reportText: reportText.trim(),
+        reportedBy: user?.id,
+        timestamp: new Date().toISOString(),
+      });
+      
+      // Reset form and close dialog
+      setReportText("");
+      setIsReportDialogOpen(false);
+      
+      // Show success feedback (you could use a toast here)
+      alert("Report submitted successfully. Thank you for helping keep our community safe.");
+      
+    } catch (error) {
+      console.error("Failed to submit report:", error);
+      alert("Failed to submit report. Please try again.");
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+  /**
    * Handle chat navigation
    */
   const handleChatClick = (interaction: QuestionInteraction) => {
@@ -341,8 +401,106 @@ export const QuestionDetails: React.FC = () => {
     <>
       <style>{customStyles}</style>
       <div className="bg-[#f0efeb] min-h-screen">
+        {/* Custom Header */}
+        <header className="fixed top-0 left-0 right-0 z-30 flex w-full h-[90px] items-center justify-between pt-10 pb-0 px-3.5 bg-[#f0efeb] border-b border-gray-200">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBackClick}
+            className="w-[35px] h-[35px] rounded-full p-0"
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+          </Button>
+          
+          {/* Center - Empty for spacing */}
+          <div className="flex-1" />
+          
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-3">
+            {/* Bookmark Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBookmark}
+              className={`w-[35px] h-[35px] rounded-full p-0 ${
+                question?.isBookmarked ? "text-yellow-500" : "text-gray-600"
+              }`}
+            >
+              <BookmarkIcon className="w-5 h-5" fill={question?.isBookmarked ? "currentColor" : "none"} />
+            </Button>
+            
+            {/* More Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-[35px] h-[35px] rounded-full p-0 text-gray-600"
+                >
+                  <MoreVerticalIcon className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+                  <DialogTrigger asChild>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <span className="text-red-600">Report Question</span>
+                    </DropdownMenuItem>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Report Question</DialogTitle>
+                      <DialogDescription>
+                        Please provide details about why you're reporting this question. 
+                        Our team will review your report and take appropriate action.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="py-4">
+                      <textarea
+                        value={reportText}
+                        onChange={(e) => setReportText(e.target.value)}
+                        placeholder="Please describe the issue with this question..."
+                        className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent resize-none"
+                        maxLength={500}
+                        disabled={isSubmittingReport}
+                      />
+                      <div className="text-right mt-1">
+                        <span className="text-xs text-gray-500">
+                          {reportText.length}/500
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setReportText("");
+                          setIsReportDialogOpen(false);
+                        }}
+                        disabled={isSubmittingReport}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleReportSubmit}
+                        disabled={!reportText.trim() || isSubmittingReport}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        {isSubmittingReport ? "Submitting..." : "Submit Report"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
         {/* Question Content */}
-        <div className="px-4 py-6">
+        <div className="px-4 py-6 pt-[120px]">
           <Card className="w-full bg-neutral-50 rounded-[20px] border-none shadow-sm">
             <CardContent className="p-5 space-y-5">
               {/* Header */}
@@ -376,26 +534,6 @@ export const QuestionDetails: React.FC = () => {
                       )}
                     </div>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleBookmark}
-                    className={`w-6 h-6 p-0 ${
-                      question.isBookmarked ? "text-yellow-500" : "text-gray-400"
-                    }`}
-                  >
-                    <BookmarkIcon className="w-5 h-5" fill={question.isBookmarked ? "currentColor" : "none"} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-6 h-6 p-0 text-gray-400"
-                  >
-                    <MoreVerticalIcon className="w-5 h-5" />
-                  </Button>
                 </div>
               </div>
 
