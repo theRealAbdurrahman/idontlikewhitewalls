@@ -556,11 +556,11 @@ export const Events: React.FC = () => {
                   <CardContent className="p-0">
                     <div className="flex h-32">
                       {/* Event Image - 33% width */}
-                      <div className="w-1/3 relative overflow-hidden">
+                      <div className="w-1/3 min-w-[120px] relative overflow-hidden bg-gray-100">
                         <img
                           src={event.bannerImage || `https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1`}
                           alt={event.name}
-                          className="event-image w-full h-full object-cover"
+                          className="event-image w-full h-full object-cover transition-transform duration-300"
                         />
                         
                         {/* Status Badge - positioned on image */}
