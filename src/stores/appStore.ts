@@ -167,7 +167,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
   notifications: [],
   chatThreads: [],
   messages: {},
-  activeFilters: ["all"],
+  activeFilters: ["meetverse"],
   sortBy: "latest",
   unreadNotifications: 0,
   unreadMessages: 0,

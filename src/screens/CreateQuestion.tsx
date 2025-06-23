@@ -159,7 +159,7 @@ export const CreateQuestion: React.FC = () => {
     if (selectedEvents.length === 0) return "Select events";
     if (selectedEvents.length === 1) {
       const event = events.find(e => e.id === selectedEvents[0]);
-      return event?.name || "All events";
+      return event?.name || "Meetverse";
     }
     return `${selectedEvents.length} events selected`;
   };

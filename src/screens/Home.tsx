@@ -57,7 +57,7 @@ export const Home: React.FC = () => {
     let filtered = [...questions];
 
     // Apply event filters
-    if (!activeFilters.includes("all")) {
+    if (!activeFilters.includes("meetverse")) {
       filtered = filtered.filter(question => 
         question.eventId && activeFilters.includes(question.eventId)
       );

@@ -17,9 +17,9 @@ export const FilterBar: React.FC = () => {
   // Create filter categories
   const filterCategories = [
     {
-      id: "all",
-      label: "All",
-      isActive: activeFilters.includes("all"),
+      id: "meetverse",
+      label: "Meetverse",
+      isActive: activeFilters.includes("meetverse"),
     },
     // TODO: don't forget to use activeEvents to filter these categories
     // use all events just for demo
@@ -31,16 +31,16 @@ export const FilterBar: React.FC = () => {
   ];
 
   const handleFilterClick = (filterId: string) => {
-    if (filterId === "all") {
-      setActiveFilters(["all"]);
+    if (filterId === "meetverse") {
+      setActiveFilters(["meetverse"]);
     } else {
       // Toggle individual filter
       const newFilters = activeFilters.includes(filterId)
         ? activeFilters.filter(id => id !== filterId)
-        : [...activeFilters.filter(id => id !== "all"), filterId];
+        : [...activeFilters.filter(id => id !== "meetverse"), filterId];
       
-      // If no filters selected, default to "all"
-      setActiveFilters(newFilters.length === 0 ? ["all"] : newFilters);
+      // If no filters selected, default to "meetverse"
+      setActiveFilters(newFilters.length === 0 ? ["meetverse"] : newFilters);
     }
   };
 

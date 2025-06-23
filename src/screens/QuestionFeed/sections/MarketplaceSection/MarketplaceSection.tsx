@@ -7,8 +7,8 @@ export const MarketplaceSection = (): JSX.Element => {
   // Define filter categories data for mapping
   const filterCategories = [
     {
-      id: "all",
-      label: "All",
+      id: "meetverse",
+      label: "Meetverse",
       isActive: true,
       className: "bg-[#ffefc1] border-[#e6ca72] text-neutral-800",
     },
