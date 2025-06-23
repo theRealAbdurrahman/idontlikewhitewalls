@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { SearchIcon, ArrowLeftIcon } from "lucide-react";
+import { SearchIcon, ArrowLeftIcon, Building2Icon } from "lucide-react";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { useAuthStore } from "../stores/authStore";
@@ -114,17 +114,30 @@ export const Header: React.FC = () => {
 
       {/* Right side */}
       {config.showSearch ? (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-[46px] h-[46px] bg-[#e9e6d9] rounded-full p-0"
-          onClick={() => {
-            // TODO: Implement search functionality
-            console.log("Search clicked");
-          }}
-        >
-          <SearchIcon className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-[40px] h-[40px] bg-[#e9e6d9] rounded-full p-0"
+            onClick={() => navigate("/create-event")}
+            title="Create Event"
+          >
+            <Building2Icon className="w-5 h-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-[46px] h-[46px] bg-[#e9e6d9] rounded-full p-0"
+            onClick={() => {
+              // TODO: Implement search functionality
+              console.log("Search clicked");
+            }}
+            title="Search"
+          >
+            <SearchIcon className="w-5 h-5" />
+          </Button>
+        </div>
       ) : (
         <div className="w-[46px]" />
       )}
