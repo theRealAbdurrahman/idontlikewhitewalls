@@ -43,6 +43,7 @@ interface Event {
   price?: number;
   currency?: string;
   status: "upcoming" | "ongoing" | "completed" | "cancelled";
+  communityName?: string; // Added community name
 }
 
 /**
@@ -75,16 +76,16 @@ const customStyles = `
   }
   
   .event-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
   }
   
-  .event-banner {
+  .event-image {
     transition: transform 0.3s ease-out;
   }
   
-  .event-card:hover .event-banner {
-    transform: scale(1.02);
+  .event-card:hover .event-image {
+    transform: scale(1.05);
   }
   
   .checkin-toggle {
@@ -111,23 +112,10 @@ const customStyles = `
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
   }
-  
-  .grid-responsive {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 1.5rem;
-  }
-  
-  @media (max-width: 768px) {
-    .grid-responsive {
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-  }
 `;
 
 /**
- * Events screen component displaying grid of event cards
+ * Events screen component displaying compact horizontal event cards
  */
 export const Events: React.FC = () => {
   const navigate = useNavigate();
@@ -147,7 +135,7 @@ export const Events: React.FC = () => {
   // Mutation for joining events
   const joinEventMutation = useCreateEventParticipantApiV1EventParticipantsPost();
 
-  // Mock event data with banner images (fallback if API fails)
+  // Mock event data with banner images and communities (fallback if API fails)
   const mockEvents: Event[] = [
     {
       id: "event-1",
@@ -156,7 +144,7 @@ export const Events: React.FC = () => {
       location: "Dublin Convention Centre",
       date: "2025-03-15T09:00:00Z",
       endDate: "2025-03-17T18:00:00Z",
-      bannerImage: "https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=800&h=450&dpr=1",
+      bannerImage: "https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
       organizerId: "organizer-1",
       organizerName: "Tech Events Ireland",
       attendeeCount: 1250,
@@ -169,6 +157,7 @@ export const Events: React.FC = () => {
       price: 299,
       currency: "EUR",
       status: "upcoming",
+      communityName: "Dublin Tech Community",
     },
     {
       id: "event-2",
@@ -177,7 +166,7 @@ export const Events: React.FC = () => {
       location: "Trinity College Dublin",
       date: "2025-02-20T10:00:00Z",
       endDate: "2025-02-20T17:00:00Z",
-      bannerImage: "https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&w=800&h=450&dpr=1",
+      bannerImage: "https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
       organizerId: "organizer-2",
       organizerName: "Dublin Tech Community",
       attendeeCount: 480,
@@ -189,6 +178,7 @@ export const Events: React.FC = () => {
       price: 150,
       currency: "EUR",
       status: "upcoming",
+      communityName: "Dublin Tech Community",
     },
     {
       id: "event-3",
@@ -197,7 +187,7 @@ export const Events: React.FC = () => {
       location: "NDRC Dublin",
       date: "2025-02-10T19:00:00Z",
       endDate: "2025-02-10T22:00:00Z",
-      bannerImage: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800&h=450&dpr=1",
+      bannerImage: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
       organizerId: "organizer-3",
       organizerName: "Dublin Startup Hub",
       attendeeCount: 120,
@@ -209,6 +199,7 @@ export const Events: React.FC = () => {
       price: 0,
       currency: "EUR",
       status: "upcoming",
+      communityName: "Dublin Startup Hub",
     },
     {
       id: "event-4",
@@ -217,7 +208,7 @@ export const Events: React.FC = () => {
       location: "Google Dublin",
       date: "2025-01-25T18:30:00Z",
       endDate: "2025-01-25T21:00:00Z",
-      bannerImage: "https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg?auto=compress&cs=tinysrgb&w=800&h=450&dpr=1",
+      bannerImage: "https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
       organizerId: "organizer-4",
       organizerName: "Women in Tech Dublin",
       attendeeCount: 85,
@@ -229,6 +220,7 @@ export const Events: React.FC = () => {
       price: 0,
       currency: "EUR",
       status: "ongoing",
+      communityName: "Women in Tech Dublin",
     },
     {
       id: "event-5", 
@@ -237,7 +229,7 @@ export const Events: React.FC = () => {
       location: "Microsoft Ireland",
       date: "2025-01-10T18:00:00Z",
       endDate: "2025-01-10T20:30:00Z",
-      bannerImage: "https://images.pexels.com/photos/574077/pexels-photo-574077.jpeg?auto=compress&cs=tinysrgb&w=800&h=450&dpr=1",
+      bannerImage: "https://images.pexels.com/photos/574077/pexels-photo-574077.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1",
       organizerId: "organizer-5",
       organizerName: "DevOps Dublin",
       attendeeCount: 95,
@@ -249,6 +241,7 @@ export const Events: React.FC = () => {
       price: 0,
       currency: "EUR",
       status: "completed",
+      communityName: "DevOps Dublin",
     },
   ];
 
@@ -262,7 +255,7 @@ export const Events: React.FC = () => {
         location: event.location || "",
         date: event.start_date,
         endDate: event.end_date,
-        bannerImage: `https://images.pexels.com/photos/${[1181533, 159711, 3183150, 3182773, 574077][index % 5]}/pexels-photo-${[1181533, 159711, 3183150, 3182773, 574077][index % 5]}.jpeg?auto=compress&cs=tinysrgb&w=800&h=450&dpr=1`,
+        bannerImage: `https://images.pexels.com/photos/${[1181533, 159711, 3183150, 3182773, 574077][index % 5]}/pexels-photo-${[1181533, 159711, 3183150, 3182773, 574077][index % 5]}.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1`,
         organizerId: event.creator_id,
         organizerName: "Event Organizer",
         attendeeCount: Math.floor(Math.random() * 500) + 50,
@@ -271,6 +264,7 @@ export const Events: React.FC = () => {
         tags: [],
         category: "General",
         status: "upcoming" as const,
+        communityName: ["Dublin Tech Community", "Lisbon Startup Hub", "Women in Tech Europe"][index % 3],
       }));
     }
     return mockEvents;
@@ -416,12 +410,16 @@ export const Events: React.FC = () => {
    */
   const LoadingCard = () => (
     <Card className="event-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="aspect-video loading-skeleton"></div>
-      <CardContent className="p-6 space-y-4">
-        <div className="loading-skeleton h-6 w-3/4 rounded"></div>
-        <div className="loading-skeleton h-4 w-1/2 rounded"></div>
-        <div className="loading-skeleton h-4 w-full rounded"></div>
-        <div className="loading-skeleton h-4 w-2/3 rounded"></div>
+      <CardContent className="p-0">
+        <div className="flex h-32">
+          <div className="w-1/4 loading-skeleton"></div>
+          <div className="flex-1 p-4 space-y-3">
+            <div className="loading-skeleton h-4 w-3/4 rounded"></div>
+            <div className="loading-skeleton h-3 w-1/2 rounded"></div>
+            <div className="loading-skeleton h-3 w-2/3 rounded"></div>
+            <div className="loading-skeleton h-3 w-1/3 rounded"></div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -487,7 +485,7 @@ export const Events: React.FC = () => {
 
         {/* Loading State */}
         {eventsLoading && (
-          <div className="grid-responsive">
+          <div className="space-y-4">
             {Array.from({ length: 6 }, (_, i) => (
               <LoadingCard key={i} />
             ))}
@@ -543,9 +541,9 @@ export const Events: React.FC = () => {
           </Card>
         )}
 
-        {/* Events Grid */}
+        {/* Compact Events List */}
         {!eventsLoading && !eventsError && filteredAndSortedEvents.length > 0 && (
-          <div className="grid-responsive">
+          <div className="space-y-4">
             {filteredAndSortedEvents.map((event) => {
               const eventStatus = getEventStatus(event);
               
@@ -555,173 +553,159 @@ export const Events: React.FC = () => {
                   className="event-card bg-white rounded-2xl border border-gray-100 shadow-sm cursor-pointer overflow-hidden relative"
                   onClick={() => handleEventClick(event.id)}
                 >
-                  {/* Banner Image */}
-                  <div className="relative aspect-video overflow-hidden">
-                    <img
-                      src={event.bannerImage || `https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=800&h=450&dpr=1`}
-                      alt={event.name}
-                      className="event-banner w-full h-full object-cover"
-                    />
-                    
-                    {/* Status Badge */}
-                    <div className="absolute top-3 left-3">
-                      <Badge
-                        className={`font-semibold text-xs px-3 py-1 ${
-                          eventStatus === "ongoing" 
-                            ? "bg-green-500 text-white event-status-ongoing" 
-                            : eventStatus === "upcoming"
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-500 text-white"
-                        }`}
-                      >
-                        {eventStatus === "ongoing" && "• LIVE"}
-                        {eventStatus === "upcoming" && "UPCOMING"}
-                        {eventStatus === "completed" && "COMPLETED"}
-                      </Badge>
-                    </div>
+                  <CardContent className="p-0">
+                    <div className="flex h-32">
+                      {/* Event Image - 25% width */}
+                      <div className="w-1/4 relative overflow-hidden">
+                        <img
+                          src={event.bannerImage || `https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1`}
+                          alt={event.name}
+                          className="event-image w-full h-full object-cover"
+                        />
+                        
+                        {/* Status Badge - positioned on image */}
+                        <div className="absolute top-2 left-2">
+                          <Badge
+                            className={`text-xs px-2 py-1 font-semibold ${
+                              eventStatus === "ongoing" 
+                                ? "bg-green-500 text-white event-status-ongoing" 
+                                : eventStatus === "upcoming"
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-500 text-white"
+                            }`}
+                          >
+                            {eventStatus === "ongoing" && "• LIVE"}
+                            {eventStatus === "upcoming" && "UPCOMING"}
+                            {eventStatus === "completed" && "COMPLETED"}
+                          </Badge>
+                        </div>
 
-                    {/* Check-in Toggle */}
-                    {event.isJoined && eventStatus !== "completed" && (
-                      <div className="absolute top-3 right-3">
-                        <div 
-                          className="checkin-toggle rounded-full p-2 shadow-lg backdrop-blur-sm"
-                          onClick={(e) => handleCheckIn(e, event.id, event.isCheckedIn)}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-gray-800">
-                              Check-in
-                            </span>
-                            <Switch
-                              checked={event.isCheckedIn}
-                              className="scale-75"
-                            />
+                        {/* Price Badge - positioned on image */}
+                        {event.price !== undefined && (
+                          <div className="absolute bottom-2 left-2">
+                            <Badge
+                              className={`text-xs font-semibold ${
+                                event.price === 0 
+                                  ? "bg-green-100 text-green-800" 
+                                  : "bg-white text-gray-800"
+                              }`}
+                            >
+                              {event.price === 0 ? "Free" : `€${event.price}`}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Event Content - 75% width */}
+                      <div className="flex-1 p-4 relative">
+                        {/* Check-in Toggle - positioned in top right */}
+                        {event.isJoined && eventStatus !== "completed" && (
+                          <div className="absolute top-2 right-2">
+                            <div 
+                              className="checkin-toggle rounded-full px-3 py-1 shadow-md backdrop-blur-sm"
+                              onClick={(e) => handleCheckIn(e, event.id, event.isCheckedIn)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-gray-800">
+                                  Check-in
+                                </span>
+                                <Switch
+                                  checked={event.isCheckedIn}
+                                  className="scale-75"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col justify-between h-full pr-16">
+                          {/* Top Section */}
+                          <div>
+                            {/* Community Name */}
+                            {event.communityName && (
+                              <p className="text-xs text-[#3ec6c6] font-semibold mb-1 truncate">
+                                {event.communityName}
+                              </p>
+                            )}
+                            
+                            {/* Event Name */}
+                            <h3 className="font-bold text-base text-black mb-2 line-clamp-2 leading-tight">
+                              {event.name}
+                            </h3>
+
+                            {/* Date & Time */}
+                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                              <ClockIcon className="w-3 h-3 flex-shrink-0" />
+                              <span className="font-medium truncate">
+                                {formatEventDateTime(event.date, event.endDate)}
+                              </span>
+                            </div>
+                            
+                            {/* Location */}
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <MapPinIcon className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{event.location}</span>
+                            </div>
+                          </div>
+
+                          {/* Bottom Section - Action Buttons */}
+                          <div className="flex gap-2 mt-2">
+                            {event.isJoined ? (
+                              <>
+                                {!event.isCheckedIn && eventStatus !== "completed" && (
+                                  <Button
+                                    onClick={(e) => handleCheckIn(e, event.id, event.isCheckedIn)}
+                                    className="text-xs px-3 py-1 h-7 bg-green-600 hover:bg-green-700 text-white"
+                                  >
+                                    Check In
+                                  </Button>
+                                )}
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEventClick(event.id);
+                                  }}
+                                  variant="outline"
+                                  className="text-xs px-3 py-1 h-7"
+                                >
+                                  Details
+                                </Button>
+                              </>
+                            ) : eventStatus === "completed" ? (
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEventClick(event.id);
+                                }}
+                                variant="outline"
+                                className="text-xs px-3 py-1 h-7"
+                              >
+                                View Details
+                              </Button>
+                            ) : (
+                              <>
+                                <Button
+                                  onClick={(e) => handleJoinEvent(e, event.id)}
+                                  className="text-xs px-3 py-1 h-7 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                                  disabled={joinEventMutation.isPending}
+                                >
+                                  {joinEventMutation.isPending ? "Joining..." : "Join"}
+                                </Button>
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEventClick(event.id);
+                                  }}
+                                  variant="outline"
+                                  className="text-xs px-3 py-1 h-7"
+                                >
+                                  Details
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
-                    )}
-
-                    {/* Price Badge */}
-                    {event.price !== undefined && (
-                      <div className="absolute bottom-3 right-3">
-                        <Badge
-                          className={`font-semibold text-xs ${
-                            event.price === 0 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-white text-gray-800"
-                          }`}
-                        >
-                          {event.price === 0 ? "Free" : `€${event.price}`}
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <CardContent className="p-6">
-                    {/* Event Name */}
-                    <h3 className="font-bold text-lg text-black mb-2 line-clamp-2 leading-tight">
-                      {event.name}
-                    </h3>
-
-                    {/* Date & Time */}
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                      <ClockIcon className="w-4 h-4 flex-shrink-0" />
-                      <span className="font-medium">
-                        {formatEventDateTime(event.date, event.endDate)}
-                      </span>
-                    </div>
-                    
-                    {/* Location */}
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                      <MapPinIcon className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate">{event.location}</span>
-                    </div>
-
-                    {/* Attendees */}
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                      <UsersIcon className="w-4 h-4 flex-shrink-0" />
-                      <span>
-                        {event.attendeeCount} attending
-                        {event.maxAttendees && ` • ${event.maxAttendees} max`}
-                      </span>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-gray-700 text-sm line-clamp-2 mb-4 leading-relaxed">
-                      {event.description}
-                    </p>
-
-                    {/* Tags */}
-                    {event.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-4">
-                        {event.tags.slice(0, 3).map((tag, index) => (
-                          <Badge key={index} variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {event.tags.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{event.tags.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      {event.isJoined ? (
-                        <>
-                          {!event.isCheckedIn && eventStatus !== "completed" && (
-                            <Button
-                              onClick={(e) => handleCheckIn(e, event.id, event.isCheckedIn)}
-                              className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
-                            >
-                              Check In
-                            </Button>
-                          )}
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEventClick(event.id);
-                            }}
-                            variant="outline"
-                            className="flex-1 text-sm h-9"
-                          >
-                            View Details
-                          </Button>
-                        </>
-                      ) : eventStatus === "completed" ? (
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEventClick(event.id);
-                          }}
-                          variant="outline"
-                          className="w-full text-sm h-9"
-                        >
-                          View Details
-                        </Button>
-                      ) : (
-                        <>
-                          <Button
-                            onClick={(e) => handleJoinEvent(e, event.id)}
-                            className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white text-sm h-9"
-                            disabled={joinEventMutation.isPending}
-                          >
-                            {joinEventMutation.isPending ? "Joining..." : "Join Event"}
-                          </Button>
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEventClick(event.id);
-                            }}
-                            variant="outline"
-                            className="text-sm h-9 px-3"
-                          >
-                            Details
-                          </Button>
-                        </>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
