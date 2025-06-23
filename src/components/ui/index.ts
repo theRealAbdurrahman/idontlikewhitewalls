@@ -13,4 +13,4 @@ export { StickyNote } from "./sticky-note";
 export { Switch } from "./switch";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
 export { toast, useToast } from "./toast";
-export { Toaster } from "./toaster";</parameter>
+export { Toaster } from "./toaster";
