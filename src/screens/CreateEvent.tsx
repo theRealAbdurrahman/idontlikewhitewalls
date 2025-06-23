@@ -16,7 +16,8 @@ import {
   PlusIcon,
   UploadIcon,
   SearchIcon,
-  LinkIcon
+  LinkIcon,
+  Edit2Icon
 } from "lucide-react";
 import { useCreateEventApiV1EventsPost } from "../api-client/api-client";
 import { Button } from "../components/ui/button";
