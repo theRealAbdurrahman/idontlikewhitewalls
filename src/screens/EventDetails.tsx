@@ -544,29 +544,15 @@ export const EventDetails: React.FC = () => {
           </Card>
 
           {/* Enter Invite Code Section - NEW */}
-          <Card className="invite-code-card event-info-card rounded-2xl border border-gray-100 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                    <KeyIcon className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">Have an Invite Code?</h3>
-                    <p className="text-white/80 text-sm">
-                      Access exclusive event content and networking
-                    </p>
-                  </div>
-                </div>
-                <Dialog open={isInviteCodeDialogOpen} onOpenChange={setIsInviteCodeDialogOpen}>
-                  <DialogTrigger asChild>
+                          <Dialog open={isInviteCodeDialogOpen} onOpenChange={setIsInviteCodeDialogOpen}>
+                  {/* <DialogTrigger asChild>
                     <Button
                       variant="outline"
                       className="bg-white/10 border-white/30 text-white hover:bg-white/20 transition-all duration-200"
                     >
                       Enter Code
                     </Button>
-                  </DialogTrigger>
+                  </DialogTrigger> */}
                   <DialogContent className="sm:max-w-[400px]">
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2">
@@ -620,9 +606,6 @@ export const EventDetails: React.FC = () => {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* About Event */}
           <Card className="event-info-card bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -745,7 +728,7 @@ export const EventDetails: React.FC = () => {
                       Joining...
                     </div>
                   ) : (
-                    `Join Event`
+                    `Check in`
                   )}
                 </Button>
                 
