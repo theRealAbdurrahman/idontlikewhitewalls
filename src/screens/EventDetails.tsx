@@ -140,6 +140,7 @@ export const EventDetails: React.FC = () => {
   const [isInviteCodeDialogOpen, setIsInviteCodeDialogOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const [isValidatingCode, setIsValidatingCode] = useState(false);
+  const [inviteCodeError, setInviteCodeError] = useState("");
 
   const event = events.find(e => e.id === id);
 
@@ -264,8 +265,18 @@ export const EventDetails: React.FC = () => {
     }
   };
 
-  const handleCheckIn = async () => {
+  const handleCheckIn = async (skipDialog = false) => {
     if (!event || !user) return;
+    
+    // Check if event is private and we haven't validated the code yet
+    const isPrivateEvent = event.maxAttendees === 50; // Mock: events with 50 max attendees are private
+    
+    if (isPrivateEvent && !skipDialog) {
+      // Show invite code dialog for private events
+      setIsInviteCodeDialogOpen(true);
+      setInviteCodeError("");
+      return;
+    }
     
     setIsLoading(true);
     
@@ -277,6 +288,13 @@ export const EventDetails: React.FC = () => {
         title: "Checked in!",
         description: `Welcome to ${event.name}!`,
       });
+      
+      // Close dialog if it was open
+      if (isInviteCodeDialogOpen) {
+        setIsInviteCodeDialogOpen(false);
+        setInviteCode("");
+        setInviteCodeError("");
+      }
     } catch (error) {
       toast({
         title: "Failed to check in",
@@ -307,52 +325,57 @@ export const EventDetails: React.FC = () => {
    */
   const handleInviteCodeSubmit = async () => {
     if (!inviteCode.trim() || inviteCode.length !== 3) {
-      toast({
-        title: "Invalid code",
-        description: "Please enter a valid 3-digit invite code.",
-        variant: "destructive",
-      });
+      setInviteCodeError("Please enter a valid 3-digit invite code.");
       return;
     }
 
     setIsValidatingCode(true);
+    setInviteCodeError("");
 
     try {
       // Simulate API call to validate invite code
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Mock validation - accept "123" as valid code
-      if (inviteCode.toUpperCase() === "123") {
-        toast({
-          title: "Code accepted!",
-          description: "You now have access to exclusive event content.",
-        });
-        setIsInviteCodeDialogOpen(false);
-        setInviteCode("");
+      // Mock validation - accept "123" as valid code for this event
+      const storedInviteCode = "123"; // In real app, this would come from the event data
+      
+      if (inviteCode === storedInviteCode) {
+        // Code is correct, proceed with check-in
+        await handleCheckIn(true); // Skip dialog since we're already validating
       } else {
-        toast({
-          title: "Invalid invite code",
-          description: "Please check your code and try again.",
-          variant: "destructive",
-        });
+        // Code is incorrect, show error and allow retry
+        setInviteCodeError("Invalid invite code. Please check your code and try again.");
       }
     } catch (error) {
-      toast({
-        title: "Validation failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
+      setInviteCodeError("Validation failed. Please try again.");
     } finally {
       setIsValidatingCode(false);
     }
   };
 
   /**
+   * Handle request access for private events
+   */
+  const handleRequestAccess = () => {
+    setIsInviteCodeDialogOpen(false);
+    setInviteCode("");
+    setInviteCodeError("");
+    
+    toast({
+      title: "Access request sent",
+      description: "The event organizer has been notified of your request.",
+    });
+  };
+  /**
    * Handle invite code input - only allow numbers and limit to 3 digits
    */
   const handleInviteCodeChange = (value: string) => {
     const numericValue = value.replace(/[^0-9]/g, "").slice(0, 3);
     setInviteCode(numericValue);
+    // Clear error when user starts typing
+    if (inviteCodeError) {
+      setInviteCodeError("");
+    }
   };
 
   // Handle edge cases
@@ -687,7 +710,7 @@ export const EventDetails: React.FC = () => {
                     disabled={isLoading}
                     className="w-full h-14 bg-green-600 hover:bg-green-700 text-white text-lg font-semibold rounded-xl event-action-button"
                   >
-                    {isLoading ? "Checking in..." : "Check In Now"}
+                    {isLoading ? "Checking in..." : "Check In"}
                   </Button>
                 )}
                 
@@ -719,17 +742,86 @@ export const EventDetails: React.FC = () => {
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Checking in...
+                      Joining...
                     </div>
                   ) : (
-                    `Checking in`
+                    `Join Event`
                   )}
                 </Button>
+                
+                {/* Check In Button for Joined Users */}
+                {event.isJoined && !event.isCheckedIn && eventStatus === "live" && (
+                  <Button
+                    onClick={handleCheckIn}
+                    disabled={isLoading}
+                    className="w-full h-14 bg-green-600 hover:bg-green-700 text-white text-lg font-semibold rounded-xl event-action-button"
+                  >
+                    {isLoading ? "Checking in..." : "Check In"}
+                  </Button>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
+        {/* Invite Code Dialog */}
+        <Dialog open={isInviteCodeDialogOpen} onOpenChange={setIsInviteCodeDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <KeyIcon className="w-5 h-5 text-[#3ec6c6]" />
+                Private Event Access
+              </DialogTitle>
+              <DialogDescription>
+                This is a private event. Enter your 3-digit invite code to check in, or request access from the organizer.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-6">
+              <Input
+                value={inviteCode}
+                onChange={(e) => handleInviteCodeChange(e.target.value)}
+                placeholder="123"
+                className="invite-code-input text-center text-2xl font-bold h-16 border-2 border-gray-300 focus:border-[#3ec6c6]"
+                maxLength={3}
+                disabled={isValidatingCode}
+              />
+              {inviteCodeError && (
+                <p className="text-sm text-red-600 text-center mt-2">
+                  {inviteCodeError}
+                </p>
+              )}
+              <p className="text-xs text-gray-500 text-center mt-2">
+                Enter the 3-digit code provided by the event organizer
+              </p>
+            </div>
+            
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={handleRequestAccess}
+                disabled={isValidatingCode}
+                className="flex-1"
+              >
+                Request Access
+              </Button>
+              <Button
+                onClick={handleInviteCodeSubmit}
+                disabled={inviteCode.length !== 3 || isValidatingCode}
+                className="bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white flex-1"
+              >
+                {isValidatingCode ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Validating...
+                  </>
+                ) : (
+                  "Check In"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
     </>
   );
 };
