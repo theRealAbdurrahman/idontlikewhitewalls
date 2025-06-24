@@ -438,13 +438,14 @@ export const EventDetails: React.FC = () => {
 
         {/* Event Banner Image */}
         <div className="pt-20">
-          <div className="relative h-64 w-full overflow-hidden">
+          <div className="flex justify-center items-center p-6">
+            <div className="relative w-80 h-80 overflow-hidden rounded-2xl shadow-lg">
             <img
               src={event.bannerImage || event.image || "https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&dpr=1"}
               alt={event.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-2xl"
             />
-            <div className="event-image-overlay absolute inset-0"></div>
+            <div className="event-image-overlay absolute inset-0 rounded-2xl"></div>
             
             {/* Event Status Badge */}
             <div className="absolute top-4 left-4">
@@ -477,6 +478,7 @@ export const EventDetails: React.FC = () => {
                 </Badge>
               </div>
             )}
+            </div>
           </div>
         </div>
 
