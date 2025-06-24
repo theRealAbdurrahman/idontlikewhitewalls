@@ -191,16 +191,11 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
   },
   
   checkInEvent: (eventId) => {
-    // COMMENTED OUT: Local state update for future reference
-    /*
     set((state) => ({
       events: state.events.map((event) =>
         event.id === eventId ? { ...event, isCheckedIn: true } : event
       ),
     }));
-    */
-    // TODO: Replace with API call to update event participant status
-    console.log("checkInEvent called for:", eventId, "- API integration needed");
   },
 
   // Question actions

@@ -129,7 +129,7 @@ const customStyles = `
 export const EventDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { events, joinEvent, checkInEvent } = useAppStore();
+  const { events, joinEvent, checkInEvent, setActiveFilters } = useAppStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
   
@@ -289,12 +289,19 @@ export const EventDetails: React.FC = () => {
         description: `Welcome to ${event.name}!`,
       });
       
+      // Update the event state to mark as checked in
+      checkInEvent(event.id);
+      
       // Close dialog if it was open
       if (isInviteCodeDialogOpen) {
         setIsInviteCodeDialogOpen(false);
         setInviteCode("");
         setInviteCodeError("");
       }
+      
+      // Seamless redirection: set event filter and navigate to home
+      setActiveFilters([event.id]);
+      navigate("/home");
     } catch (error) {
       toast({
         title: "Failed to check in",
