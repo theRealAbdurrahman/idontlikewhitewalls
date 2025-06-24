@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { CalendarIcon, MapPinIcon, UsersIcon, EuroIcon, ClockIcon, FilterIcon } from "lucide-react";
-import { format, isAfter, isBefore, isToday, parseISO } from "date-fns";
+import { CalendarIcon, MapPinIcon, UsersIcon, BookmarkIcon } from "lucide-react";
+import { format, isAfter, isBefore, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { 
   useReadEventsApiV1EventsGet, 
@@ -9,15 +9,8 @@ import {
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Switch } from "../components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
 import { useAuthStore } from "../stores/authStore";
+import { useToast } from "../hooks/use-toast";
 import { ParticipantRole, ParticipantStatus } from "../api-client/models";
 
 /**
@@ -43,29 +36,9 @@ interface Event {
   price?: number;
   currency?: string;
   status: "upcoming" | "ongoing" | "completed" | "cancelled";
-  communityName?: string; // Added community name
+  communityName?: string;
+  isBookmarked?: boolean; // TODO: Add to main Event interface in appStore
 }
-
-/**
- * Sort options for events
- */
-const sortOptions = [
-  { value: "date", label: "By Date" },
-  { value: "name", label: "By Name" },
-  { value: "attendees", label: "By Attendees" },
-  { value: "recently-added", label: "Recently Added" },
-];
-
-/**
- * Filter options for events
- */
-const filterOptions = [
-  { value: "all", label: "All Events" },
-  { value: "ongoing", label: "Ongoing" },
-  { value: "upcoming", label: "Upcoming" },
-  { value: "joined", label: "Joined" },
-  { value: "past", label: "Past Events" },
-];
 
 /**
  * Custom styles for animations and hover effects
@@ -88,18 +61,12 @@ const customStyles = `
     transform: scale(1.05);
   }
   
-  .checkin-toggle {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.9);
+  .bookmark-button {
+    transition: all 0.2s ease-out;
   }
   
-  .event-status-ongoing {
-    animation: pulse 2s infinite;
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+  .bookmark-button:hover {
+    transform: scale(1.1);
   }
   
   .loading-skeleton {
@@ -115,15 +82,15 @@ const customStyles = `
 `;
 
 /**
- * Events screen component displaying compact horizontal event cards
+ * Events screen component displaying simplified event cards
  */
 export const Events: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { toast } = useToast();
   
-  // Local state
-  const [sortBy, setSortBy] = useState("date");
-  const [filterBy, setFilterBy] = useState("all");
+  // Local state for bookmarks (TODO: Move to appStore)
+  const [bookmarkedEvents, setBookmarkedEvents] = useState<Set<string>>(new Set());
   
   // Fetch events from API
   const { 
@@ -158,6 +125,7 @@ export const Events: React.FC = () => {
       currency: "EUR",
       status: "upcoming",
       communityName: "Dublin Tech Community",
+      isBookmarked: false,
     },
     {
       id: "event-2",
@@ -179,6 +147,7 @@ export const Events: React.FC = () => {
       currency: "EUR",
       status: "upcoming",
       communityName: "Dublin Tech Community",
+      isBookmarked: true,
     },
     {
       id: "event-3",
@@ -200,6 +169,7 @@ export const Events: React.FC = () => {
       currency: "EUR",
       status: "upcoming",
       communityName: "Dublin Startup Hub",
+      isBookmarked: false,
     },
     {
       id: "event-4",
@@ -221,6 +191,7 @@ export const Events: React.FC = () => {
       currency: "EUR",
       status: "ongoing",
       communityName: "Women in Tech Dublin",
+      isBookmarked: false,
     },
     {
       id: "event-5", 
@@ -242,6 +213,7 @@ export const Events: React.FC = () => {
       currency: "EUR",
       status: "completed",
       communityName: "DevOps Dublin",
+      isBookmarked: false,
     },
   ];
 
@@ -265,10 +237,14 @@ export const Events: React.FC = () => {
         category: "General",
         status: "upcoming" as const,
         communityName: ["Dublin Tech Community", "Lisbon Startup Hub", "Women in Tech Europe"][index % 3],
+        isBookmarked: bookmarkedEvents.has(event.id),
       }));
     }
-    return mockEvents;
-  }, [eventsData?.data]);
+    return mockEvents.map(event => ({
+      ...event,
+      isBookmarked: bookmarkedEvents.has(event.id)
+    }));
+  }, [eventsData?.data, bookmarkedEvents]);
 
   /**
    * Determine event status based on dates
@@ -288,79 +264,38 @@ export const Events: React.FC = () => {
   };
 
   /**
-   * Filter and sort events
+   * Format event date and time - simplified to show only time and short date
    */
-  const filteredAndSortedEvents = useMemo(() => {
-    let filtered = [...events];
-    const now = new Date();
-
-    // Apply filters
-    switch (filterBy) {
-      case "ongoing":
-        filtered = filtered.filter(event => getEventStatus(event) === "ongoing");
-        break;
-      case "upcoming":
-        filtered = filtered.filter(event => getEventStatus(event) === "upcoming");
-        break;
-      case "joined":
-        filtered = filtered.filter(event => event.isJoined);
-        break;
-      case "past":
-        filtered = filtered.filter(event => getEventStatus(event) === "completed");
-        break;
-      default:
-        // For "all", hide past events by default
-        filtered = filtered.filter(event => getEventStatus(event) !== "completed");
-    }
-
-    // Apply sorting
-    switch (sortBy) {
-      case "date":
-        // Sort by: ongoing first, then upcoming by date, then completed by date
-        filtered.sort((a, b) => {
-          const statusA = getEventStatus(a);
-          const statusB = getEventStatus(b);
-          
-          if (statusA === statusB) {
-            return new Date(a.date).getTime() - new Date(b.date).getTime();
-          }
-          
-          // Priority: ongoing > upcoming > completed
-          const statusPriority = { ongoing: 0, upcoming: 1, completed: 2 };
-          return statusPriority[statusA] - statusPriority[statusB];
-        });
-        break;
-      case "name":
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "attendees":
-        filtered.sort((a, b) => b.attendeeCount - a.attendeeCount);
-        break;
-      case "recently-added":
-        filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        break;
-    }
-
-    return filtered;
-  }, [events, filterBy, sortBy]);
+  const formatEventDateTime = (startDate: string) => {
+    const start = parseISO(startDate);
+    const time = format(start, 'HH:mm');
+    const date = format(start, 'MMM dd');
+    return `${time} • ${date}`;
+  };
 
   /**
-   * Format date and time for display
+   * Handle bookmark toggle
    */
-  const formatEventDateTime = (startDate: string, endDate?: string) => {
-    const start = parseISO(startDate);
-    const end = endDate ? parseISO(endDate) : null;
+  const handleBookmarkToggle = (e: React.MouseEvent, eventId: string) => {
+    e.stopPropagation();
     
-    if (end && format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
-      // Same day event
-      return `${format(start, 'MMM dd, yyyy')} • ${format(start, 'h:mm a')} - ${format(end, 'h:mm a')}`;
-    } else if (end) {
-      // Multi-day event
-      return `${format(start, 'MMM dd')} - ${format(end, 'MMM dd, yyyy')}`;
+    const newBookmarkedEvents = new Set(bookmarkedEvents);
+    if (bookmarkedEvents.has(eventId)) {
+      newBookmarkedEvents.delete(eventId);
+      toast({
+        title: "Removed from bookmarks",
+        description: "Event removed from your bookmarks.",
+      });
     } else {
-      // Single point in time
-      return `${format(start, 'MMM dd, yyyy')} • ${format(start, 'h:mm a')}`;
+      newBookmarkedEvents.add(eventId);
+      toast({
+        title: "Added to bookmarks", 
+        description: "Event added to your bookmarks.",
+      });
     }
+    setBookmarkedEvents(newBookmarkedEvents);
+    
+    // TODO: Integrate with appStore.toggleEventBookmark(eventId)
   };
 
   /**
@@ -388,9 +323,18 @@ export const Events: React.FC = () => {
     }, {
       onSuccess: () => {
         console.log("Successfully joined event:", eventId);
+        toast({
+          title: "Joined event!",
+          description: "You're now registered for this event.",
+        });
       },
       onError: (error) => {
         console.error("Failed to join event:", error);
+        toast({
+          title: "Failed to join event",
+          description: "Please try again.",
+          variant: "destructive",
+        });
       }
     });
   };
@@ -398,11 +342,15 @@ export const Events: React.FC = () => {
   /**
    * Handle check-in toggle
    */
-  const handleCheckIn = (e: React.MouseEvent, eventId: string, currentStatus: boolean) => {
+  const handleCheckIn = (e: React.MouseEvent, eventId: string) => {
     e.stopPropagation();
     
     // TODO: Implement check-in API call
-    console.log("Toggle check-in for event:", eventId, "current status:", currentStatus);
+    console.log("Toggle check-in for event:", eventId);
+    toast({
+      title: "Checked in!",
+      description: "Welcome to the event!",
+    });
   };
 
   /**
@@ -428,59 +376,12 @@ export const Events: React.FC = () => {
     <>
       <style>{customStyles}</style>
       <div className="px-4 py-6">
-        {/* Header */}
+        {/* Simplified Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-black flex items-center gap-2">
-                <CalendarIcon className="w-6 h-6 text-[#3ec6c6]" />
-                Events
-              </h1>
-              <p className="text-gray-600 mt-1">Discover and join professional events</p>
-            </div>
-            
-            <Badge variant="secondary" className="bg-[#3ec6c6]/10 text-[#3ec6c6] font-semibold px-4 py-2">
-              {filteredAndSortedEvents.length} Events
-            </Badge>
-          </div>
-
-          {/* Filters and Sort */}
-          <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2">
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <FilterIcon className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filter:</span>
-            </div>
-            
-            <Select value={filterBy} onValueChange={setFilterBy}>
-              <SelectTrigger className="w-40 h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {filterOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-sm font-medium text-gray-700">Sort:</span>
-            </div>
-            
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-40 h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {sortOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <h1 className="text-2xl font-bold text-black flex items-center gap-2">
+            <CalendarIcon className="w-6 h-6 text-[#3ec6c6]" />
+            Events
+          </h1>
         </div>
 
         {/* Loading State */}
@@ -514,37 +415,24 @@ export const Events: React.FC = () => {
         )}
 
         {/* Empty State */}
-        {!eventsLoading && !eventsError && filteredAndSortedEvents.length === 0 && (
+        {!eventsLoading && !eventsError && events.length === 0 && (
           <Card className="bg-white">
             <CardContent className="p-12 text-center">
               <CalendarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {filterBy === "past" ? "No past events found" : 
-                 filterBy === "joined" ? "You haven't joined any events yet" :
-                 "No events found"}
+                No events found
               </h3>
               <p className="text-gray-600 mb-6">
-                {filterBy === "past" ? "There are no completed events to show." :
-                 filterBy === "joined" ? "Join some events to see them here." :
-                 "Try adjusting your filters or check back later for new events."}
+                Check back later for new events.
               </p>
-              {filterBy !== "all" && (
-                <Button 
-                  onClick={() => setFilterBy("all")}
-                  variant="outline"
-                  className="mb-4"
-                >
-                  Show All Events
-                </Button>
-              )}
             </CardContent>
           </Card>
         )}
 
-        {/* Compact Events List */}
-        {!eventsLoading && !eventsError && filteredAndSortedEvents.length > 0 && (
+        {/* Simplified Events List */}
+        {!eventsLoading && !eventsError && events.length > 0 && (
           <div className="space-y-4">
-            {filteredAndSortedEvents.map((event) => {
+            {events.map((event) => {
               const eventStatus = getEventStatus(event);
               
               return (
@@ -554,51 +442,18 @@ export const Events: React.FC = () => {
                   onClick={() => handleEventClick(event.id)}
                 >
                   <CardContent className="p-0">
-                    <div className="flex h-32">
+                    <div className="flex h-32 relative">
                       {/* Event Image - 33% width */}
                       <div className="w-1/3 min-w-[120px] relative overflow-hidden bg-gray-100">
                         <img
                           src={event.bannerImage || `https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1`}
                           alt={event.name}
-                          className="event-image w-full h-full object-cover transition-transform duration-300"
+                          className="event-image w-full h-full object-cover"
                         />
-                        
-                        {/* Status Badge - positioned on image */}
-                        <div className="absolute top-2 left-2">
-                          <Badge
-                            className={`text-xs px-2 py-1 font-semibold ${
-                              eventStatus === "ongoing" 
-                                ? "bg-green-500 text-white event-status-ongoing" 
-                                : eventStatus === "upcoming"
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-500 text-white"
-                            }`}
-                          >
-                            {eventStatus === "ongoing" && "• LIVE"}
-                            {eventStatus === "upcoming" && "UPCOMING"}
-                            {eventStatus === "completed" && "COMPLETED"}
-                          </Badge>
-                        </div>
-
-                        {/* Price Badge - positioned on image */}
-                        {event.price !== undefined && (
-                          <div className="absolute bottom-2 left-2">
-                            <Badge
-                              className={`text-xs font-semibold ${
-                                event.price === 0 
-                                  ? "bg-green-100 text-green-800" 
-                                  : "bg-white text-gray-800"
-                              }`}
-                            >
-                              {event.price === 0 ? "Free" : `€${event.price}`}
-                            </Badge>
-                          </div>
-                        )}
                       </div>
 
                       {/* Event Content - 67% width */}
                       <div className="flex-1 p-4 relative">
-                        {/* Check-in Toggle - positioned in top right */}
                         <div className="flex flex-col justify-between h-full">
                           {/* Top Section */}
                           <div>
@@ -610,15 +465,14 @@ export const Events: React.FC = () => {
                             )}
                             
                             {/* Event Name */}
-                            <h3 className="font-bold text-base text-black mb-2 line-clamp-2 leading-tight">
+                            <h3 className="font-bold text-base text-black mb-2 line-clamp-2 leading-tight pr-8">
                               {event.name}
                             </h3>
 
-                            {/* Date & Time */}
+                            {/* Simplified Date & Time */}
                             <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                              <ClockIcon className="w-3 h-3 flex-shrink-0" />
-                              <span className="font-medium truncate">
-                                {formatEventDateTime(event.date, event.endDate)}
+                              <span className="font-medium">
+                                {formatEventDateTime(event.date)}
                               </span>
                             </div>
                             
@@ -629,6 +483,23 @@ export const Events: React.FC = () => {
                             </div>
                           </div>
                         </div>
+
+                        {/* Bookmark Button - Top Right */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => handleBookmarkToggle(e, event.id)}
+                          className={`bookmark-button absolute top-2 right-2 w-8 h-8 p-0 rounded-full ${
+                            event.isBookmarked 
+                              ? "text-yellow-500 bg-yellow-50 hover:bg-yellow-100" 
+                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          <BookmarkIcon 
+                            className="w-4 h-4" 
+                            fill={event.isBookmarked ? "currentColor" : "none"} 
+                          />
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
