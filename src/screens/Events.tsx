@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { CalendarIcon, MapPinIcon, UsersIcon, BookmarkIcon } from "lucide-react";
-import { format, isAfter, isBefore, parseISO } from "date-fns";
+import { format, isAfter, isBefore, parseISO, isToday, isTomorrow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { 
   useReadEventsApiV1EventsGet, 
@@ -264,13 +264,23 @@ export const Events: React.FC = () => {
   };
 
   /**
-   * Format event date and time - simplified to show only time and short date
+   * Format event date and time according to specific rules:
+   * - Today: "Today at HH:MM"
+   * - Tomorrow: "Tomorrow at HH:MM"
+   * - Other dates: "DD MMM at HH:MM"
    */
   const formatEventDateTime = (startDate: string) => {
     const start = parseISO(startDate);
-    const time = format(start, 'HH:mm');
-    const date = format(start, 'MMM dd');
-    return `${time} • ${date}`;
+    const time = format(start, 'HH:mm'); // 24-hour format
+    
+    if (isToday(start)) {
+      return `Today at ${time}`;
+    } else if (isTomorrow(start)) {
+      return `Tomorrow at ${time}`;
+    } else {
+      const date = format(start, 'dd MMM'); // DD MMM format
+      return `${date} at ${time}`;
+    }
   };
 
   /**
