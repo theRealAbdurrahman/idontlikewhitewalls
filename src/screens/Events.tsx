@@ -479,7 +479,7 @@ export const Events: React.FC = () => {
                             {/* Location */}
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <MapPinIcon className="w-3 h-3 flex-shrink-0" />
-                              <span className="truncate">{event.location}</span>
+                              <span className="line-clamp-2 leading-tight">{event.location}</span>
                             </div>
                           </div>
                         </div>
