@@ -250,10 +250,10 @@ export const EventDetails: React.FC = () => {
       joinEvent(event.id);
       setAttendeeCount(prev => prev + 1);
       
-      toast({
-        title: "Joined event!",
-        description: `You're now registered for ${event.name}.`,
-      });
+      // toast({
+      //   title: "Joined event!",
+      //   description: `You're now registered for ${event.name}.`,
+      // });
     } catch (error) {
       toast({
         title: "Failed to join event",
@@ -284,10 +284,10 @@ export const EventDetails: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
       checkInEvent(event.id);
       
-      toast({
-        title: "Checked in!",
-        description: `Welcome to ${event.name}!`,
-      });
+      // toast({
+      //   title: "Checked in!",
+      //   description: `Welcome to ${event.name}!`,
+      // });
       
       // Update the event state to mark as checked in
       checkInEvent(event.id);
@@ -315,12 +315,12 @@ export const EventDetails: React.FC = () => {
 
   const handleToggleBookmark = () => {
     setIsBookmarked(!isBookmarked);
-    toast({
-      title: isBookmarked ? "Removed from bookmarks" : "Added to bookmarks",
-      description: isBookmarked 
-        ? "Event removed from your bookmarks."
-        : "Event added to your bookmarks.",
-    });
+    // toast({
+    //   title: isBookmarked ? "Removed from bookmarks" : "Added to bookmarks",
+    //   description: isBookmarked 
+    //     ? "Event removed from your bookmarks."
+    //     : "Event added to your bookmarks.",
+    // });
   };
 
   const handleViewQuestions = () => {
@@ -725,7 +725,7 @@ export const EventDetails: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 <Button
-                  onClick={handleJoinEvent}
+                  onClick={() => handleCheckIn()}
                   disabled={isLoading}
                   className="w-full h-14 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white text-lg font-semibold rounded-xl event-action-button"
                 >
@@ -742,7 +742,7 @@ export const EventDetails: React.FC = () => {
                 {/* Check In Button for Joined Users */}
                 {event.isJoined && !event.isCheckedIn && eventStatus === "live" && (
                   <Button
-                    onClick={handleCheckIn}
+                    onClick={() => handleCheckIn()}
                     disabled={isLoading}
                     className="w-full h-14 bg-green-600 hover:bg-green-700 text-white text-lg font-semibold rounded-xl event-action-button"
                   >
