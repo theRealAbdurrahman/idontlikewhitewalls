@@ -12,13 +12,23 @@ import {
   BuildingIcon,
   PhoneIcon,
   MailIcon,
-  HeartIcon,
-  StarIcon
+  BookmarkIcon,
+  KeyIcon
 } from "lucide-react";
 import { format, parseISO, isAfter, isBefore, isToday } from "date-fns";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { Input } from "../components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
 import { useAppStore } from "../stores/appStore";
 import { useAuthStore } from "../stores/authStore";
 import { useToast } from "../hooks/use-toast";
@@ -98,6 +108,19 @@ const customStyles = `
     background-color: rgb(243 244 246);
     transform: scale(1.02);
   }
+  
+  .invite-code-card {
+    background: linear-gradient(135deg, #3ec6c6 0%, #2ea5a5 100%);
+    color: white;
+  }
+  
+  .invite-code-input {
+    letter-spacing: 0.5em;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 1.5rem;
+  }
 `;
 
 /**
@@ -112,17 +135,20 @@ export const EventDetails: React.FC = () => {
   
   // Local state
   const [isLoading, setIsLoading] = useState(false);
-  const [isFavorited, setIsFavorited] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [attendeeCount, setAttendeeCount] = useState(0);
+  const [isInviteCodeDialogOpen, setIsInviteCodeDialogOpen] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
+  const [isValidatingCode, setIsValidatingCode] = useState(false);
 
   const event = events.find(e => e.id === id);
 
-  // Initialize attendee count and favorite status
+  // Initialize attendee count and bookmark status
   useEffect(() => {
     if (event) {
       setAttendeeCount(event.attendeeCount || 0);
-      // TODO: In real app, fetch favorite status from API
-      setIsFavorited(Math.random() > 0.7); // Mock random favorite status
+      // TODO: In real app, fetch bookmark status from API
+      setIsBookmarked(Math.random() > 0.7); // Mock random bookmark status
     }
   }, [event]);
 
@@ -262,18 +288,71 @@ export const EventDetails: React.FC = () => {
     }
   };
 
-  const handleToggleFavorite = () => {
-    setIsFavorited(!isFavorited);
+  const handleToggleBookmark = () => {
+    setIsBookmarked(!isBookmarked);
     toast({
-      title: isFavorited ? "Removed from favorites" : "Added to favorites",
-      description: isFavorited 
-        ? "Event removed from your favorites."
-        : "Event added to your favorites.",
+      title: isBookmarked ? "Removed from bookmarks" : "Added to bookmarks",
+      description: isBookmarked 
+        ? "Event removed from your bookmarks."
+        : "Event added to your bookmarks.",
     });
   };
 
   const handleViewQuestions = () => {
     navigate("/home", { state: { filterByEvent: event?.id } });
+  };
+
+  /**
+   * Handle invite code submission
+   */
+  const handleInviteCodeSubmit = async () => {
+    if (!inviteCode.trim() || inviteCode.length !== 3) {
+      toast({
+        title: "Invalid code",
+        description: "Please enter a valid 3-digit invite code.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsValidatingCode(true);
+
+    try {
+      // Simulate API call to validate invite code
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Mock validation - accept "123" as valid code
+      if (inviteCode.toUpperCase() === "123") {
+        toast({
+          title: "Code accepted!",
+          description: "You now have access to exclusive event content.",
+        });
+        setIsInviteCodeDialogOpen(false);
+        setInviteCode("");
+      } else {
+        toast({
+          title: "Invalid invite code",
+          description: "Please check your code and try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Validation failed",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsValidatingCode(false);
+    }
+  };
+
+  /**
+   * Handle invite code input - only allow numbers and limit to 3 digits
+   */
+  const handleInviteCodeChange = (value: string) => {
+    const numericValue = value.replace(/[^0-9]/g, "").slice(0, 3);
+    setInviteCode(numericValue);
   };
 
   // Handle edge cases
@@ -332,16 +411,16 @@ export const EventDetails: React.FC = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleToggleFavorite}
+                onClick={handleToggleBookmark}
                 className={`w-10 h-10 rounded-full transition-all duration-200 ${
-                  isFavorited 
-                    ? "text-red-500 bg-red-50 hover:bg-red-100" 
+                  isBookmarked 
+                    ? "text-yellow-500 bg-yellow-50 hover:bg-yellow-100" 
                     : "text-gray-600 hover:bg-gray-100/80"
                 }`}
               >
-                <HeartIcon 
+                <BookmarkIcon 
                   className="w-5 h-5" 
-                  fill={isFavorited ? "currentColor" : "none"} 
+                  fill={isBookmarked ? "currentColor" : "none"} 
                 />
               </Button>
               
@@ -403,12 +482,13 @@ export const EventDetails: React.FC = () => {
 
         {/* Event Content */}
         <div className="px-4 py-6 space-y-6 pb-32">
-          {/* Event Header Info */}
+          {/* Event Header Info - Modified: Removed star rating, expanded event name */}
           <Card className="event-info-card bg-white rounded-2xl border border-gray-100 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
+                {/* Event name now takes full width */}
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2">
+                  <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2 w-full">
                     {event.name}
                   </h1>
                   {event.organizerName && (
@@ -417,12 +497,6 @@ export const EventDetails: React.FC = () => {
                       <span>Hosted by {event.organizerName}</span>
                     </p>
                   )}
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <StarIcon className="w-5 h-5 text-yellow-500 fill-current" />
-                  <span className="text-sm font-semibold text-gray-700">4.8</span>
-                  <span className="text-sm text-gray-500">(124)</span>
                 </div>
               </div>
               
@@ -481,6 +555,87 @@ export const EventDetails: React.FC = () => {
                     )}
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Enter Invite Code Section - NEW */}
+          <Card className="invite-code-card event-info-card rounded-2xl border border-gray-100 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                    <KeyIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Have an Invite Code?</h3>
+                    <p className="text-white/80 text-sm">
+                      Access exclusive event content and networking
+                    </p>
+                  </div>
+                </div>
+                <Dialog open={isInviteCodeDialogOpen} onOpenChange={setIsInviteCodeDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="bg-white/10 border-white/30 text-white hover:bg-white/20 transition-all duration-200"
+                    >
+                      Enter Code
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[400px]">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <KeyIcon className="w-5 h-5 text-[#3ec6c6]" />
+                        Enter Invite Code
+                      </DialogTitle>
+                      <DialogDescription>
+                        Enter your 3-digit invite code to access exclusive event features and content.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="py-6">
+                      <Input
+                        value={inviteCode}
+                        onChange={(e) => handleInviteCodeChange(e.target.value)}
+                        placeholder="123"
+                        className="invite-code-input text-center text-2xl font-bold h-16 border-2 border-gray-300 focus:border-[#3ec6c6]"
+                        maxLength={3}
+                        disabled={isValidatingCode}
+                      />
+                      <p className="text-xs text-gray-500 text-center mt-2">
+                        Enter the 3-digit code provided by the event organizer
+                      </p>
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsInviteCodeDialogOpen(false);
+                          setInviteCode("");
+                        }}
+                        disabled={isValidatingCode}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleInviteCodeSubmit}
+                        disabled={inviteCode.length !== 3 || isValidatingCode}
+                        className="bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                      >
+                        {isValidatingCode ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            Validating...
+                          </>
+                        ) : (
+                          "Submit Code"
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>
@@ -560,7 +715,7 @@ export const EventDetails: React.FC = () => {
           </Card>
         </div>
 
-        {/* Floating Action Buttons */}
+        {/* Floating Action Buttons - Modified: Removed "Preview Event Q&A" button */}
         <div className="fixed bottom-0 left-0 right-0 floating-action-section shadow-lg">
           <div className="p-6">
             {event.isJoined ? (
@@ -608,14 +763,6 @@ export const EventDetails: React.FC = () => {
                   ) : (
                     `Join Event${event.price && event.price > 0 ? ` • €${event.price}` : ""}`
                   )}
-                </Button>
-                
-                <Button
-                  onClick={handleViewQuestions}
-                  variant="outline"
-                  className="w-full h-12 font-semibold rounded-xl event-action-button border-2 border-gray-200 hover:border-[#3ec6c6] hover:text-[#3ec6c6]"
-                >
-                  Preview Event Q&A
                 </Button>
               </div>
             )}
