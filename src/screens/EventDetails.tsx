@@ -268,47 +268,59 @@ export const EventDetails: React.FC = () => {
   const handleCheckIn = async (skipDialog = false) => {
     if (!event || !user) return;
     
+    console.log("🔍 handleCheckIn called:", { eventId: event.id, skipDialog, isLoading });
+    
     // Check if event is private and we haven't validated the code yet
     const isPrivateEvent = event.maxAttendees === 50; // Mock: events with 50 max attendees are private
     
     if (isPrivateEvent && !skipDialog) {
+      console.log("🔐 Private event detected, showing invite code dialog");
       // Show invite code dialog for private events
       setIsInviteCodeDialogOpen(true);
       setInviteCodeError("");
       return;
     }
     
+    console.log("📝 Proceeding with check-in process");
     setIsLoading(true);
     
     try {
       await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
+      console.log("✅ Check-in API call completed successfully");
+      
       checkInEvent(event.id);
+      console.log("🔄 Event state updated, user checked in");
       
       toast({
         title: "Checked in!",
         description: `Welcome to ${event.name}!`,
       });
       
-      // Update the event state to mark as checked in
-      checkInEvent(event.id);
-      
       // Close dialog if it was open
       if (isInviteCodeDialogOpen) {
+        console.log("🚪 Closing invite code dialog");
         setIsInviteCodeDialogOpen(false);
         setInviteCode("");
         setInviteCodeError("");
       }
       
       // Seamless redirection: set event filter and navigate to home
+      console.log("🎯 Setting active filter to:", [event.id]);
       setActiveFilters([event.id]);
+      
+      console.log("🏠 Navigating to home page...");
       navigate("/home");
+      console.log("✨ Navigation command sent to /home");
+      
     } catch (error) {
+      console.error("❌ Check-in failed:", error);
       toast({
         title: "Failed to check in",
         description: "Please try again.",
         variant: "destructive",
       });
     } finally {
+      console.log("🔚 Setting loading to false");
       setIsLoading(false);
     }
   };
