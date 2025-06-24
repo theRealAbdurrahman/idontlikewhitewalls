@@ -446,38 +446,6 @@ export const EventDetails: React.FC = () => {
               className="w-full h-full object-cover rounded-2xl"
             />
             <div className="event-image-overlay absolute inset-0 rounded-2xl"></div>
-            
-            {/* Event Status Badge */}
-            <div className="absolute top-4 left-4">
-              <Badge
-                className={`text-xs font-semibold px-3 py-1 ${
-                  eventStatus === "live" 
-                    ? "bg-red-500 text-white event-status-live" 
-                    : eventStatus === "upcoming"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-500 text-white"
-                }`}
-              >
-                {eventStatus === "live" && "• LIVE NOW"}
-                {eventStatus === "upcoming" && "UPCOMING"}
-                {eventStatus === "completed" && "COMPLETED"}
-              </Badge>
-            </div>
-
-            {/* Price Badge */}
-            {event.price !== undefined && (
-              <div className="absolute top-4 right-4">
-                <Badge
-                  className={`text-sm font-semibold px-4 py-2 ${
-                    event.price === 0 
-                      ? "bg-green-500 text-white" 
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  {event.price === 0 ? "FREE" : `€${event.price}`}
-                </Badge>
-              </div>
-            )}
             </div>
           </div>
         </div>
@@ -500,15 +468,6 @@ export const EventDetails: React.FC = () => {
                     </p>
                   )}
                 </div>
-              </div>
-              
-              {/* Attendee Count */}
-              <div className="flex items-center gap-2 text-gray-600">
-                <UsersIcon className="w-5 h-5" />
-                <span className="font-medium">
-                  {attendeeCount.toLocaleString()} attending
-                  {event.maxAttendees && ` • ${event.maxAttendees.toLocaleString()} max`}
-                </span>
               </div>
             </CardContent>
           </Card>
@@ -760,10 +719,10 @@ export const EventDetails: React.FC = () => {
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Joining...
+                      Checking in...
                     </div>
                   ) : (
-                    `Join Event${event.price && event.price > 0 ? ` • €${event.price}` : ""}`
+                    `Checking in`
                   )}
                 </Button>
               </div>
