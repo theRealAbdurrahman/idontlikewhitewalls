@@ -316,7 +316,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
               className={`h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${
                 question.isUpvoted ? "bg-blue-50 border-blue-200 text-blue-600" : ""
               } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
-              }`}
             >
               <ArrowUpIcon className={`w-4 h-4 mr-2 ${question.isUpvoted ? "text-blue-600" : ""}`} />
               <span className="font-medium text-sm">
@@ -335,7 +334,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
               className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${
                 question.isMeToo ? "bg-orange-50 text-orange-600" : ""
               } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
-              }`}
             >
               <img 
                 src="/Metoo (1).svg" 
