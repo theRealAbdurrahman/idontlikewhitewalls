@@ -55,7 +55,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       isAuthenticated: true, // Skip authentication for now
       user: {
         // Default mock user for API calls
-        id: "user-123",
+        id: "09517f15-7dd3-4bed-96ea-e62138dcde16",
         name: "Stuart Wilson",
         email: "stuart@example.com",
         avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
@@ -76,7 +76,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       // Actions
       initializeMockUser: () => {
         const mockUser: User = {
-          id: "user-123",
+          id: "09517f15-7dd3-4bed-96ea-e62138dcde16",
           name: "Stuart Wilson",
           email: "stuart@example.com",
           avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
@@ -136,7 +136,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         
         // Simplified login - just set mock user
         const mockUser: User = {
-          id: "user-123",
+          id: "09517f15-7dd3-4bed-96ea-e62138dcde16",
           name: "Stuart Wilson",
           email: email,
           avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
@@ -196,7 +196,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         
         // Simplified LinkedIn login - just set mock user
         const mockUser: User = {
-          id: "user-123",
+          id: "09517f15-7dd3-4bed-96ea-e62138dcde16",
           name: "Stuart Wilson",
           email: "stuart@example.com",
           avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
