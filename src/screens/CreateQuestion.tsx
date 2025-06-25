@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { XIcon, ImageIcon, MicIcon, SparklesIcon, MessageCircleIcon, ChevronDownIcon } from "lucide-react";
 import { useCreateQuestionApiV1QuestionsPost, useReadEventsApiV1EventsGet } from "../api-client/api-client";
 import { Button } from "../components/ui/button";
+import { Switch } from "../components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,8 @@ export const CreateQuestion: React.FC = () => {
   const [selectedEvents, setSelectedEvents] = useState<string[]>(['']); // Default to first event
   const [visibility, setVisibility] = useState<"anyone" | "network" | "event">("anyone");
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [tempVisibility, setTempVisibility] = useState<"anyone" | "network" | "event">("anyone");
+  const [tempIsAnonymous, setTempIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEventsDropdownOpen, setIsEventsDropdownOpen] = useState(false);
   const [isVisibilityDropdownOpen, setIsVisibilityDropdownOpen] = useState(false);
@@ -168,19 +171,43 @@ export const CreateQuestion: React.FC = () => {
    * Get display text for selected visibility option
    */
   const getVisibilityText = () => {
-    if (isAnonymous) {
-      return "Anonymous";
-    }
     switch (visibility) {
       case "anyone":
-        return "Anyone can help";
+        return isAnonymous ? "Anonymous - Anyone can help" : "Anyone can help";
       case "network":
-        return "My network";
+        return isAnonymous ? "Anonymous - My network" : "My network";
       case "event":
-        return "This event only";
+        return isAnonymous ? "Anonymous - This event only" : "This event only";
       default:
-        return "Public";
+        return isAnonymous ? "Anonymous - Anyone can help" : "Anyone can help";
     }
+  };
+
+  /**
+   * Handle opening visibility dropdown
+   */
+  const handleOpenVisibilityDropdown = () => {
+    setTempVisibility(visibility);
+    setTempIsAnonymous(isAnonymous);
+    setIsVisibilityDropdownOpen(true);
+  };
+
+  /**
+   * Handle saving visibility settings
+   */
+  const handleSaveVisibility = () => {
+    setVisibility(tempVisibility);
+    setIsAnonymous(tempIsAnonymous);
+    setIsVisibilityDropdownOpen(false);
+  };
+
+  /**
+   * Handle canceling visibility changes
+   */
+  const handleCancelVisibility = () => {
+    setTempVisibility(visibility);
+    setTempIsAnonymous(isAnonymous);
+    setIsVisibilityDropdownOpen(false);
   };
 
   /**
@@ -395,6 +422,7 @@ export const CreateQuestion: React.FC = () => {
               <DropdownMenu open={isVisibilityDropdownOpen} onOpenChange={setIsVisibilityDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button
+                    onClick={handleOpenVisibilityDropdown}
                     variant="outline"
                     className="flex items-center gap-2 px-4 py-2 rounded-full border-gray-300 bg-white hover:bg-gray-50 font-medium text-gray-900"
                     disabled={isSubmitting}
@@ -404,81 +432,104 @@ export const CreateQuestion: React.FC = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-[calc(100vw-40px)] p-2" align="start">
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => {
-                        setVisibility("anyone");
-                        setIsAnonymous(false);
-                        setIsVisibilityDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-3 rounded-md hover:bg-gray-100 ${
-                        visibility === "anyone" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium">Anyone can help</div>
-                        <div className="text-xs text-gray-500 leading-tight">
-                          Visible everywhere - on your profile, in feeds etc
+                  <div className="p-4">
+                    <h3 className="font-semibold text-gray-900 mb-4">Who can see and help with this question?</h3>
+                    
+                    {/* Visibility Options with Radio Buttons */}
+                    <div className="space-y-3 mb-6">
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="visibility"
+                          value="anyone"
+                          checked={tempVisibility === "anyone"}
+                          onChange={(e) => setTempVisibility(e.target.value as "anyone")}
+                          className="mt-1 w-4 h-4 text-[#3ec6c6] border-gray-300 focus:ring-[#3ec6c6]"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">Anyone can help</div>
+                          <div className="text-xs text-gray-500 leading-tight mt-1">
+                            Visible everywhere - on your profile, in feeds etc
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVisibility("network");
-                        setIsAnonymous(false);
-                        setIsVisibilityDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-3 rounded-md hover:bg-gray-100 ${
-                        visibility === "network" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium">My network</div>
-                        <div className="text-xs text-gray-500 leading-tight">
-                          Shows in selected event feeds, your personal networks' feeds, communities you belong to and on your profile
+                      </label>
+                      
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="visibility"
+                          value="network"
+                          checked={tempVisibility === "network"}
+                          onChange={(e) => setTempVisibility(e.target.value as "network")}
+                          className="mt-1 w-4 h-4 text-[#3ec6c6] border-gray-300 focus:ring-[#3ec6c6]"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">My network</div>
+                          <div className="text-xs text-gray-500 leading-tight mt-1">
+                            Shows in selected event feeds, your personal networks' feeds, communities you belong to and on your profile
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVisibility("event");
-                        setIsAnonymous(false);
-                        setIsVisibilityDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-3 rounded-md hover:bg-gray-100 ${
-                        visibility === "event" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium">This event only</div>
-                        <div className="text-xs text-gray-500 leading-tight">
-                          Appears in the event feed now and disappears from your profile when the event ends
+                      </label>
+                      
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="visibility"
+                          value="event"
+                          checked={tempVisibility === "event"}
+                          onChange={(e) => setTempVisibility(e.target.value as "event")}
+                          className="mt-1 w-4 h-4 text-[#3ec6c6] border-gray-300 focus:ring-[#3ec6c6]"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">This event only</div>
+                          <div className="text-xs text-gray-500 leading-tight mt-1">
+                            Appears in the event feed now and disappears from your profile when the event ends
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsAnonymous(true);
-                        setIsVisibilityDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-3 rounded-md hover:bg-gray-100 ${
-                        isAnonymous ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium">Anonymous</div>
-                        <div className="text-xs text-gray-500 leading-tight space-y-0.5">
-                          <div>• Your identity is hidden</div>
-                          <div>• The question will not appear on your profile</div>
-                          <div>• Only users who interact 'I can help' will see who has asked</div>
-                          <div>• Use this when you want help without being in the spotlight</div>
+                      </label>
+                    </div>
+                    
+                    {/* Anonymous Toggle */}
+                    <div className="border-t border-gray-200 pt-4 mb-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900 mb-1">Post anonymously</div>
+                          <div className="text-xs text-gray-500 leading-tight">
+                            <div>• Your identity is hidden</div>
+                            <div>• The question will not appear on your profile</div>
+                            <div>• Only users who interact 'I can help' will see who has asked</div>
+                            <div>• Use this when you want help without being in the spotlight</div>
+                          </div>
                         </div>
+                        <Switch
+                          checked={tempIsAnonymous}
+                          onCheckedChange={setTempIsAnonymous}
+                          className="ml-4"
+                        />
                       </div>
-                    </button>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={handleCancelVisibility}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleSaveVisibility}
+                        className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                      >
+                        Save
+                      </Button>
+                    </div>
                   </div>
                 </DropdownMenuContent>
-               </DropdownMenu>
+              </DropdownMenu>
             </div>
+            
             {/* Action Buttons Row - FIXED LAYOUT */}
             <div className="flex items-center justify-between">
               {/* Left Side - Improve with AI */}
