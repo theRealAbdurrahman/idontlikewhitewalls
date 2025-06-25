@@ -18,6 +18,7 @@ import { UserProfile } from "./screens/UserProfile";
 import { ProfilePage } from "./screens/ProfilePage";
 import { Chat } from "./screens/Chat";
 import { OfferHelp } from "./screens/OfferHelp";
+import { SuggestFeature } from "./screens/SuggestFeature";
 import { useAuthStore } from "./stores/authStore";
 
 export const App = (): JSX.Element => {
@@ -48,6 +49,7 @@ export const App = (): JSX.Element => {
           <Route path="/create-community" element={<CreateCommunity />} />
           <Route path="/communities" element={<Communities />} />
           <Route path="/offer-help/:questionId" element={<OfferHelp />} />
+          <Route path="/suggest-feature" element={<SuggestFeature />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </Layout>
