@@ -106,7 +106,7 @@ export const QuestionDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { questions, chatThreads } = useAppStore();
+  const { questions, chatThreads, messages } = useAppStore();
   
   // Local state
   const [activeTab, setActiveTab] = useState<"me_too" | "can_help">("me_too");
@@ -126,6 +126,8 @@ export const QuestionDetails: React.FC = () => {
   // Find the question
   const question = questions.find(q => q.id === id);
 
+  // Check if this is the current user's own question
+  const isOwnQuestion = question?.authorId === user?.id;
   // Enhanced mock interaction data
   const mockInteractions: QuestionInteraction[] = [
     {
@@ -318,16 +320,20 @@ export const QuestionDetails: React.FC = () => {
   const handleCanHelp = () => {
     if (!user || !question) return;
     
-    const existingThread = chatThreads.find(thread => 
-      thread.participants.includes(user.id) && 
-      thread.participants.includes(question.authorId) &&
-      thread.questionId === question.id
-    );
+    // Generate thread ID for this help conversation
+    const threadId = `help-${question.id}-${user.id}`;
     
-    if (existingThread) {
-      navigate(`/chat/${existingThread.id}`);
+    // Check if there's already a thread with messages (not just preview)
+    const existingThread = chatThreads.find(thread => thread.id === threadId);
+    const threadMessages = messages[threadId] || [];
+    const hasActualMessages = threadMessages.some(msg => msg.type !== "preview" && msg.senderId === user.id);
+    
+    if (existingThread && hasActualMessages) {
+      // Navigate to existing chat thread without question parameter
+      navigate(`/chat/${threadId}`);
     } else {
-      navigate(`/offer-help/${question.id}`);
+      // Navigate to chat with question parameter to trigger offer help mode
+      navigate(`/chat/${threadId}?questionId=${question.id}`);
     }
   };
 
@@ -646,6 +652,59 @@ export const QuestionDetails: React.FC = () => {
                   </div>
                 )}
               </div>
+                {/* Action Buttons - Only show for other users' questions */}
+                {!isOwnQuestion && (
+                  <div className="flex items-center justify-between gap-3 pt-2">
+                    {/* Upvote */}
+                    <Button
+                      variant="outline"
+                      onClick={handleUpvote}
+                      disabled={createInteractionMutation.isPending}
+                      className={`action-button h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${
+                        question.isUpvoted ? "bg-blue-50 border-blue-200 text-blue-600" : ""
+                      }`}
+                    >
+                      <ArrowUpIcon className={`w-4 h-4 mr-2 ${question.isUpvoted ? "text-blue-600" : ""}`} />
+                      <span className="font-medium text-sm">
+                        {question.upvotes}
+                      </span>
+                    </Button>
+
+                    {/* Me Too */}
+                    <Button
+                      variant="outline"
+                      onClick={handleMeToo}
+                      disabled={createInteractionMutation.isPending}
+                      className={`action-button h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${
+                        question.isMeToo ? "bg-orange-50 text-orange-600" : ""
+                      }`}
+                    >
+                      <img 
+                        src="/Metoo (1).svg" 
+                        alt="Me too" 
+                        className={`w-6 h-6 mr-1 ${question.isMeToo ? "filter-orange" : ""}`} 
+                      />
+                      <span className="font-normal text-sm mr-1">Me too</span>
+                      <span className="font-medium text-sm">{question.meTooCount}</span>
+                    </Button>
+
+                    {/* I Can Help */}
+                    <Button
+                      variant="outline"
+                      onClick={handleCanHelp}
+                      disabled={createInteractionMutation.isPending}
+                      className="action-button h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    >
+                      <img 
+                        src="/I Can Help.svg" 
+                        alt="I can help" 
+                        className="w-6 h-6 mr-1" 
+                      />
+                      <span className="font-normal text-sm mr-1">I can help</span>
+                      <span className="font-medium text-sm">{question.canHelpCount}</span>
+                    </Button>
+                  </div>
+                )}
 
             </CardContent>
           </Card>
