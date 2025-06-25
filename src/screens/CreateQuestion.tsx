@@ -514,39 +514,46 @@ export const CreateQuestion: React.FC = () => {
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                      <SparklesIcon className="w-5 h-5 text-[#3ec6c6]" />
-                      AI Question Enhancement
+                      Why there is no AI, yet
                     </DialogTitle>
-                    <DialogDescription className="text-left space-y-3">
+                    <DialogDescription className="text-left space-y-4 text-sm leading-relaxed">
                       <p>
-                        We built this feature but disabled it because we believe 
-                        <strong> questions should be human and authentic</strong>.
+                        We built a feature to help you improve your questions with AI, but then we paused.
                       </p>
-                      
-                      <div>
-                        <p className="font-medium text-gray-900 mb-2">Tips for asking better questions:</p>
-                        <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                          <li>Be specific about what you need help with</li>
-                          <li>Include context about your situation</li>
-                          <li>Mention any constraints or requirements</li>
-                          <li>Ask one clear question at a time</li>
-                        </ul>
-                      </div>
+                      <p>
+                        We realized that raw, human questions, even if imperfect, are often more powerful, relatable and real. So for now, we're choosing authenticity over polish.
+                      </p>
+                      <p>
+                        Still, not everyone finds it easy to ask for help. If you'd like a gentle assist, to express yourself more clearly, or just fix grammar, let us know.
+                      </p>
+                      <p className="font-medium">
+                        We're listening.
+                      </p>
                     </DialogDescription>
                   </DialogHeader>
-                  <DialogFooter className="flex-col sm:flex-col space-y-2">
+                  <DialogFooter className="flex-col sm:flex-col space-y-3">
                     <Button
-                      onClick={handleSuggestFeature}
-                      className="w-full bg-[#3ec6c6] hover:bg-[#3999a8] text-white"
+                      onClick={() => {
+                        // TODO: Implement tips modal or navigation
+                        toast({
+                          title: "Tips coming soon!",
+                          description: "We're working on a comprehensive guide for asking great questions.",
+                        });
+                      }}
+                      className="w-full bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                    >
+                      Tips: How to ask a good question
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        navigate("/suggest-feature");
+                      }}
+                      variant="outline"
+                      className="w-full"
                     >
                       <MessageCircleIcon className="w-4 h-4 mr-2" />
-                      Suggest a Feature
+                      Suggest a feature
                     </Button>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="w-full">
-                        Got it, thanks!
-                      </Button>
-                    </DialogTrigger>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
