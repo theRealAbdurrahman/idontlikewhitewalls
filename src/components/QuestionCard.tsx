@@ -61,7 +61,7 @@ interface QuestionCardProps {
  */
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const { user } = useAuthStore();
-  const { chatThreads } = useAppStore();
+  const { chatThreads, messages } = useAppStore();
   const navigate = useNavigate();
   
   // API mutations for interactions
