@@ -314,18 +314,11 @@ export const Chat: React.FC = () => {
                       <span className="block text-xs text-gray-500 mb-1">
                         {message.isPublicVisible 
                           ? "Others can see you offered to help. Your message remains private."
-                          : "Only the question author can see this."
-                  placeholder={isInitialOfferHelpMode 
-                    ? `This is how I can help ${question?.isAnonymous ? 'them' : question?.authorName}...`
-                    : "Type a message..."
-                  className="px-6 py-2 h-10 bg-[#FFCA28] hover:bg-[#ffb300] text-black rounded-full font-medium disabled:opacity-50"
+                          : "Only the question author can see this."}
                       </span>
-                  {isInitialOfferHelpMode ? "Send" : (
-                    <>
-                      <SendIcon className="w-4 h-4 mr-2" />
-                      Send
-                    </>
-                  )}
+                    )}
+                    {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
+                  </p>
                 </div>
               </div>
             );
@@ -343,7 +336,9 @@ export const Chat: React.FC = () => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type a message..."
+              placeholder={isInitialOfferHelpMode 
+                ? `This is how I can help ${question?.isAnonymous ? 'them' : question?.authorName}...`
+                : "Type a message..."}
               rows={1}
               className="w-full p-3 border border-gray-300 rounded-[25px] focus:outline-none focus:ring-2 focus:ring-[#5ae0e0] focus:border-transparent resize-none max-h-24 bg-[#fbfbfb]"
               style={{ minHeight: "44px" }}
@@ -387,8 +382,12 @@ export const Chat: React.FC = () => {
               disabled={!newMessage.trim()}
               className="px-6 py-2 h-10 bg-[#ffb300] hover:bg-[#ffd580] text-black rounded-full font-medium disabled:opacity-50"
             >
-              <SendIcon className="w-4 h-4 mr-2" />
-              Send
+              {isInitialOfferHelpMode ? "Send" : (
+                <>
+                  <SendIcon className="w-4 h-4 mr-2" />
+                  Send
+                </>
+              )}
             </Button>
           </div>
         </div>
