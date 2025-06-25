@@ -969,6 +969,24 @@ export const QuestionDetails: React.FC = () => {
             </CardContent>
           </div>
         </div>
+
+        {/* Suggest a Feature Section */}
+        <div className="flex flex-col items-center justify-center pb-[50px]">
+          <img 
+            src="/Icon_suggest a feature.png" 
+            alt="Suggest a feature" 
+            className="w-6 h-6 mb-[5px]" 
+          />
+          <span 
+            className="text-[#404040]"
+            style={{ 
+              fontFamily: 'Livvic, sans-serif', 
+              fontSize: '11px'
+            }}
+          >
+            Suggest a feature
+          </span>
+        </div>
       </div>
     </>
   );
