@@ -693,7 +693,7 @@ export const QuestionDetails: React.FC = () => {
                 style={{ fontSize: 'min(14px, 3.5vw)', gap: '10px' }}
               >
                 <img 
-                  src="/Icon_I can help.png" 
+                  src="/I Can Help.svg" 
                   alt="I can help" 
                   className="w-4 h-4" 
                   style={{ 
