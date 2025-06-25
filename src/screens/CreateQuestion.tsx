@@ -419,8 +419,8 @@ export const CreateQuestion: React.FC = () => {
           <div className="px-4 py-4 border-gray-200 bg-[#fbfbfb]">
             {/* Visibility Selection */}
             <div className="mb-4 flex items-center gap-3">
-              <DropdownMenu open={isVisibilityDropdownOpen} onOpenChange={setIsVisibilityDropdownOpen}>
-                <DropdownMenuTrigger asChild>
+              <Dialog open={isVisibilityDropdownOpen} onOpenChange={setIsVisibilityDropdownOpen}>
+                <DialogTrigger asChild>
                   <Button
                     onClick={handleOpenVisibilityDropdown}
                     variant="outline"
@@ -430,13 +430,15 @@ export const CreateQuestion: React.FC = () => {
                     <span>{getVisibilityText()}</span>
                     <ChevronDownIcon className="w-4 h-4 text-gray-500" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[calc(100vw-40px)] p-2" align="start">
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-4">Who can see and help with this question?</h3>
+                </DialogTrigger>
+                <DialogContent className="w-[calc(100vw-40px)] max-w-none mx-5">
+                  <DialogHeader>
+                    <DialogTitle className="text-left">Who can see and help with this question?</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6">
                     
                     {/* Visibility Options with Radio Buttons */}
-                    <div className="space-y-3 mb-6">
+                    <div className="space-y-4">
                       <label className="flex items-start gap-3 cursor-pointer">
                         <input
                           type="radio"
@@ -490,7 +492,7 @@ export const CreateQuestion: React.FC = () => {
                     </div>
                     
                     {/* Anonymous Toggle */}
-                    <div className="border-t border-gray-200 pt-4 mb-6">
+                    <div className="border-t border-gray-200 pt-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="text-sm font-medium text-gray-900 mb-1">Post anonymously</div>
@@ -508,26 +510,24 @@ export const CreateQuestion: React.FC = () => {
                         />
                       </div>
                     </div>
-                    
-                    {/* Action Buttons */}
-                    <div className="flex gap-3">
-                      <Button
-                        variant="outline"
-                        onClick={handleCancelVisibility}
-                        className="flex-1"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleSaveVisibility}
-                        className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-                      >
-                        Save
-                      </Button>
-                    </div>
                   </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  <DialogFooter className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={handleCancelVisibility}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSaveVisibility}
+                      className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                    >
+                      Save
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
             
             {/* Action Buttons Row - FIXED LAYOUT */}
