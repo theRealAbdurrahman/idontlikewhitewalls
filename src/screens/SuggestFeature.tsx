@@ -219,7 +219,7 @@ export const SuggestFeature: React.FC = () => {
 
         {/* Chat Input Section - Fixed at Bottom */}
         <div className="fixed bottom-0 left-0 right-0 chat-input-container" style={{ paddingBottom: '50px', paddingTop: '16px', paddingLeft: '20px', paddingRight: '20px' }}>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {/* Text Input */}
             <div className="w-full relative">
               <textarea
@@ -228,12 +228,13 @@ export const SuggestFeature: React.FC = () => {
                 onChange={handleTextareaChange}
                 onKeyPress={handleKeyPress}
                 placeholder="Share your idea"
-                className="message-input w-full px-4 py-3 border border-gray-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white"
+                className="message-input w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white"
                 style={{ 
                   minHeight: "38px",
                   maxHeight: "120px",
                   fontSize: message.trim() ? '12px' : '12px',
-                  color: message.trim() ? '#000000' : '#8F8F8F'
+                  color: message.trim() ? '#000000' : '#8F8F8F',
+                  borderRadius: '10px'
                 }}
                 disabled={isSubmitting}
               />
@@ -260,7 +261,8 @@ export const SuggestFeature: React.FC = () => {
               <Button
                 onClick={handleSendMessage}
                 disabled={!message.trim() || isSubmitting}
-                className="send-button px-6 py-3 h-12 bg-[#4285f4] hover:bg-[#3367d6] text-white rounded-3xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="send-button px-6 py-3 h-12 text-white rounded-3xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#FFCA28' }}
               >
                 {isSubmitting ? (
                   <>
@@ -276,7 +278,7 @@ export const SuggestFeature: React.FC = () => {
           
           {/* Recording Status */}
           {isRecording && (
-            <div className="mt-3 flex items-center justify-center">
+            <div className="mt-2 flex items-center justify-center">
               <div className="flex items-center gap-2 bg-red-100 text-red-700 px-3 py-2 rounded-full text-sm">
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                 Recording... (Voice-to-text coming soon!)
