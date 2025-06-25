@@ -2,11 +2,9 @@ import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeftIcon,
-  SendIcon, 
   MicIcon
 } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
 import { useToast } from "../hooks/use-toast";
 
 /**
@@ -46,7 +44,12 @@ const customStyles = `
   
   .send-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 179, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+  }
+  
+  .chat-input-container {
+    background: rgba(240, 239, 235, 0.95);
+    backdrop-filter: blur(20px);
   }
 `;
 
@@ -187,10 +190,10 @@ export const SuggestFeature: React.FC = () => {
         </header>
 
         {/* Chat Content - Default Empty State */}
-        <div className="flex-1 pt-20 px-4 py-6 flex flex-col justify-center items-center">
+        <div className="flex-1 pt-20 px-4 py-6 flex flex-col justify-center">
           {/* Welcome Message - Left Aligned */}
-          <div className="w-full max-w-md mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="w-full mb-8">
+            <div className="bg-white rounded-3xl p-6 shadow-sm max-w-sm">
               <h2 
                 className="mb-3 leading-tight"
                 style={{ 
@@ -214,9 +217,9 @@ export const SuggestFeature: React.FC = () => {
           </div>
         </div>
 
-        {/* Message Input Section - Fixed at Bottom with 50px padding */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#f0efeb] border-t border-gray-200" style={{ paddingBottom: '50px' }}>
-          <div className="flex items-end gap-3">
+        {/* Chat Input Section - Fixed at Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 chat-input-container" style={{ paddingBottom: '50px', paddingTop: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
+          <div className="flex items-end gap-2">
             {/* Text Input */}
             <div className="flex-1 relative">
               <textarea
@@ -225,9 +228,9 @@ export const SuggestFeature: React.FC = () => {
                 onChange={handleTextareaChange}
                 onKeyPress={handleKeyPress}
                 placeholder="Share your idea"
-                className="message-input w-full p-4 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent resize-none bg-white"
+                className="message-input w-full px-4 py-3 border border-gray-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white"
                 style={{ 
-                  minHeight: "52px",
+                  minHeight: "48px",
                   maxHeight: "120px",
                   fontSize: message.trim() ? '12px' : '12px',
                   color: message.trim() ? '#000000' : '#8F8F8F'
@@ -241,32 +244,29 @@ export const SuggestFeature: React.FC = () => {
               variant="ghost"
               size="icon"
               onClick={handleVoiceRecording}
-              className={`voice-button w-12 h-12 rounded-full p-0 ${
+              className={`voice-button w-10 h-10 rounded-full p-0 ${
                 isRecording 
                   ? "bg-red-100 text-red-600 hover:bg-red-200" 
                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
               }`}
               disabled={isSubmitting}
             >
-              <MicIcon className={`w-5 h-5 ${isRecording ? "animate-pulse" : ""}`} />
+              <MicIcon className={`w-4 h-4 ${isRecording ? "animate-pulse" : ""}`} />
             </Button>
 
             {/* Send Button */}
             <Button
               onClick={handleSendMessage}
               disabled={!message.trim() || isSubmitting}
-              className="send-button px-6 py-3 h-12 bg-[#ffb300] hover:bg-[#ffd580] text-black rounded-2xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="send-button px-6 py-3 h-12 bg-[#4285f4] hover:bg-[#3367d6] text-white rounded-3xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                   Sending...
                 </>
               ) : (
-                <>
-                  <SendIcon className="w-4 h-4 mr-2" />
-                  Send
-                </>
+                "Send"
               )}
             </Button>
           </div>
