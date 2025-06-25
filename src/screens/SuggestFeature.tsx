@@ -186,53 +186,36 @@ export const SuggestFeature: React.FC = () => {
           </div>
         </header>
 
-        {/* Content */}
-        <div className="flex-1 pt-20 px-4 py-6">
-          {/* Welcome Message Card */}
-          <Card className="mb-6 bg-white rounded-2xl border-none shadow-sm">
-            <CardContent className="p-6">
-              <div className="text-center space-y-4">
-                <h2 className="text-xl font-bold text-gray-900 leading-tight">
-                  Meetball is built by people like you.
-                </h2>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  If you've got an idea, let us know :)
-                </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Your idea and suggestion will be shared with our team internally only.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Example Suggestions */}
-          <div className="space-y-3 mb-6">
-            <Card className="bg-blue-50 border-blue-100">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <p className="text-blue-900 font-medium text-sm mb-1">PavitraST</p>
-                    <p className="text-blue-800 text-sm leading-relaxed">
-                      I would like to be able to check-in to the conference using this app, directly when at the event. Not sure how you can do this but will be very helpful
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-green-50 border-green-100">
-              <CardContent className="p-4">
-                <p className="text-green-800 text-sm leading-relaxed">
-                  Thank you so much! If you have any more ideas, feel free to share them with us here!
-                </p>
-              </CardContent>
-            </Card>
+        {/* Chat Content - Default Empty State */}
+        <div className="flex-1 pt-20 px-4 py-6 flex flex-col justify-center items-center">
+          {/* Welcome Message - Left Aligned */}
+          <div className="w-full max-w-md mb-8">
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <h2 
+                className="mb-3 leading-tight"
+                style={{ 
+                  fontSize: '14px', 
+                  color: '#000000',
+                  fontWeight: '600'
+                }}
+              >
+                Meetball is built by people like you. If you've got an idea, let us know :)
+              </h2>
+              <p 
+                className="leading-relaxed"
+                style={{ 
+                  fontSize: '12px', 
+                  color: '#000000'
+                }}
+              >
+                Your idea and suggestion will be shared with our team internally only.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Message Input Section */}
-        <div className="p-4 bg-[#f0efeb] border-t border-gray-200">
+        {/* Message Input Section - Fixed at Bottom with 50px padding */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#f0efeb] border-t border-gray-200" style={{ paddingBottom: '50px' }}>
           <div className="flex items-end gap-3">
             {/* Text Input */}
             <div className="flex-1 relative">
@@ -245,7 +228,9 @@ export const SuggestFeature: React.FC = () => {
                 className="message-input w-full p-4 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent resize-none bg-white"
                 style={{ 
                   minHeight: "52px",
-                  maxHeight: "120px"
+                  maxHeight: "120px",
+                  fontSize: message.trim() ? '12px' : '12px',
+                  color: message.trim() ? '#000000' : '#8F8F8F'
                 }}
                 disabled={isSubmitting}
               />
