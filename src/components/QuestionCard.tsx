@@ -68,14 +68,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const createInteractionMutation = useCreateInteractionApiV1InteractionsPost();
   const deleteInteractionMutation = useDeleteInteractionApiV1InteractionsInteractionIdDelete();
   
-  // COMMENTED OUT: Local state management for future reference
-  // const { toggleUpvote, toggleMeToo, toggleBookmark } = useAppStore();
+  // Check if this is the current user's own question
+  const isOwnQuestion = question.authorId === user?.id;
 
   const handleUpvote = () => {
-    if (!user) return;
-    
-    // COMMENTED OUT: Local state update for future reference
-    // toggleUpvote(question.id);
+    // Don't allow interaction with own questions
+    if (!user || isOwnQuestion) return;
     
     // Use API to toggle upvote
     if (question.isUpvoted) {
@@ -102,10 +100,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   };
 
   const handleMeToo = () => {
-    if (!user) return;
-    
-    // COMMENTED OUT: Local state update for future reference
-    // toggleMeToo(question.id);
+    // Don't allow interaction with own questions
+    if (!user || isOwnQuestion) return;
     
     // Use API to toggle me too
     if (question.isMeToo) {
@@ -132,10 +128,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   };
 
   const handleBookmark = () => {
+    // Allow bookmarking own questions
     if (!user) return;
-    
-    // COMMENTED OUT: Local state update for future reference
-    // toggleBookmark(question.id);
     
     // Use API to toggle bookmark
     if (question.isBookmarked) {
@@ -162,12 +156,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   };
 
   const handleCanHelp = () => {
-    if (!user || !question) return;
-    if (event) {
-      event.stopPropagation();
-    }
-    
-    if (!user) return;
+    // Don't allow offering help on own questions
+    if (!user || !question || isOwnQuestion) return;
     
     // Generate thread ID for this help conversation
     const threadId = `help-${question.id}-${user.id}`;
@@ -254,7 +244,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleBookmark}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent question click event
+                  handleBookmark();
+                }}
                 className={`w-6 h-6 p-0 ${
                   question.isBookmarked ? "text-yellow-500" : "text-gray-400"
                 }`}
@@ -264,6 +257,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={(e) => e.stopPropagation()} // Prevent question click event
                 className="w-6 h-6 p-0 text-gray-400"
               >
                 <MoreVerticalIcon className="w-5 h-5" />
@@ -314,10 +308,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
             {/* Upvote */}
             <Button
               variant="outline"
-              onClick={handleUpvote}
-              disabled={createInteractionMutation.isPending}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent question click event
+                handleUpvote();
+              }}
+              disabled={createInteractionMutation.isPending || isOwnQuestion}
               className={`h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${
                 question.isUpvoted ? "bg-blue-50 border-blue-200 text-blue-600" : ""
+              } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
               }`}
             >
               <ArrowUpIcon className={`w-4 h-4 mr-2 ${question.isUpvoted ? "text-blue-600" : ""}`} />
@@ -329,10 +327,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
             {/* Me Too */}
             <Button
               variant="outline"
-              onClick={handleMeToo}
-              disabled={createInteractionMutation.isPending}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent question click event
+                handleMeToo();
+              }}
+              disabled={createInteractionMutation.isPending || isOwnQuestion}
               className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${
                 question.isMeToo ? "bg-orange-50 text-orange-600" : ""
+              } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
               }`}
             >
               <img 
@@ -351,8 +353,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 e.stopPropagation(); // Prevent card click event
                 handleCanHelp();
               }}
-              disabled={createInteractionMutation.isPending}
-              className="h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors"
+              disabled={createInteractionMutation.isPending || isOwnQuestion}
+              className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors ${
+                isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               <img 
                 src="/I Can Help.svg" 
