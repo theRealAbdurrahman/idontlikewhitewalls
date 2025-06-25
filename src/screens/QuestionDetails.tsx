@@ -556,9 +556,9 @@ export const QuestionDetails: React.FC = () => {
         </header>
 
         {/* Enhanced Question Content with better spacing and shadows */}
-        <div className="px-4 py-6 pt-[120px]">
-          <Card className="w-full bg-white rounded-2xl border-none question-content-shadow">
-            <CardContent className="p-6 space-y-6">
+        <div className="pt-[90px]">
+          <Card className="w-full bg-white border-none question-content-shadow">
+            <CardContent className="p-4 space-y-6">
               {/* Enhanced Header with better typography */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3 flex-1">
@@ -659,7 +659,7 @@ export const QuestionDetails: React.FC = () => {
           className={`${
             isTabsSticky 
               ? 'fixed top-[100px] left-0 right-0 z-30 sticky-tabs shadow-sm' 
-              : 'relative bg-[#f0efeb]'
+              : 'relative bg-[#f0efeb] px-4'
           } transition-all duration-300`}
         >
           <Tabs 
@@ -711,7 +711,7 @@ export const QuestionDetails: React.FC = () => {
         </div>
 
         {/* Enhanced Content with better empty states and animations */}
-        <div className="pb-8">
+        <div className="pb-[30px]">
           <div className="mt-4 bg-white overflow-hidden">
             <CardContent className="p-0">
               {activeTab === "me_too" && (
