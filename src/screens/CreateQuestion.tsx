@@ -504,7 +504,7 @@ export const CreateQuestion: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                </DropdownMenuContent>
+                </SheetContent>
               </DropdownMenu>
             </div>
 
