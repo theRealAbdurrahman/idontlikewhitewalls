@@ -13,6 +13,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Switch } from "../components/ui/switch";
+import { 
+  useCreateInteractionApiV1InteractionsPost 
+} from "../api-client/api-client";
+import { InteractionTarget, InteractionType } from "../api-client/models";
 import { useAppStore } from "../stores/appStore";
 import { useAuthStore } from "../stores/authStore";
 
@@ -28,7 +32,11 @@ export const Chat: React.FC = () => {
   
   const [newMessage, setNewMessage] = useState("");
   const [isPublicVisible, setIsPublicVisible] = useState(true); // Default: ON
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // API mutation for creating interactions
+  const createInteractionMutation = useCreateInteractionApiV1InteractionsPost();
 
   // Get questionId from URL query parameters
   const searchParams = new URLSearchParams(location.search);
@@ -113,42 +121,69 @@ export const Chat: React.FC = () => {
   /**
    * Handle sending message
    */
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || !currentThreadId || !user) return;
 
-    // Determine receiver ID
-    let receiverId = "";
-    if (isInitialOfferHelpMode && question) {
-      receiverId = question.authorId;
-    } else if (thread) {
-      receiverId = thread.participants.find(p => p !== user.id) || "";
-    }
+    setIsSubmitting(true);
 
-    // Create the message with visibility info if in offer help mode
-    const messageData = {
-      senderId: user.id,
-      receiverId,
-      questionId: isInitialOfferHelpMode ? questionId : thread?.questionId,
-      content: newMessage.trim(),
-      isRead: false,
-      type: "text" as const,
-      ...(isInitialOfferHelpMode && { isPublicVisible }),
-    };
-
-    addMessage(currentThreadId, messageData);
-
-    // If in initial offer help mode, handle visibility and transition
-    if (isInitialOfferHelpMode && question) {
-      // Increment help count if public visible
-      if (isPublicVisible) {
-        incrementQuestionHelpCount(question.id, true);
+    try {
+      // Determine receiver ID
+      let receiverId = "";
+      if (isInitialOfferHelpMode && question) {
+        receiverId = question.authorId;
+      } else if (thread) {
+        receiverId = thread.participants.find(p => p !== user.id) || "";
       }
-      
-      // Navigate to the same chat without question parameter to exit offer help mode
-      navigate(`/chat/${currentThreadId}`, { replace: true });
-    }
 
-    setNewMessage("");
+      // Create the message with visibility info if in offer help mode
+      const messageData = {
+        senderId: user.id,
+        receiverId,
+        questionId: isInitialOfferHelpMode ? questionId : thread?.questionId,
+        content: newMessage.trim(),
+        isRead: false,
+        type: "text" as const,
+        ...(isInitialOfferHelpMode && { isPublicVisible }),
+      };
+
+      addMessage(currentThreadId, messageData);
+
+      // If in initial offer help mode, handle visibility and transition
+      if (isInitialOfferHelpMode && question) {
+        // Record the help interaction in the backend if public visible
+        if (isPublicVisible) {
+          try {
+            await createInteractionMutation.mutateAsync({
+              data: {
+                user_id: user.id,
+                target_type: InteractionTarget.question,
+                target_id: question.id,
+                interaction_type: InteractionType.i_can_help,
+              }
+            });
+            console.log("Help interaction recorded successfully");
+          } catch (error) {
+            console.error("Failed to record help interaction:", error);
+            // Continue with the flow even if API fails
+          }
+        }
+        
+        // Increment help count if public visible
+        if (isPublicVisible) {
+          incrementQuestionHelpCount(question.id, true);
+        }
+        
+        // Navigate to the same chat without question parameter to exit offer help mode
+        navigate(`/chat/${currentThreadId}`, { replace: true });
+      }
+
+      setNewMessage("");
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      // TODO: Show error toast to user
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   /**
@@ -422,10 +457,15 @@ export const Chat: React.FC = () => {
             {/* Send Button */}
             <Button
               onClick={handleSendMessage}
-              disabled={!newMessage.trim()}
+              disabled={!newMessage.trim() || isSubmitting}
               className="px-6 py-2 h-10 bg-[#ffb300] hover:bg-[#ffd580] text-black rounded-full font-medium disabled:opacity-50"
             >
-              {isInitialOfferHelpMode ? "Send" : (
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Sending...
+                </>
+              ) : isInitialOfferHelpMode ? "Send" : (
                 <>
                   <SendIcon className="w-4 h-4 mr-2" />
                   Send
