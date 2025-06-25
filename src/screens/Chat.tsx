@@ -252,10 +252,53 @@ export const Chat: React.FC = () => {
 
       {/* Question Context */}
       {(isInitialOfferHelpMode ? question?.title : thread?.questionTitle) && (
-        <Card className="mx-4 mt-4 mb-2 bg-[#fbfbfb]">
-          <CardContent className="p-3">
-            <p className="text-sm text-gray-600 mb-1">Question context:</p>
-            <p className="text-sm font-medium text-black">{isInitialOfferHelpMode ? question?.title : thread?.questionTitle}</p>
+        <Card className="mx-4 mt-4 mb-2 bg-[#fbfbfb] border border-gray-200">
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 mb-3">Question context:</p>
+            
+            <div className="space-y-3">
+              {/* Question Title */}
+              <h3 className="font-semibold text-gray-900 text-base leading-tight">
+                {isInitialOfferHelpMode ? question?.title : thread?.questionTitle}
+              </h3>
+              
+              {/* Question Description - only show in initial offer help mode when we have full question data */}
+              {isInitialOfferHelpMode && question?.description && (
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  {question.description}
+                </p>
+              )}
+              
+              {/* Question Tags - only show in initial offer help mode when we have full question data */}
+              {isInitialOfferHelpMode && question?.tags && question.tags.length > 0 && (
+                <div className="flex items-start gap-2 flex-wrap">
+                  {question.tags.map((tag, index) => (
+                    <span 
+                      key={index}
+                      className="text-[#5B5B5B]" 
+                      style={{ 
+                        fontFamily: 'Fira Sans, sans-serif', 
+                        fontSize: '12px',
+                        fontWeight: 'normal'
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              {/* Question Image - only show in initial offer help mode when we have full question data */}
+              {isInitialOfferHelpMode && question?.image && (
+                <div className="relative h-32 w-full rounded-lg overflow-hidden">
+                  <img
+                    className="w-full h-full object-cover"
+                    alt="Question attachment"
+                    src={question.image}
+                  />
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
