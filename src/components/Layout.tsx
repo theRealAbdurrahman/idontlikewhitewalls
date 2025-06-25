@@ -24,7 +24,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     !location.pathname.includes("/events/") &&
                     !location.pathname.includes("/create-event") &&
                     !location.pathname.includes("/create-community") &&
-                    !location.pathname.includes("/offer-help");
+                    !location.pathname.includes("/suggest-feature");
   const showFilterBar = location.pathname === "/home";
 
   // Determine if we should show bottom navigation
@@ -34,7 +34,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                        !location.pathname.includes("/events/") &&
                        !location.pathname.includes("/create-event") &&
                        !location.pathname.includes("/create-community") &&
-                       !location.pathname.includes("/offer-help") &&
                        !location.pathname.includes("/suggest-feature");
 
   return (

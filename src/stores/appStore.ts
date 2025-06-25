@@ -79,6 +79,7 @@ export interface Message {
   createdAt: string;
   isRead: boolean;
   type: "text" | "image" | "file" | "preview";
+  isPublicVisible?: boolean; // Whether others can see this user offered help
 }
 
 /**

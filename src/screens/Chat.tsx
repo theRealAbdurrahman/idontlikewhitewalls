@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { 
   ArrowLeftIcon,
   SendIcon, 
@@ -12,6 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
+import { Switch } from "../components/ui/switch";
 import { useAppStore } from "../stores/appStore";
 import { useAuthStore } from "../stores/authStore";
 
@@ -21,54 +22,86 @@ import { useAuthStore } from "../stores/authStore";
 export const Chat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuthStore();
-  const { chatThreads, messages, addMessage, setMessages } = useAppStore();
+  const { chatThreads, messages, addMessage, setMessages, questions, incrementQuestionHelpCount } = useAppStore();
   
   const [newMessage, setNewMessage] = useState("");
+  const [isPublicVisible, setIsPublicVisible] = useState(true); // Default: ON
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const thread = chatThreads.find(t => t.id === id);
-  const threadMessages = messages[id || ""] || [];
+  // Get questionId from URL query parameters
+  const searchParams = new URLSearchParams(location.search);
+  const questionId = searchParams.get('questionId');
+  
+  // Determine the current thread ID and mode
+  const currentThreadId = id || "";
+  const question = questionId ? questions.find(q => q.id === questionId) : null;
+  
+  // Check if we're in initial offer help mode
+  const threadMessages = messages[currentThreadId] || [];
+  const hasActualMessages = threadMessages.some(msg => msg.type !== "preview" && msg.senderId === user?.id);
+  const isInitialOfferHelpMode = !!questionId && !hasActualMessages;
+  
+  const thread = chatThreads.find(t => t.id === currentThreadId);
 
   /**
    * Load initial messages for this thread
    */
   useEffect(() => {
-    // Load messages for this thread (mock data)
-    if (id && threadMessages.length === 0) {
-      const mockMessages = [
-        {
-          id: "msg-1",
-          senderId: "user-789",
-          receiverId: "user-123",
-          questionId: thread?.questionId,
-          content: "Hi! I saw your question about AI/ML algorithms. I'd be happy to help review your recommendation system.",
-          createdAt: "2025-01-15T10:00:00Z",
-          isRead: true,
-          type: "text" as const,
-        },
-        {
-          id: "msg-2",
-          senderId: "user-123",
-          receiverId: "user-789",
-          content: "That would be amazing! Thank you so much. I've been working on this for weeks and could really use a fresh perspective.",
-          createdAt: "2025-01-15T10:05:00Z",
-          isRead: true,
-          type: "text" as const,
-        },
-        {
-          id: "msg-3",
-          senderId: "user-789",
-          receiverId: "user-123",
-          content: "I'd be happy to help review your recommendation algorithm. I have 5 years of experience with ML systems and have built several recommendation engines for e-commerce platforms.",
-          createdAt: "2025-01-15T12:00:00Z",
-          isRead: false,
-          type: "text" as const,
-        },
-      ];
-      setMessages(id, mockMessages);
+    // Load messages for this thread
+    if (currentThreadId && threadMessages.length === 0 && isInitialOfferHelpMode && question && user) {
+      // Create initial question preview message for offer help mode
+      const questionPreviewMessage = {
+        id: `preview-${questionId}`,
+        senderId: question.authorId,
+        receiverId: user.id,
+        questionId: question.id,
+        content: `Question Preview: ${question.title}\n\n${question.description}${question.tags.length > 0 ? `\n\n${question.tags.join(' ')}` : ''}`,
+        createdAt: question.createdAt,
+        isRead: true,
+        type: "preview" as const,
+        isPublicVisible: false,
+      };
+      
+      setMessages(currentThreadId, [questionPreviewMessage]);
+    } else if (currentThreadId && threadMessages.length === 0 && !isInitialOfferHelpMode) {
+      // Load mock messages for existing chat threads
+      if (thread) {
+        const mockMessages = [
+          {
+            id: "msg-1",
+            senderId: "user-789",
+            receiverId: "user-123",
+            questionId: thread?.questionId,
+            content: "Hi! I saw your question about AI/ML algorithms. I'd be happy to help review your recommendation system.",
+            createdAt: "2025-01-15T10:00:00Z",
+            isRead: true,
+            type: "text" as const,
+          },
+          {
+            id: "msg-2",
+            senderId: "user-123",
+            receiverId: "user-789",
+            content: "That would be amazing! Thank you so much. I've been working on this for weeks and could really use a fresh perspective.",
+            createdAt: "2025-01-15T10:05:00Z",
+            isRead: true,
+            type: "text" as const,
+          },
+          {
+            id: "msg-3",
+            senderId: "user-789",
+            receiverId: "user-123",
+            content: "I'd be happy to help review your recommendation algorithm. I have 5 years of experience with ML systems and have built several recommendation engines for e-commerce platforms.",
+            createdAt: "2025-01-15T12:00:00Z",
+            isRead: false,
+            type: "text" as const,
+          },
+        ];
+        setMessages(currentThreadId, mockMessages);
+      }
     }
-  }, [id, threadMessages.length, setMessages, thread?.questionId]);
+  }, [currentThreadId, threadMessages.length, setMessages, isInitialOfferHelpMode, question, user, thread]);
 
   /**
    * Scroll to bottom when new messages arrive
@@ -81,16 +114,39 @@ export const Chat: React.FC = () => {
    * Handle sending message
    */
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !id) return;
+    if (!newMessage.trim() || !currentThreadId || !user) return;
 
-    addMessage(id, {
-      senderId: user?.id || "user-123",
-      receiverId: thread?.participants.find(p => p !== user?.id) || "",
-      questionId: thread?.questionId,
+    // Determine receiver ID
+    let receiverId = "";
+    if (isInitialOfferHelpMode && question) {
+      receiverId = question.authorId;
+    } else if (thread) {
+      receiverId = thread.participants.find(p => p !== user.id) || "";
+    }
+
+    // Create the message with visibility info if in offer help mode
+    const messageData = {
+      senderId: user.id,
+      receiverId,
+      questionId: isInitialOfferHelpMode ? questionId : thread?.questionId,
       content: newMessage.trim(),
       isRead: false,
-      type: "text",
-    });
+      type: "text" as const,
+      ...(isInitialOfferHelpMode && { isPublicVisible }),
+    };
+
+    addMessage(currentThreadId, messageData);
+
+    // If in initial offer help mode, handle visibility and transition
+    if (isInitialOfferHelpMode && question) {
+      // Increment help count if public visible
+      if (isPublicVisible) {
+        incrementQuestionHelpCount(question.id, true);
+      }
+      
+      // Navigate to the same chat without question parameter to exit offer help mode
+      navigate(`/chat/${currentThreadId}`, { replace: true });
+    }
 
     setNewMessage("");
   };
@@ -113,25 +169,48 @@ export const Chat: React.FC = () => {
   };
 
   // Handle edge cases
-  // if (!thread || !user) {
-  //   return (
-  //     <div className="bg-[var(--ColorYellow_primary_colorYellow_100)] min-h-screen flex items-center justify-center p-4">
-  //       <Card>
-  //         <CardContent className="p-6 text-center">
-  //           <h1 className="text-xl font-bold text-black mb-2">Chat Not Found</h1>
-  //           <p className="text-gray-600 mb-4">This conversation doesn't exist or has been removed.</p>
-  //           <Button onClick={() => navigate("/messages")}>
-  //             Back to Messages
-  //           </Button>
-  //         </CardContent>
-  //       </Card>
-  //     </div>
-  //   );
-  // }
+  if (!user) {
+    return (
+      <div className="bg-[var(--ColorYellow_primary_colorYellow_100)] min-h-screen flex items-center justify-center p-4">
+        <Card>
+          <CardContent className="p-6 text-center">
+            <h1 className="text-xl font-bold text-black mb-2">Login Required</h1>
+            <p className="text-gray-600 mb-4">Please log in to access chat.</p>
+            <Button onClick={() => navigate("/login")}>
+              Log In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const otherParticipantIndex = (thread?.participantNames || ['Dexter', 'You']).findIndex(name => name !== "You");
-  const otherParticipantName = thread?.participantNames[otherParticipantIndex] || "Unknown";
-  const otherParticipantAvatar = thread?.participantAvatars[otherParticipantIndex];
+  if (isInitialOfferHelpMode && !question) {
+    return (
+      <div className="bg-[var(--ColorYellow_primary_colorYellow_100)] min-h-screen flex items-center justify-center p-4">
+        <Card>
+          <CardContent className="p-6 text-center">
+            <h1 className="text-xl font-bold text-black mb-2">Question Not Found</h1>
+            <p className="text-gray-600 mb-4">This question may have been removed or doesn't exist.</p>
+            <Button onClick={handleBackClick}>Go Back</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Determine participant info
+  let otherParticipantName = "Unknown";
+  let otherParticipantAvatar = "";
+  
+  if (isInitialOfferHelpMode && question) {
+    otherParticipantName = question.isAnonymous ? "Anonymous" : question.authorName;
+    otherParticipantAvatar = question.isAnonymous ? "" : question.authorAvatar || "";
+  } else if (thread) {
+    const otherParticipantIndex = thread.participantNames.findIndex(name => name !== "You");
+    otherParticipantName = thread.participantNames[otherParticipantIndex] || "Unknown";
+    otherParticipantAvatar = thread.participantAvatars[otherParticipantIndex] || "";
+  }
 
   return (
     <div className="bg-[var(--ColorYellow_primary_colorYellow_100)] min-h-screen flex flex-col">
@@ -154,9 +233,9 @@ export const Chat: React.FC = () => {
           
           <div className="flex-1">
             <h1 className="font-semibold text-black">{otherParticipantName}</h1>
-            {(thread?.questionTitle || 'title') && (
+            {(isInitialOfferHelpMode ? question?.title : thread?.questionTitle) && (
               <p className="text-xs text-gray-500 truncate">
-                Re: {thread?.questionTitle || 'title'}
+                Re: {isInitialOfferHelpMode ? question?.title : thread?.questionTitle}
               </p>
             )}
           </div>
@@ -172,19 +251,43 @@ export const Chat: React.FC = () => {
       </header>
 
       {/* Question Context */}
-      {(thread?.questionTitle || 'title') && (
+      {(isInitialOfferHelpMode ? question?.title : thread?.questionTitle) && (
         <Card className="mx-4 mt-4 mb-2 bg-[#fbfbfb]">
           <CardContent className="p-3">
             <p className="text-sm text-gray-600 mb-1">Question context:</p>
-            <p className="text-sm font-medium text-black">{thread?.questionTitle || 'title'}</p>
+            <p className="text-sm font-medium text-black">{isInitialOfferHelpMode ? question?.title : thread?.questionTitle}</p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Visibility Toggle Section - Only show in initial offer help mode */}
+      {isInitialOfferHelpMode && (
+        <div className="p-4 m-3 rounded-xl bg-[#FBFBFB] border border-gray-200">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-black mb-1">
+                Show others you said "I can Help".
+              </p>
+              <p className="text-xs text-gray-600">
+                Your message will always remain private.
+              </p>
+            </div>
+            <Switch
+              checked={isPublicVisible}
+              onCheckedChange={setIsPublicVisible}
+              className="data-[state=checked]:bg-[#34C759]"
+            />
+          </div>
+        </div>
       )}
 
       {/* Messages */}
       <div className="flex-1 px-4 py-2 overflow-y-auto">
         <div className="space-y-4">
           {threadMessages.map((message) => {
+            // Skip preview messages in display
+            if (message.type === "preview") return null;
+            
             const isOwnMessage = message.senderId === user?.id;
             
             return (
@@ -206,8 +309,23 @@ export const Chat: React.FC = () => {
                   <p className={`text-xs text-gray-500 mt-1 ${
                     isOwnMessage ? "text-right" : "text-left"
                   }`}>
-                    {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
-                  </p>
+                    {/* Show visibility status for the first user message in offer help mode */}
+                    {isOwnMessage && message.isPublicVisible !== undefined && (
+                      <span className="block text-xs text-gray-500 mb-1">
+                        {message.isPublicVisible 
+                          ? "Others can see you offered to help. Your message remains private."
+                          : "Only the question author can see this."
+                  placeholder={isInitialOfferHelpMode 
+                    ? `This is how I can help ${question?.isAnonymous ? 'them' : question?.authorName}...`
+                    : "Type a message..."
+                  className="px-6 py-2 h-10 bg-[#FFCA28] hover:bg-[#ffb300] text-black rounded-full font-medium disabled:opacity-50"
+                      </span>
+                  {isInitialOfferHelpMode ? "Send" : (
+                    <>
+                      <SendIcon className="w-4 h-4 mr-2" />
+                      Send
+                    </>
+                  )}
                 </div>
               </div>
             );

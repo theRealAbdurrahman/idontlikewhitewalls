@@ -48,7 +48,6 @@ export const App = (): JSX.Element => {
           <Route path="/create-event" element={<CreateEvent />} />
           <Route path="/create-community" element={<CreateCommunity />} />
           <Route path="/communities" element={<Communities />} />
-          <Route path="/offer-help/:questionId" element={<OfferHelp />} />
           <Route path="/suggest-feature" element={<SuggestFeature />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>

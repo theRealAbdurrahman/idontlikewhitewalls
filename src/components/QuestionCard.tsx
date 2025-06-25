@@ -162,26 +162,27 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   };
 
   const handleCanHelp = () => {
-    // Prevent event bubbling to parent card click handler
+    if (!user || !question) return;
     if (event) {
       event.stopPropagation();
     }
     
     if (!user) return;
     
-    // Check if there's already a chat thread between the user and question author
-    const existingThread = chatThreads.find(thread => 
-      thread.participants.includes(user.id) && 
-      thread.participants.includes(question.authorId) &&
-      thread.questionId === question.id
-    );
+    // Generate thread ID for this help conversation
+    const threadId = `help-${question.id}-${user.id}`;
     
-    if (existingThread) {
-      // Navigate to existing chat thread
-      navigate(`/messages/${existingThread.id}`);
+    // Check if there's already a thread with messages (not just preview)
+    const existingThread = chatThreads.find(thread => thread.id === threadId);
+    const threadMessages = messages[threadId] || [];
+    const hasActualMessages = threadMessages.some(msg => msg.type !== "preview" && msg.senderId === user.id);
+    
+    if (existingThread && hasActualMessages) {
+      // Navigate to existing chat thread without question parameter
+      navigate(`/chat/${threadId}`);
     } else {
-      // Navigate to offer help screen to start a new conversation
-      navigate(`/offer-help/${question.id}`);
+      // Navigate to chat with question parameter to trigger offer help mode
+      navigate(`/chat/${threadId}?questionId=${question.id}`);
     }
   };
 
