@@ -719,9 +719,9 @@ export const QuestionDetails: React.FC = () => {
                   {/* Display 4 rows of people who clicked "Me too" */}
                   <div>
                     {/* Row 1 - Sara Timóteo with #Remember tag */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
                       <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-11 h-11">
                           <AvatarImage src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Sara Timóteo" />
                           <AvatarFallback>ST</AvatarFallback>
                         </Avatar>
@@ -742,14 +742,14 @@ export const QuestionDetails: React.FC = () => {
                       <img 
                         src="/message-question.svg" 
                         alt="Message" 
-                        className="w-6 h-6 cursor-pointer" 
+                        className="w-5 h-5 cursor-pointer" 
                       />
                     </div>
 
                     {/* Row 2 - Adrian Silva with #WeMet tag */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
                       <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-11 h-11">
                           <AvatarImage src="https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Adrian Silva" />
                           <AvatarFallback>AS</AvatarFallback>
                         </Avatar>
@@ -770,14 +770,14 @@ export const QuestionDetails: React.FC = () => {
                       <img 
                         src="/message-question.svg" 
                         alt="Message" 
-                        className="w-6 h-6 cursor-pointer" 
+                        className="w-5 h-5 cursor-pointer" 
                       />
                     </div>
 
                     {/* Row 3 - André Duarte with #Remember #WeMet tags */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
                       <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-11 h-11">
                           <AvatarImage src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="André Duarte" />
                           <AvatarFallback>AD</AvatarFallback>
                         </Avatar>
@@ -798,14 +798,14 @@ export const QuestionDetails: React.FC = () => {
                       <img 
                         src="/message-question.svg" 
                         alt="Message" 
-                        className="w-6 h-6 cursor-pointer" 
+                        className="w-5 h-5 cursor-pointer" 
                       />
                     </div>
 
                     {/* Row 4 - Eric Martinez with #Remember tag */}
-                    <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center justify-between py-3.5 px-4">
                       <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-11 h-11">
                           <AvatarImage src="https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Eric Martinez" />
                           <AvatarFallback>EM</AvatarFallback>
                         </Avatar>
@@ -826,7 +826,7 @@ export const QuestionDetails: React.FC = () => {
                       <img 
                         src="/message-question.svg" 
                         alt="Message" 
-                        className="w-6 h-6 cursor-pointer" 
+                        className="w-5 h-5 cursor-pointer" 
                       />
                     </div>
                   </div>
@@ -838,9 +838,9 @@ export const QuestionDetails: React.FC = () => {
                   {canHelpInteractions.length > 0 ? (
                     <div>
                     {/* Row 1 - Luis Roquette Valdez with #Remember tag */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
                       <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-11 h-11">
                           <AvatarImage src="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Luis Roquette Valdez" />
                           <AvatarFallback>LV</AvatarFallback>
                         </Avatar>
@@ -861,14 +861,14 @@ export const QuestionDetails: React.FC = () => {
                       <img 
                         src="/message-question.svg" 
                         alt="Message" 
-                        className="w-6 h-6 cursor-pointer" 
+                        className="w-5 h-5 cursor-pointer" 
                       />
                     </div>
 
                     {/* Row 2 - Maria Santos with #WeMet tag */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
                       <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-11 h-11">
                           <AvatarImage src="https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Maria Santos" />
                           <AvatarFallback>MS</AvatarFallback>
                         </Avatar>
@@ -889,14 +889,14 @@ export const QuestionDetails: React.FC = () => {
                       <img 
                         src="/message-question.svg" 
                         alt="Message" 
-                        className="w-6 h-6 cursor-pointer" 
+                        className="w-5 h-5 cursor-pointer" 
                       />
                     </div>
 
                     {/* Row 3 - João Silva with #Remember #WeMet tags */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
                       <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-11 h-11">
                           <AvatarImage src="https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="João Silva" />
                           <AvatarFallback>JS</AvatarFallback>
                         </Avatar>
@@ -917,14 +917,14 @@ export const QuestionDetails: React.FC = () => {
                       <img 
                         src="/message-question.svg" 
                         alt="Message" 
-                        className="w-6 h-6 cursor-pointer" 
+                        className="w-5 h-5 cursor-pointer" 
                       />
                     </div>
 
                     {/* Row 4 - Ana Costa with #Remember tag */}
-                    <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center justify-between py-3.5 px-4">
                       <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-11 h-11">
                           <AvatarImage src="https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Ana Costa" />
                           <AvatarFallback>AC</AvatarFallback>
                         </Avatar>
@@ -945,7 +945,7 @@ export const QuestionDetails: React.FC = () => {
                       <img 
                         src="/message-question.svg" 
                         alt="Message" 
-                        className="w-6 h-6 cursor-pointer" 
+                        className="w-5 h-5 cursor-pointer" 
                       />
                     </div>
                     </div>
