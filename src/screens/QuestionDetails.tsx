@@ -676,7 +676,7 @@ export const QuestionDetails: React.FC = () => {
                 <img 
                   src="/Metoo (1).svg" 
                   alt="Me too" 
-                  className="w-4 h-4" 
+                  className="w-8 h-8" 
                   style={{ 
                     width: activeTab === "me_too" ? "16.16px" : "16px", 
                     height: activeTab === "me_too" ? "16.16px" : "16px" 
