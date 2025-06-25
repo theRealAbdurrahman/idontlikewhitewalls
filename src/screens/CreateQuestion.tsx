@@ -173,7 +173,7 @@ export const CreateQuestion: React.FC = () => {
     }
     switch (visibility) {
       case "anyone":
-        return "Public";
+        return "Anyone can help";
       case "network":
         return "My network";
       case "event":
@@ -404,50 +404,76 @@ export const CreateQuestion: React.FC = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-48 p-2" align="start">
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     <button
                       onClick={() => {
                         setVisibility("anyone");
+                        setIsAnonymous(false);
                         setIsVisibilityDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
+                      className={`w-full text-left px-3 py-3 rounded-md hover:bg-gray-100 ${
                         visibility === "anyone" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
                       }`}
                     >
-                      Public
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium">Anyone can help</div>
+                        <div className="text-xs text-gray-500 leading-tight">
+                          Visible everywhere - on your profile, in feeds etc
+                        </div>
+                      </div>
                     </button>
                     <button
                       onClick={() => {
                         setVisibility("network");
+                        setIsAnonymous(false);
                         setIsVisibilityDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
+                      className={`w-full text-left px-3 py-3 rounded-md hover:bg-gray-100 ${
                         visibility === "network" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
                       }`}
                     >
-                      My network
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium">My network</div>
+                        <div className="text-xs text-gray-500 leading-tight">
+                          Shows in selected event feeds, your personal networks' feeds, communities you belong to and on your profile
+                        </div>
+                      </div>
                     </button>
                     <button
                       onClick={() => {
                         setVisibility("event");
+                        setIsAnonymous(false);
                         setIsVisibilityDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
+                      className={`w-full text-left px-3 py-3 rounded-md hover:bg-gray-100 ${
                         visibility === "event" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
                       }`}
                     >
-                      This event only
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium">This event only</div>
+                        <div className="text-xs text-gray-500 leading-tight">
+                          Appears in the event feed now and disappears from your profile when the event ends
+                        </div>
+                      </div>
                     </button>
                     <button
                       onClick={() => {
                         setIsAnonymous(true);
                         setIsVisibilityDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
+                      className={`w-full text-left px-3 py-3 rounded-md hover:bg-gray-100 ${
                         isAnonymous ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
                       }`}
                     >
-                      Anonymous
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium">Anonymous</div>
+                        <div className="text-xs text-gray-500 leading-tight space-y-0.5">
+                          <div>• Your identity is hidden</div>
+                          <div>• The question will not appear on your profile</div>
+                          <div>• Only users who interact 'I can help' will see who has asked</div>
+                          <div>• Use this when you want help without being in the spotlight</div>
+                        </div>
+                      </div>
                     </button>
                   </div>
                 </DropdownMenuContent>
