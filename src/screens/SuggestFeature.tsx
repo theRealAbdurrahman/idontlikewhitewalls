@@ -249,11 +249,11 @@ export const SuggestFeature: React.FC = () => {
                 className={`voice-button w-10 h-10 rounded-full p-0 ${
                   isRecording 
                     ? "bg-red-100 text-red-600 hover:bg-red-200" 
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                    : "text-black hover:bg-gray-100 hover:text-black"
                 }`}
                 disabled={isSubmitting}
               >
-                <MicIcon className={`w-4 h-4 ${isRecording ? "animate-pulse" : ""}`} />
+                <MicIcon className={`w-8 h-8 ${isRecording ? "animate-pulse" : ""}`} />
               </Button>
 
               {/* Send Button */}
