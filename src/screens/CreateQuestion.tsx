@@ -403,7 +403,7 @@ export const CreateQuestion: React.FC = () => {
                     <ChevronDownIcon className="w-4 h-4 text-gray-500" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 p-2" align="start">
+                <DropdownMenuContent className="w-[calc(100vw-40px)] p-2" align="start">
                   <div className="space-y-2">
                     <button
                       onClick={() => {
