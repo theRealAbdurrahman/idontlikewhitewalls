@@ -431,7 +431,7 @@ export const CreateQuestion: React.FC = () => {
                     <ChevronDownIcon className="w-4 h-4 text-gray-500" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="w-[calc(100vw-40px)] max-w-none mx-5">
+                <DialogContent className="w-[calc(100vw-40px)] max-w-none">
                   <DialogHeader>
                     <DialogTitle className="text-left">Who can see and help with this question?</DialogTitle>
                   </DialogHeader>
