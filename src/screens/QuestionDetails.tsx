@@ -660,7 +660,7 @@ export const QuestionDetails: React.FC = () => {
             isTabsSticky 
               ? 'fixed top-[100px] left-0 right-0 z-30 sticky-tabs shadow-sm' 
               : 'relative bg-[#f0efeb] px-4'
-          } transition-all duration-300`}
+          } transition-all duration-300 pt-[10px]`}
         >
           <Tabs 
             value={activeTab} 
