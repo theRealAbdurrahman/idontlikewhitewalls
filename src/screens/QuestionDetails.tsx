@@ -556,13 +556,13 @@ export const QuestionDetails: React.FC = () => {
         </header>
 
         {/* Enhanced Question Content with better spacing and shadows */}
-        <div className="pt-[90px]">
+        <div className="pt-[100px]">
           <Card className="w-full bg-white border-none question-content-shadow">
-            <CardContent className="p-4 space-y-6">
+            <CardContent className="pt-[10px] px-4 pb-4 space-y-[10px]">
               {/* Enhanced Header with better typography */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3 flex-1">
-                  <Avatar className="w-12 h-12 ring-2 ring-gray-100">
+                  <Avatar className="w-10 h-10 ring-2 ring-gray-100">
                     <AvatarImage
                       src={question.isAnonymous ? undefined : (question.authorAvatar || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1")}
                       alt={question.isAnonymous ? "Anonymous" : question.authorName}
@@ -591,8 +591,8 @@ export const QuestionDetails: React.FC = () => {
               </div>
 
               {/* Enhanced Content with better typography and spacing */}
-              <div className="space-y-4">
-                <div className="space-y-3">
+              <div className="space-y-[10px]">
+                <div className="space-y-[10px]">
                   <h1 className="font-semibold text-gray-900 text-lg leading-tight">
                     {question.title}
                   </h1>
@@ -602,7 +602,7 @@ export const QuestionDetails: React.FC = () => {
                 </div>
 
                 {/* Tags with specific styling */}
-                <div className="flex items-start gap-2 flex-wrap pt-2">
+                <div className="flex items-start gap-2 flex-wrap">
                   <span 
                     className="text-[#5B5B5B]" 
                     style={{ 
