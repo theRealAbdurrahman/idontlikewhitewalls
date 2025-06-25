@@ -431,7 +431,7 @@ export const CreateQuestion: React.FC = () => {
                     <ChevronDownIcon className="w-4 h-4 text-gray-500" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="w-[calc(100vw-40px)] max-w-none">
+                <DialogContent className="w-[calc(100vw-40px)] max-w-none rounded-2xl">
                   <DialogHeader>
                     <DialogTitle className="text-left">Who can see and help with this question?</DialogTitle>
                   </DialogHeader>
@@ -544,7 +544,7 @@ export const CreateQuestion: React.FC = () => {
                     Improve with AI?
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="w-[calc(100vw-40px)] max-w-none mx-5">
+                <DialogContent className="w-[calc(100vw-40px)] max-w-none rounded-2xl">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       Why there is no AI, yet
