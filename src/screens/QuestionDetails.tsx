@@ -674,7 +674,7 @@ export const QuestionDetails: React.FC = () => {
                 style={{ fontSize: 'min(14px, 3.5vw)', gap: '10px' }}
               >
                 <img 
-                  src="/Icon_Me too.png" 
+                  src="/Metoo (1).svg" 
                   alt="Me too" 
                   className="w-4 h-4" 
                   style={{ 
