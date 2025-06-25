@@ -540,7 +540,7 @@ export const CreateQuestion: React.FC = () => {
                           description: "We're working on a comprehensive guide for asking great questions.",
                         });
                       }}
-                      className="w-full bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                      className="w-full bg-[#FFCA28] hover:bg-[#e6b324] text-[#262626]"
                     >
                       Tips: How to ask a good question
                     </Button>
@@ -556,6 +556,51 @@ export const CreateQuestion: React.FC = () => {
                     </Button>
                   </DialogFooter>
                 </DialogContent>
+              <DialogContent className="w-[calc(100vw-40px)] max-w-none mx-5">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    Why there is no AI, yet
+                  </DialogTitle>
+                  <DialogDescription className="text-left space-y-4 text-sm leading-relaxed">
+                    <p>
+                      We built a feature to help you improve your questions with AI, but then we paused.
+                    </p>
+                    <p>
+                      We realized that raw, human questions, even if imperfect, are often more powerful, relatable and real. So for now, we're choosing authenticity over polish.
+                    </p>
+                    <p>
+                      Still, not everyone finds it easy to ask for help. If you'd like a gentle assist, to express yourself more clearly, or just fix grammar, let us know.
+                    </p>
+                    <p className="font-medium">
+                      We're listening.
+                    </p>
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="flex-col sm:flex-col space-y-3">
+                  <Button
+                    onClick={() => {
+                      // TODO: Implement tips modal or navigation
+                      toast({
+                        title: "Tips coming soon!",
+                        description: "We're working on a comprehensive guide for asking great questions.",
+                      });
+                    }}
+                    className="w-full bg-[#FFCA28] hover:bg-[#e6b324] text-[#262626]"
+                  >
+                    Tips: How to ask a good question
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      navigate("/suggest-feature");
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <MessageCircleIcon className="w-4 h-4 mr-2" />
+                    Suggest a feature
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
               </Dialog>
 
               {/* Right Side - Media Buttons + Post Button */}
