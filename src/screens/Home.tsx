@@ -114,7 +114,7 @@ export const Home: React.FC = () => {
   return (
     <>
       {/* Question Feed */}
-      <div className="px-2.5 py-2.5">
+      <div className="px-2.5 py-3">
         <div className="flex flex-col gap-[15px]">
           {filteredQuestions.length > 0 ? (
             filteredQuestions.map((question) => (
