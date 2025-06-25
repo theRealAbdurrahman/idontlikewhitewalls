@@ -304,7 +304,7 @@ export const CreateQuestion: React.FC = () => {
           <DropdownMenuContent className="w-80 p-0" align="start">
             <div className="p-4">
               <h3 className="font-semibold text-gray-900 mb-3">Select Events</h3>
-              <div className="space-y-3 max-h-60 overflow-y-auto">
+              <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
                 {eventsLoading ? (
                   <div className="text-center py-4 text-gray-500">Loading events...</div>
                 ) : (
