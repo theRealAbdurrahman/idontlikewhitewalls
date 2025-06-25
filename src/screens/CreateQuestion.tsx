@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { XIcon, ImageIcon, MicIcon, SparklesIcon, MessageCircleIcon, ChevronDownIcon } from "lucide-react";
 import { useCreateQuestionApiV1QuestionsPost, useReadEventsApiV1EventsGet } from "../api-client/api-client";
 import { Button } from "../components/ui/button";
+import { Switch } from "../components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,14 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../components/ui/sheet";
 import { Checkbox } from "../components/ui/checkbox";
 import { useAuthStore } from "../stores/authStore";
 import { useToast } from "../hooks/use-toast";
@@ -51,6 +60,7 @@ export const CreateQuestion: React.FC = () => {
   const [visibility, setVisibility] = useState<"anyone" | "network" | "event">("anyone");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVisibilitySheetOpen, setIsVisibilitySheetOpen] = useState(false);
   const [isEventsDropdownOpen, setIsEventsDropdownOpen] = useState(false);
   const [isVisibilityDropdownOpen, setIsVisibilityDropdownOpen] = useState(false);
 
@@ -389,8 +399,8 @@ export const CreateQuestion: React.FC = () => {
           <div className="px-4 py-4 border-gray-200 bg-[#fbfbfb]">
             {/* Visibility Selection */}
             <div className="mb-4 flex items-center gap-3">
-              <DropdownMenu open={isVisibilityDropdownOpen} onOpenChange={setIsVisibilityDropdownOpen}>
-                <DropdownMenuTrigger asChild>
+              <Sheet open={isVisibilitySheetOpen} onOpenChange={setIsVisibilitySheetOpen}>
+                <SheetTrigger asChild>
                   <Button
                     variant="outline"
                     className="flex items-center gap-2 px-4 py-2 rounded-full border-gray-300 bg-white hover:bg-gray-50 font-medium text-gray-900"
@@ -399,42 +409,100 @@ export const CreateQuestion: React.FC = () => {
                     <span>{getVisibilityText()}</span>
                     <ChevronDownIcon className="w-4 h-4 text-gray-500" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 p-2" align="start">
-                  <div className="space-y-1">
-                    <button
-                      onClick={() => {
-                        setVisibility("anyone");
-                        setIsVisibilityDropdownOpen(false);
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-3xl">
+                  <SheetHeader className="text-left pb-6">
+                    <SheetTitle 
+                      className="text-left"
+                      style={{ 
+                        fontFamily: 'Fira Sans, sans-serif', 
+                        fontSize: '12pt', 
+                        color: '#000000',
+                        fontWeight: 'normal'
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
-                        visibility === "anyone" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
-                      }`}
                     >
-                      Public
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVisibility("network");
-                        setIsVisibilityDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
-                        visibility === "network" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
-                      }`}
+                      Who can see your question?
+                    </SheetTitle>
+                  </SheetHeader>
+                  
+                  <div className="space-y-4 pb-6">
+                    {/* Anyone can help option */}
+                    <div 
+                      className="flex items-start justify-between p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => setVisibility("anyone")}
                     >
-                      My network
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVisibility("event");
-                        setIsVisibilityDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
-                        visibility === "event" ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
-                      }`}
+                      <div className="flex-1 pr-4">
+                        <h3 
+                          className="font-medium mb-1"
+                          style={{ 
+                            fontFamily: 'Fira Sans, sans-serif', 
+                            fontSize: '12pt', 
+                            color: '#000000'
+                          }}
+                        >
+                          Anyone can help
+                        </h3>
+                        <p 
+                          style={{ 
+                            fontFamily: 'Fira Sans, sans-serif', 
+                            fontSize: '11pt', 
+                            color: '#5B5B5B'
+                          }}
+                        >
+                          Visible everywhere - on your profile, in feeds etc
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          visibility === "anyone" 
+                            ? "border-blue-500 bg-blue-500" 
+                            : "border-gray-300"
+                        }`}>
+                          {visibility === "anyone" && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* My network option */}
+                    <div 
+                      className="flex items-start justify-between p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => setVisibility("network")}
                     >
-                      This event only
-                    </button>
+                      <div className="flex-1 pr-4">
+                        <h3 
+                          className="font-medium mb-1"
+                          style={{ 
+                            fontFamily: 'Fira Sans, sans-serif', 
+                            fontSize: '12pt', 
+                            color: '#000000'
+                          }}
+                        >
+                          My network
+                        </h3>
+                        <p 
+                          style={{ 
+                            fontFamily: 'Fira Sans, sans-serif', 
+                            fontSize: '11pt', 
+                            color: '#5B5B5B'
+                          }}
+                        >
+                          Shows in selected event feeds, your personal networks' feeds, communities you belong to and on your profile
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          visibility === "network" 
+                            ? "border-blue-500 bg-blue-500" 
+                            : "border-gray-300"
+                        }`}>
+                          {visibility === "network" && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
