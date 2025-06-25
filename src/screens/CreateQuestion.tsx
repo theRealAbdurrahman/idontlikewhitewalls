@@ -494,8 +494,10 @@ export const CreateQuestion: React.FC = () => {
                     {/* Anonymous Toggle */}
                     <div className="border-t border-gray-200 pt-4">
                       <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-gray-900 mb-1">Post anonymously</div>
+                        <div className="flex-1 flex items-center">
+                          <div className="text-sm font-medium text-black mb-1">
+                            Post anonymously
+                          </div>
                           <div className="text-xs text-gray-500 leading-tight">
                             <div>• Your identity is hidden</div>
                             <div>• The question will not appear on your profile</div>
@@ -503,11 +505,13 @@ export const CreateQuestion: React.FC = () => {
                             <div>• Use this when you want help without being in the spotlight</div>
                           </div>
                         </div>
-                        <Switch
-                          checked={tempIsAnonymous}
-                          onCheckedChange={setTempIsAnonymous}
-                          className="ml-4"
-                        />
+                        <div className="ml-4">
+                          <Switch
+                            checked={tempIsAnonymous}
+                            onCheckedChange={setTempIsAnonymous}
+                            className="data-[state=checked]:bg-[#34C759] is-public-visible-switch"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -521,7 +525,7 @@ export const CreateQuestion: React.FC = () => {
                     </Button>
                     <Button
                       onClick={handleSaveVisibility}
-                      className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                      className="flex-1 bg-[#FFCA28] hover:bg-[#e6b324] text-[#262626]"
                     >
                       Save
                     </Button>
