@@ -558,7 +558,7 @@ export const QuestionDetails: React.FC = () => {
         {/* Enhanced Question Content with better spacing and shadows */}
         <div className="pt-[100px]">
           <Card className="w-full bg-white border-none question-content-shadow">
-            <CardContent className="pt-[10px] px-4 pb-4 space-y-[10px]">
+            <CardContent className="pt-[20px] px-4 pb-4 space-y-[10px]">
               {/* Enhanced Header with better typography */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3 flex-1">
