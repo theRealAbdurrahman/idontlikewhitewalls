@@ -447,7 +447,7 @@ export const QuestionDetails: React.FC = () => {
       <style>{customStyles}</style>
       <div className="bg-[#f0efeb] min-h-screen">
         {/* Enhanced Header with better shadows and typography */}
-        <header className="fixed top-0 left-0 right-0 z-40 flex w-full h-[90px] items-center justify-between pt-12 pb-4 px-4 bg-[#f0efeb]/95 backdrop-blur-lg border-b border-gray-200/50">
+        <header className="fixed top-0 left-0 right-0 z-40 flex w-full h-[100px] items-center justify-between pt-12 pb-4 px-4 bg-[#f0efeb]/95 backdrop-blur-lg border-b border-gray-200/50">
           <Button
             variant="ghost"
             size="icon"
@@ -556,7 +556,7 @@ export const QuestionDetails: React.FC = () => {
         </header>
 
         {/* Enhanced Question Content with better spacing and shadows */}
-        <div className="px-4 py-6 pt-[110px]">
+        <div className="px-4 py-6 pt-[120px]">
           <Card className="w-full bg-white rounded-2xl border-none question-content-shadow">
             <CardContent className="p-6 space-y-6">
               {/* Enhanced Header with better typography */}
@@ -658,7 +658,7 @@ export const QuestionDetails: React.FC = () => {
           ref={tabsRef}
           className={`${
             isTabsSticky 
-              ? 'fixed top-[90px] left-0 right-0 z-30 sticky-tabs shadow-sm' 
+              ? 'fixed top-[100px] left-0 right-0 z-30 sticky-tabs shadow-sm' 
               : 'relative bg-[#f0efeb]'
           } transition-all duration-300`}
         >
@@ -740,7 +740,7 @@ export const QuestionDetails: React.FC = () => {
                         </div>
                       </div>
                       <img 
-                        src="/Icon_message-circle.png" 
+                        src="/message-question.svg" 
                         alt="Message" 
                         className="w-6 h-6 cursor-pointer" 
                       />
@@ -768,7 +768,7 @@ export const QuestionDetails: React.FC = () => {
                         </div>
                       </div>
                       <img 
-                        src="/Icon_message-circle.png" 
+                        src="/message-question.svg" 
                         alt="Message" 
                         className="w-6 h-6 cursor-pointer" 
                       />
@@ -796,7 +796,7 @@ export const QuestionDetails: React.FC = () => {
                         </div>
                       </div>
                       <img 
-                        src="/Icon_message-circle.png" 
+                        src="/message-question.svg" 
                         alt="Message" 
                         className="w-6 h-6 cursor-pointer" 
                       />
@@ -824,7 +824,7 @@ export const QuestionDetails: React.FC = () => {
                         </div>
                       </div>
                       <img 
-                        src="/Icon_message-circle.png" 
+                        src="/message-question.svg" 
                         alt="Message" 
                         className="w-6 h-6 cursor-pointer" 
                       />
@@ -859,7 +859,7 @@ export const QuestionDetails: React.FC = () => {
                         </div>
                       </div>
                       <img 
-                        src="/Icon_message-circle.png" 
+                        src="/message-question.svg" 
                         alt="Message" 
                         className="w-6 h-6 cursor-pointer" 
                       />
@@ -887,7 +887,7 @@ export const QuestionDetails: React.FC = () => {
                         </div>
                       </div>
                       <img 
-                        src="/Icon_message-circle.png" 
+                        src="/message-question.svg" 
                         alt="Message" 
                         className="w-6 h-6 cursor-pointer" 
                       />
@@ -915,7 +915,7 @@ export const QuestionDetails: React.FC = () => {
                         </div>
                       </div>
                       <img 
-                        src="/Icon_message-circle.png" 
+                        src="/message-question.svg" 
                         alt="Message" 
                         className="w-6 h-6 cursor-pointer" 
                       />
@@ -943,7 +943,7 @@ export const QuestionDetails: React.FC = () => {
                         </div>
                       </div>
                       <img 
-                        src="/Icon_message-circle.png" 
+                        src="/message-question.svg" 
                         alt="Message" 
                         className="w-6 h-6 cursor-pointer" 
                       />
