@@ -218,10 +218,10 @@ export const SuggestFeature: React.FC = () => {
         </div>
 
         {/* Chat Input Section - Fixed at Bottom */}
-        <div className="fixed bottom-0 left-0 right-0 chat-input-container" style={{ paddingBottom: '50px', paddingTop: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
-          <div className="flex items-end gap-2">
+        <div className="fixed bottom-0 left-0 right-0 chat-input-container" style={{ paddingBottom: '50px', paddingTop: '16px', paddingLeft: '20px', paddingRight: '20px' }}>
+          <div className="flex flex-col gap-3">
             {/* Text Input */}
-            <div className="flex-1 relative">
+            <div className="w-full relative">
               <textarea
                 ref={textareaRef}
                 value={message}
@@ -230,7 +230,7 @@ export const SuggestFeature: React.FC = () => {
                 placeholder="Share your idea"
                 className="message-input w-full px-4 py-3 border border-gray-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white"
                 style={{ 
-                  minHeight: "48px",
+                  minHeight: "38px",
                   maxHeight: "120px",
                   fontSize: message.trim() ? '12px' : '12px',
                   color: message.trim() ? '#000000' : '#8F8F8F'
@@ -239,36 +239,39 @@ export const SuggestFeature: React.FC = () => {
               />
             </div>
             
-            {/* Voice Recording Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleVoiceRecording}
-              className={`voice-button w-10 h-10 rounded-full p-0 ${
-                isRecording 
-                  ? "bg-red-100 text-red-600 hover:bg-red-200" 
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-              }`}
-              disabled={isSubmitting}
-            >
-              <MicIcon className={`w-4 h-4 ${isRecording ? "animate-pulse" : ""}`} />
-            </Button>
+            {/* Voice Recording and Send Buttons */}
+            <div className="flex items-center justify-between">
+              {/* Voice Recording Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleVoiceRecording}
+                className={`voice-button w-10 h-10 rounded-full p-0 ${
+                  isRecording 
+                    ? "bg-red-100 text-red-600 hover:bg-red-200" 
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                }`}
+                disabled={isSubmitting}
+              >
+                <MicIcon className={`w-4 h-4 ${isRecording ? "animate-pulse" : ""}`} />
+              </Button>
 
-            {/* Send Button */}
-            <Button
-              onClick={handleSendMessage}
-              disabled={!message.trim() || isSubmitting}
-              className="send-button px-6 py-3 h-12 bg-[#4285f4] hover:bg-[#3367d6] text-white rounded-3xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Sending...
-                </>
-              ) : (
-                "Send"
-              )}
-            </Button>
+              {/* Send Button */}
+              <Button
+                onClick={handleSendMessage}
+                disabled={!message.trim() || isSubmitting}
+                className="send-button px-6 py-3 h-12 bg-[#4285f4] hover:bg-[#3367d6] text-white rounded-3xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Sending...
+                  </>
+                ) : (
+                  "Send"
+                )}
+              </Button>
+            </div>
           </div>
           
           {/* Recording Status */}
