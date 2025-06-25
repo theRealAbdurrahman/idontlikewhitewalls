@@ -162,6 +162,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   };
 
   const handleCanHelp = () => {
+    // Prevent event bubbling to parent card click handler
+    if (event) {
+      event.stopPropagation();
+    }
+    
     if (!user) return;
     
     // Check if there's already a chat thread between the user and question author
@@ -341,7 +346,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
             {/* I Can Help */}
             <Button
               variant="outline"
-              onClick={handleCanHelp}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card click event
+                handleCanHelp();
+              }}
               disabled={createInteractionMutation.isPending}
               className="h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors"
             >
