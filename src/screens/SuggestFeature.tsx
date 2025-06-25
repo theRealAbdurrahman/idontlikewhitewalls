@@ -192,7 +192,7 @@ export const SuggestFeature: React.FC = () => {
         {/* Chat Content - Default Empty State */}
         <div className="flex-1 pt-20 px-4 py-6 flex flex-col justify-center">
           {/* Welcome Message - Left Aligned */}
-          <div className="w-full" style={{ marginBottom: '20px' }}>
+          <div className="w-full" style={{ marginBottom: '8px' }}>
             <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ maxWidth: 'calc(90% - 20px)' }}>
               <h2 
                 className="mb-3 leading-tight"
