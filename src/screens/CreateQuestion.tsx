@@ -404,6 +404,7 @@ export const CreateQuestion: React.FC = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-[calc(100vw-40px)] p-2" align="start">
+                <DropdownMenuContent className="w-[calc(100vw-40px)] p-2" align="center">
                   <div className="space-y-2">
                     <button
                       onClick={() => {
