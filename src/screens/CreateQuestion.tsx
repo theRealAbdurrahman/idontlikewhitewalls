@@ -168,6 +168,9 @@ export const CreateQuestion: React.FC = () => {
    * Get display text for selected visibility option
    */
   const getVisibilityText = () => {
+    if (isAnonymous) {
+      return "Anonymous";
+    }
     switch (visibility) {
       case "anyone":
         return "Public";
@@ -434,6 +437,17 @@ export const CreateQuestion: React.FC = () => {
                       }`}
                     >
                       This event only
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsAnonymous(true);
+                        setIsVisibilityDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 ${
+                        isAnonymous ? "bg-[#f0eee4] text-gray-900 font-medium" : "text-gray-700"
+                      }`}
+                    >
+                      Anonymous
                     </button>
                   </div>
                 </DropdownMenuContent>
