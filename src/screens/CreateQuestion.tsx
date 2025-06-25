@@ -477,9 +477,8 @@ export const CreateQuestion: React.FC = () => {
                     </button>
                   </div>
                 </DropdownMenuContent>
-              </DropdownMenu>
+               </DropdownMenu>
             </div>
-
             {/* Action Buttons Row - FIXED LAYOUT */}
             <div className="flex items-center justify-between">
               {/* Left Side - Improve with AI */}
