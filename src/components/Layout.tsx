@@ -34,7 +34,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                        !location.pathname.includes("/events/") &&
                        !location.pathname.includes("/create-event") &&
                        !location.pathname.includes("/create-community") &&
-                       !location.pathname.includes("/offer-help");
+                       !location.pathname.includes("/offer-help") &&
+                       !location.pathname.includes("/suggest-feature");
 
   return (
     <div className="bg-[#f0efeb] flex flex-row justify-center w-full min-h-screen">
