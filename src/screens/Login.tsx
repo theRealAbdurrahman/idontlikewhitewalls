@@ -9,7 +9,7 @@ export const Login: React.FC = () => {
     <div className="relative w-full h-screen bg-white overflow-hidden flex items-center justify-center">
       {/* Background Image */}
       <img
-        src="/backggroundmeetball.png"
+        src="/login-bg.png"
         alt="Background swirl"
         className="absolute inset-0 w-full h-full object-cover z-0"
       />
@@ -18,7 +18,7 @@ export const Login: React.FC = () => {
       <div className="z-10 flex flex-col items-center justify-center gap-y-6 px-6">
         {/* Center Logo */}
         <img
-          src="/Bolt_Figma_Group_8.png"
+          src="/meetball-logo.png"
           alt="Meetball Logo"
           className="w-[270px] max-w-full"
         />
