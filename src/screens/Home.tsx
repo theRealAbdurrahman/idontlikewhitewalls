@@ -1,56 +1,27 @@
 import React from "react";
+import { useMemo } from "react";
 import { PlusIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useReadQuestionsApiV1QuestionsGet } from "../api-client/api-client";
 import { Button } from "../components/ui/button";
-import { FilterBar } from "../components/FilterBar";
 import { QuestionCard } from "../components/QuestionCard";
 import { useAppStore } from "../stores/appStore";
-import { useAuthStore } from "../stores/authStore";
-import { useLogto, type IdTokenClaims } from '@logto/react';
-import { useEffect, useState } from 'react';
+import { useLogto } from '@logto/react';
+import { QuestionRead } from '../api-client/models/questionRead';
 /**
  * Home screen component displaying the main question feed
  */
 export const Home: React.FC = () => {
-  // TODO: Eric I commented your code for logto to make the the home screen work again
-  // const { signIn, signOut, isAuthenticated, getIdTokenClaims } = useLogto();
-  // const [user, setUser] = useState<IdTokenClaims>();
-
-  // useEffect(() => {
-  //   (async () => {
-  //     if (isAuthenticated) {
-  //       const claims = await getIdTokenClaims();
-  //       setUser(claims);
-  //     }
-  //   })();
-  // }, [getIdTokenClaims, isAuthenticated]);
-
-  // return isAuthenticated && user ? (
-  //   <>
-  //     <button onClick={() => signOut('http://localhost:5173')}>Sign Out</button>
-  //     <table>
-  //       <thead>
-  //         <tr>
-  //           <th>Name</th>
-  //           <th>Value</th>
-  //         </tr>
-  //       </thead>
-  //       <tbody>
-  //         {Object.entries(user).map(([key, value]) => (
-  //           <tr key={key}>
-  //             <td>{key}</td>
-  //             <td>{typeof value === 'string' ? value : JSON.stringify(value)}</td>
-  //           </tr>
-  //         ))}
-  //       </tbody>
-  //     </table>
-  //   </>
-  // ) : (
-  //   <button onClick={() => signIn('http://localhost:5173/callback')}>Sign In</button>
-  // );
+  
+  const { isAuthenticated, signOut } = useLogto();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+
+  if (!isAuthenticated) {
+    navigate('/login');
+    // TODO: implement non logged in user to navigate the questions
+    // prompt for login if press interactions
+  }
+
   const { activeFilters, sortBy } = useAppStore();
 
   // Fetch questions from API
@@ -61,11 +32,26 @@ export const Home: React.FC = () => {
   } = useReadQuestionsApiV1QuestionsGet();
 
   // Transform API data to component format
-  const questions = React.useMemo(() => {
+  const questions = useMemo(() => {
     if (!questionsData?.data) return [];
-    console.log("Questions Data:", questionsData.data);
+    
+    // Create a safe wrapper function to handle the type mismatch
+    function ensureQuestionArray(data: any): QuestionRead[] {
+      // Check if data is an array
+      if (Array.isArray(data)) {
+        return data as QuestionRead[];
+      }
+      // Check if data has a data property that is an array
+      else if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+        return data.data as QuestionRead[];
+      }
+      // Return empty array as fallback
+      return [];
+    }
+    
+    const questionList = ensureQuestionArray(questionsData.data);
 
-    return questionsData.data.map((question) => ({
+    return questionList.map((question) => ({
       id: question.id,
       authorId: question.user_id,
       authorName: question.is_anonymous ? "Anonymous" : "Question Author",
@@ -90,7 +76,7 @@ export const Home: React.FC = () => {
   }, [questionsData?.data]);
 
   // Filter questions based on active filters
-  const filteredQuestions = React.useMemo(() => {
+  const filteredQuestions = useMemo(() => {
     let filtered = [...questions];
 
     // Apply event filters
@@ -151,6 +137,7 @@ export const Home: React.FC = () => {
   return (
     <>
       {/* Question Feed */}
+      <Button onClick={() => signOut(`http://localhost:5173`)}>Sign Out</Button>
       <div className="px-2.5 py-3">
         <div className="flex flex-col gap-[15px]">
           {filteredQuestions.length > 0 ? (

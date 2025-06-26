@@ -4,14 +4,15 @@ import { useEffect } from 'react';
 
 export const Callback = () => {
   const navigate = useNavigate();
-  const { isLoading, error } = useHandleSignInCallback();
+  const { isLoading, isAuthenticated, error } = useHandleSignInCallback();
   
   useEffect(() => {
     // Only navigate when authentication is complete (not loading)
-    if (!isLoading && !error) {
-      navigate('/');
+    if (!isLoading && isAuthenticated && !error) {
+      console.log("Authentication successful");
+      navigate('/home');
     }
-  }, [isLoading, error, navigate]);
+  }, [isLoading, error, isAuthenticated, navigate]);
 
   // Show loading state while processing
   return (
