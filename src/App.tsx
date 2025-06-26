@@ -18,6 +18,7 @@ import { SuggestFeature } from "./screens/SuggestFeature";
 import { Callback } from "./screens/Callback";
 
 import { LogtoProvider, LogtoConfig } from '@logto/react';
+import { Login } from "./screens/Login";
 
 const config: LogtoConfig = {
   endpoint: 'https://y42e79.logto.app/',
@@ -30,6 +31,7 @@ export const App = (): JSX.Element => {
       <Layout>
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/home" element={<Home />} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetails />} />
