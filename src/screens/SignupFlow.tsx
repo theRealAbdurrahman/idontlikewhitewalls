@@ -896,6 +896,9 @@ export const SignupFlow: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Ref for scrolling to top of form
+  const formContainerRef = useRef<HTMLDivElement>(null);
+  
   // State for step 3 validation
   const [step3Validation, setStep3Validation] = useState({
     isValidating: false,
@@ -918,6 +921,25 @@ export const SignupFlow: React.FC = () => {
       linkedinUrl: ""
     }
   });
+
+  /**
+   * Scroll to top when step changes
+   */
+  useEffect(() => {
+    // Scroll to top of form container when step changes
+    if (formContainerRef.current) {
+      formContainerRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    } else {
+      // Fallback: scroll to top of page
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'smooth' 
+      });
+    }
+  }, [currentStep]);
 
   /**
    * Handle step 1 data changes
@@ -1107,7 +1129,7 @@ export const SignupFlow: React.FC = () => {
 
         {/* Main Content */}
         <div className="pt-20 px-4 py-6 pb-32">
-          <div className="max-w-2xl mx-auto">
+          <div ref={formContainerRef} className="max-w-2xl mx-auto">
             {/* Progress Indicator */}
             <ProgressIndicator currentStep={currentStep} totalSteps={3} />
 
