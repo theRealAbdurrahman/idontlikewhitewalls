@@ -16,25 +16,25 @@ interface LayoutProps {
  */
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  
+
   // Determine if we should show the header/filter based on current route
-  const showHeader = !location.pathname.includes("/create-question") && 
-                    !location.pathname.includes("/chat") &&
-                    !location.pathname.includes("/questions/") &&
-                    !location.pathname.includes("/events/") &&
-                    !location.pathname.includes("/create-event") &&
-                    !location.pathname.includes("/create-community") &&
+  const showHeader = !location.pathname.includes("/create-question") &&
+    !location.pathname.includes("/chat") &&
+    !location.pathname.includes("/questions/") &&
+    !location.pathname.includes("/events/") &&
+    !location.pathname.includes("/create-event") &&
+    !location.pathname.includes("/create-community") &&
     !location.pathname.includes("/suggest-feature") &&
     !location.pathname.includes("/login");
   const showFilterBar = location.pathname === "/home";
 
   // Determine if we should show bottom navigation
-  const showBottomNav = !location.pathname.includes("/create-question") && 
-                       !location.pathname.includes("/chat") &&
-                       !location.pathname.includes("/questions/") &&
-                       !location.pathname.includes("/events/") &&
-                       !location.pathname.includes("/create-event") &&
-                       !location.pathname.includes("/create-community") &&
+  const showBottomNav = !location.pathname.includes("/create-question") &&
+    !location.pathname.includes("/chat") &&
+    !location.pathname.includes("/questions/") &&
+    !location.pathname.includes("/events/") &&
+    !location.pathname.includes("/create-event") &&
+    !location.pathname.includes("/create-community") &&
     !location.pathname.includes("/suggest-feature") &&
     !location.pathname.includes("/login");
 
@@ -48,7 +48,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             {showFilterBar && <FilterBar />}
           </div>
         )}
-        
+
         {/* Main Content */}
         <main className={`relative ${showHeader ? (showFilterBar ? 'pt-[140px]' : 'pt-[90px]') : ''} ${showBottomNav ? 'pb-[122px]' : 'pb-4'}`}>
           {/* Gradient overlay for smooth post transitions */}
@@ -57,7 +57,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           )}
           {children}
         </main>
-        
+
         {/* Bottom Navigation */}
         {showBottomNav && <BottomNavigation />}
       </div>
