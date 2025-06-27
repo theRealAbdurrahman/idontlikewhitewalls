@@ -416,7 +416,7 @@ export const CreateQuestion: React.FC = () => {
           </div>
 
           {/* Bottom Section */}
-          <div className="px-4 py-4 border-gray-200 bg-[#fbfbfb]">
+          <div className="px-4 py-4 border-gray-200 bg-[#fbfbfb] pb-safe">
             {/* Visibility Selection */}
             <div className="mb-4 flex items-center gap-3">
               <Dialog open={isVisibilityDropdownOpen} onOpenChange={setIsVisibilityDropdownOpen}>
@@ -592,7 +592,7 @@ export const CreateQuestion: React.FC = () => {
               </Dialog>
 
               {/* Right Side - Media Buttons + Post Button */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 pb-safe">
                 {/* Media Buttons */}
                 <Button
                   type="button"
