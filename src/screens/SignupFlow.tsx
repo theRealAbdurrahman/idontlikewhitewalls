@@ -1053,10 +1053,6 @@ export const SignupFlow: React.FC = () => {
   const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep(prev => prev + 1);
-      toast({
-        title: "Progress saved",
-        description: "Your information has been saved.",
-      });
     } else {
       // Complete signup flow
       handleComplete();
