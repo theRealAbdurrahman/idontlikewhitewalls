@@ -25,7 +25,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     !location.pathname.includes("/create-event") &&
     !location.pathname.includes("/create-community") &&
     !location.pathname.includes("/suggest-feature") &&
-    !location.pathname.includes("/login");
+    !location.pathname.includes("/login") &&
+    !location.pathname.includes("/signup");
   const showFilterBar = location.pathname === "/home";
 
   // Determine if we should show bottom navigation
@@ -36,7 +37,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     !location.pathname.includes("/create-event") &&
     !location.pathname.includes("/create-community") &&
     !location.pathname.includes("/suggest-feature") &&
-    !location.pathname.includes("/login");
+    !location.pathname.includes("/login") && !location.pathname.includes("/signup");
 
   return (
     <div className="bg-[#f0efeb] flex flex-row justify-center w-full min-h-screen">
