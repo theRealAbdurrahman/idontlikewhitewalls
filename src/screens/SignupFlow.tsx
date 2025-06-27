@@ -30,7 +30,7 @@ interface Step2Data {
 interface SignupFlowData {
   step1: Step1Data;
   step2: Step2Data;
-  step3?: any;
+  step3: Step3Data;
 }
 
 /**
@@ -738,6 +738,9 @@ export const SignupFlow: React.FC = () => {
     },
     step2: {
       interests: []
+    },
+    step3: {
+      linkedinUrl: ""
     }
   });
 
@@ -748,6 +751,16 @@ export const SignupFlow: React.FC = () => {
     setSignupData(prev => ({
       ...prev,
       step1: data
+    }));
+  };
+
+  /**
+   * Handle step 3 data changes
+   */
+  const handleStep3DataChange = (data: Step3Data) => {
+    setSignupData(prev => ({
+      ...prev,
+      step3: data
     }));
   };
 
@@ -870,29 +883,12 @@ export const SignupFlow: React.FC = () => {
                 )}
                 
                 {currentStep === 3 && (
-                  <div className="form-container text-center py-12">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                      Step 3 Coming Soon
-                    </h2>
-                    <p className="text-gray-600 mb-6">
-                      This step is under development.
-                    </p>
-                    <div className="flex gap-3">
-                      <Button
-                        variant="outline"
-                        onClick={handleBack}
-                        className="flex-1"
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        onClick={handleComplete}
-                        className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-                      >
-                        Complete
-                      </Button>
-                    </div>
-                  </div>
+                  <Step3
+                    data={signupData.step3}
+                    onDataChange={handleStep3DataChange}
+                    onComplete={handleComplete}
+                    onBack={handleBack}
+                  />
                 )}
               </CardContent>
             </Card>
