@@ -6,6 +6,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
+import { StickyNote } from "../components/ui/sticky-note";
 import { useToast } from "../hooks/use-toast";
 
 /**
@@ -18,12 +19,17 @@ interface Step1Data {
 }
 
 /**
+ * Interface for Step 2 data structure
+ */
+interface Step2Data {
+  interests: string[];
+}
+/**
  * Interface for the complete signup flow data
  */
 interface SignupFlowData {
   step1: Step1Data;
-  // Future steps can be added here
-  step2?: any;
+  step2: Step2Data;
   step3?: any;
 }
 
@@ -37,6 +43,26 @@ const CONNECTION_LABELS = [
   "Mental Health"
 ] as const;
 
+/**
+ * Pre-defined interests beyond work with colors for sticky notes
+ */
+const INTEREST_OPTIONS = [
+  { label: "Travel", color: "#FFE066" },
+  { label: "Cooking", color: "#FF6B6B" },
+  { label: "Photography", color: "#4ECDC4" },
+  { label: "Music", color: "#95E1D3" },
+  { label: "Sports", color: "#FFB347" },
+  { label: "Reading", color: "#DDA0DD" },
+  { label: "Gaming", color: "#87CEEB" },
+  { label: "Art", color: "#F0E68C" },
+  { label: "Fitness", color: "#98FB98" },
+  { label: "Movies", color: "#FFA07A" },
+  { label: "Nature", color: "#90EE90" },
+  { label: "Technology", color: "#ADD8E6" },
+  { label: "Fashion", color: "#FFB6C1" },
+  { label: "Dancing", color: "#FFEFD5" },
+  { label: "Writing", color: "#E6E6FA" },
+] as const;
 /**
  * Custom styles for animations and interactions
  */
@@ -100,6 +126,44 @@ const customStyles = `
   .next-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(62, 198, 198, 0.3);
+  }
+  
+  .interest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    justify-items: center;
+  }
+  
+  .interest-note {
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+  }
+  
+  .interest-note:hover {
+    transform: scale(1.05) rotate(0deg) !important;
+    z-index: 10;
+  }
+  
+  .interest-note.selected {
+    transform: scale(1.1) rotate(0deg) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    z-index: 5;
+  }
+  
+  .custom-interest-input {
+    animation: fadeInScale 0.3s ease-out;
+  }
+  
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 `;
 
@@ -339,6 +403,270 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
 };
 
 /**
+ * Step 2 Component - Interests Beyond Work
+ */
+interface Step2Props {
+  data: Step2Data;
+  onDataChange: (data: Step2Data) => void;
+  onNext: () => void;
+  onBack: () => void;
+}
+
+const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => {
+  const [customInterest, setCustomInterest] = useState("");
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
+
+  /**
+   * Handle toggling interest selection
+   */
+  const handleInterestToggle = (interest: string) => {
+    const updatedInterests = data.interests.includes(interest)
+      ? data.interests.filter(i => i !== interest)
+      : [...data.interests, interest];
+    
+    onDataChange({
+      ...data,
+      interests: updatedInterests
+    });
+  };
+
+  /**
+   * Handle adding custom interest
+   */
+  const handleAddCustomInterest = () => {
+    if (customInterest.trim() && !data.interests.includes(customInterest.trim())) {
+      onDataChange({
+        ...data,
+        interests: [...data.interests, customInterest.trim()]
+      });
+      setCustomInterest("");
+      setIsAddingCustom(false);
+    }
+  };
+
+  /**
+   * Handle removing custom interest
+   */
+  const handleRemoveInterest = (interest: string) => {
+    onDataChange({
+      ...data,
+      interests: data.interests.filter(i => i !== interest)
+    });
+  };
+
+  /**
+   * Handle key press for custom interest input
+   */
+  const handleCustomInterestKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddCustomInterest();
+    } else if (e.key === "Escape") {
+      setIsAddingCustom(false);
+      setCustomInterest("");
+    }
+  };
+
+  /**
+   * Get color for interest (predefined or random for custom)
+   */
+  const getInterestColor = (interest: string): string => {
+    const predefined = INTEREST_OPTIONS.find(option => option.label === interest);
+    if (predefined) return predefined.color;
+    
+    // Generate consistent color for custom interests based on string hash
+    const colors = ["#FFE066", "#FF6B6B", "#4ECDC4", "#95E1D3", "#FFB347", "#DDA0DD"];
+    let hash = 0;
+    for (let i = 0; i < interest.length; i++) {
+      hash = interest.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  /**
+   * Get rotation for sticky note (random but consistent)
+   */
+  const getRotation = (interest: string): number => {
+    let hash = 0;
+    for (let i = 0; i < interest.length; i++) {
+      hash = interest.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return (hash % 21) - 10; // Random rotation between -10 and 10 degrees
+  };
+
+  return (
+    <div className="form-container space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+          What lights you up outside of work?
+        </h2>
+        <p className="text-gray-600 text-base">
+          Select your interests to help others connect with you on a personal level
+        </p>
+      </div>
+
+      {/* Interests Grid */}
+      <div className="space-y-6">
+        <div className="interest-grid">
+          {INTEREST_OPTIONS.map((option) => {
+            const isSelected = data.interests.includes(option.label);
+            return (
+              <div
+                key={option.label}
+                className={`interest-note ${isSelected ? 'selected' : ''}`}
+                onClick={() => handleInterestToggle(option.label)}
+                role="button"
+                tabIndex={0}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleInterestToggle(option.label);
+                  }
+                }}
+                aria-pressed={isSelected}
+                aria-label={`Toggle ${option.label} interest`}
+              >
+                <StickyNote
+                  content={option.label}
+                  backgroundColor={option.color}
+                  width={100}
+                  height={80}
+                  rotation={getRotation(option.label)}
+                  className={`text-sm font-semibold ${
+                    isSelected ? 'ring-4 ring-[#3ec6c6] ring-opacity-50' : ''
+                  }`}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Custom Interests */}
+        {data.interests
+          .filter(interest => !INTEREST_OPTIONS.some(option => option.label === interest))
+          .length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 text-center">
+              Your Custom Interests
+            </h3>
+            <div className="interest-grid">
+              {data.interests
+                .filter(interest => !INTEREST_OPTIONS.some(option => option.label === interest))
+                .map((interest) => (
+                  <div
+                    key={interest}
+                    className="interest-note selected relative"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Remove ${interest} custom interest`}
+                  >
+                    <StickyNote
+                      content={interest}
+                      backgroundColor={getInterestColor(interest)}
+                      width={100}
+                      height={80}
+                      rotation={getRotation(interest)}
+                      className="text-sm font-semibold ring-4 ring-[#3ec6c6] ring-opacity-50"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveInterest(interest)}
+                      className="absolute -top-2 -right-2 w-6 h-6 p-0 bg-red-500 hover:bg-red-600 text-white rounded-full z-10"
+                      aria-label={`Remove ${interest} interest`}
+                    >
+                      <XIcon className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Add Custom Interest */}
+        <div className="flex justify-center">
+          {isAddingCustom ? (
+            <div className="custom-interest-input flex gap-2 max-w-xs">
+              <Input
+                value={customInterest}
+                onChange={(e) => setCustomInterest(e.target.value)}
+                onKeyPress={handleCustomInterestKeyPress}
+                placeholder="Enter your interest"
+                className="flex-1 text-sm"
+                maxLength={20}
+                autoFocus
+                aria-label="Custom interest"
+              />
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleAddCustomInterest}
+                disabled={!customInterest.trim()}
+                className="bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white px-3"
+              >
+                Add
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsAddingCustom(false);
+                  setCustomInterest("");
+                }}
+                className="px-3"
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddingCustom(true)}
+              className="label-button flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50 border-dashed"
+              aria-label="Add custom interest"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Add your own
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="space-y-4 pt-6">
+        <p className="text-sm text-gray-500 text-center">
+          Selected: {data.interests.length} interest{data.interests.length !== 1 ? 's' : ''}
+        </p>
+        
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onBack}
+            className="flex-1 h-12 text-base font-semibold rounded-xl"
+            aria-label="Go back to previous step"
+          >
+            Back
+          </Button>
+          
+          <Button
+            type="button"
+            onClick={onNext}
+            className="next-button flex-1 h-12 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white text-base font-semibold rounded-xl"
+            aria-label="Continue to next step"
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+/**
  * Progress Indicator Component
  */
 interface ProgressIndicatorProps {
@@ -387,6 +715,9 @@ export const SignupFlow: React.FC = () => {
       connectWith: [],
       connectDetails: "",
       offerings: ""
+    },
+    step2: {
+      interests: []
     }
   });
 
@@ -400,6 +731,15 @@ export const SignupFlow: React.FC = () => {
     }));
   };
 
+  /**
+   * Handle step 2 data changes
+   */
+  const handleStep2DataChange = (data: Step2Data) => {
+    setSignupData(prev => ({
+      ...prev,
+      step2: data
+    }));
+  };
   /**
    * Handle navigation to next step
    */
@@ -416,6 +756,14 @@ export const SignupFlow: React.FC = () => {
     }
   };
 
+  /**
+   * Handle navigation to previous step
+   */
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
   /**
    * Handle skipping the signup flow
    */
@@ -492,29 +840,12 @@ export const SignupFlow: React.FC = () => {
                 )}
                 
                 {currentStep === 2 && (
-                  <div className="form-container text-center py-12">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                      Step 2 Coming Soon
-                    </h2>
-                    <p className="text-gray-600 mb-6">
-                      This step is under development.
-                    </p>
-                    <div className="flex gap-3">
-                      <Button
-                        variant="outline"
-                        onClick={() => setCurrentStep(1)}
-                        className="flex-1"
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        onClick={handleNext}
-                        className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
+                  <Step2
+                    data={signupData.step2}
+                    onDataChange={handleStep2DataChange}
+                    onNext={handleNext}
+                    onBack={handleBack}
+                  />
                 )}
                 
                 {currentStep === 3 && (
@@ -528,7 +859,7 @@ export const SignupFlow: React.FC = () => {
                     <div className="flex gap-3">
                       <Button
                         variant="outline"
-                        onClick={() => setCurrentStep(2)}
+                        onClick={handleBack}
                         className="flex-1"
                       >
                         Back
