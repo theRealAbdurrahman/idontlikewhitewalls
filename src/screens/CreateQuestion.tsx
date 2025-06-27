@@ -403,7 +403,7 @@ export const CreateQuestion: React.FC = () => {
             </div>
 
             {/* Description Textarea */}
-            <div className="flex-1">
+            <div className="flex-1 pb-32">
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -415,10 +415,11 @@ export const CreateQuestion: React.FC = () => {
             </div>
           </div>
 
-          {/* Bottom Section */}
-          <div className="px-4 py-4 border-gray-200 bg-[#fbfbfb] pb-safe">
+          {/* Fixed Action Buttons Section */}
+          <div className="fixed bottom-0 left-0 right-0 bg-[#fbfbfb]/95 backdrop-blur-lg border-t border-gray-200 shadow-lg pb-safe">
+            <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
             {/* Visibility Selection */}
-            <div className="mb-4 flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <Dialog open={isVisibilityDropdownOpen} onOpenChange={setIsVisibilityDropdownOpen}>
                 <DialogTrigger asChild>
                   <Button
@@ -592,7 +593,7 @@ export const CreateQuestion: React.FC = () => {
               </Dialog>
 
               {/* Right Side - Media Buttons + Post Button */}
-              <div className="flex items-center gap-3 pb-safe">
+              <div className="flex items-center gap-3">
                 {/* Media Buttons */}
                 <Button
                   type="button"
@@ -632,6 +633,7 @@ export const CreateQuestion: React.FC = () => {
                   )}
                 </Button>
               </div>
+            </div>
             </div>
           </div>
         </form>
