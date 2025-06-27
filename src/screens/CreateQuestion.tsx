@@ -63,7 +63,6 @@ export const CreateQuestion: React.FC = () => {
       backdrop-filter: blur(20px);
       background: rgba(251, 251, 251, 0.95);
       border-bottom: 1px solid rgba(0,0,0,0.06);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
   `;
 
@@ -431,7 +430,7 @@ export const CreateQuestion: React.FC = () => {
           </div>
 
           {/* Fixed Action Buttons Section */}
-          <div className="fixed bottom-0 left-0 right-0 bg-[#fbfbfb]/95 backdrop-blur-lg border-t border-gray-200 shadow-lg pb-safe">
+          <div className="fixed bottom-0 left-0 right-0 bg-[#fbfbfb]/95 backdrop-blur-lg shadow-lg pb-safe">
             <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
             {/* Visibility Selection */}
             <div className="flex items-center gap-3">

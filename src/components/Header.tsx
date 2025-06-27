@@ -35,10 +35,10 @@ export const Header: React.FC = () => {
       };
     }
     
-    if (path.includes("/events/")) {
+    if (path.includes("/events")) {
       return {
         showBackButton: true,
-        title: "Event Details",
+        title: "Events",
         showSearch: false,
         showAvatar: false,
       };
