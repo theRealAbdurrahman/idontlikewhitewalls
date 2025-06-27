@@ -768,11 +768,12 @@ export const SignupFlow: React.FC = () => {
    * Handle skipping the signup flow
    */
   const handleSkip = () => {
-    toast({
-      title: "Signup skipped",
-      description: "You can complete this later in your profile settings.",
-    });
-    navigate("/home");
+    if (currentStep < 3) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      // skip to home
+      navigate("/home");
+    }
   };
 
   /**

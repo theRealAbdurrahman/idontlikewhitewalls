@@ -1,9 +1,11 @@
 import React from "react";
 import { useLogto } from "@logto/react";
+import { useNavigate } from 'react-router-dom';
 
 
 export const Login: React.FC = () => {
   const { signIn } = useLogto();
+  const navigate = useNavigate()
 
   return (
     <div className="relative w-full h-screen bg-white overflow-hidden flex items-center justify-center">
@@ -29,7 +31,7 @@ export const Login: React.FC = () => {
             onClick={() => signIn(`http://localhost:5173/callback`)}>
             Login to Meetball
           </button>
-          <p className="text-gray-700 text-sm">Or sign up</p>
+          <p className="text-gray-700 text-sm" onClick={() => navigate('/signup')}>Or sign up</p>
         </div>
       </div>
     </div>
