@@ -132,18 +132,48 @@
   }
 }
 
-/* div#app {
-  padding-top: env(safe-area-inset-top);
-  padding-right: env(safe-area-inset-right);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  max-height: 100dvh;
+/* Prevent mobile zoom on input focus by ensuring font-size is at least 16px */
+@layer base {
+  /* Apply to all input types, textareas, and select elements on mobile */
+  @media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="month"],
+    input[type="week"],
+    input[type="time"],
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+    
+    /* Ensure placeholder text is also 16px */
+    input::placeholder,
+    textarea::placeholder {
+      font-size: 16px !important;
+    }
+  }
 }
 
-main {
-  max-height: 100dvh;
-}
-
+/* Safe area insets for devices with notches */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
-} */
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.pl-safe {
+  padding-left: env(safe-area-inset-left);
+}
+
+.pr-safe {
+  padding-right: env(safe-area-inset-right);
+}
