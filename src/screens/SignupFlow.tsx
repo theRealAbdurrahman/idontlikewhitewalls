@@ -146,8 +146,6 @@ const customStyles = `
   }
   
   .interest-note.selected {
-    transform: scale(1.1) rotate(0deg) !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     z-index: 5;
   }
   
@@ -527,16 +525,30 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
                 aria-pressed={isSelected}
                 aria-label={`Toggle ${option.label} interest`}
               >
-                <StickyNote
-                  content={option.label}
-                  backgroundColor={option.color}
-                  width={100}
-                  height={80}
-                  rotation={getRotation(option.label)}
-                  className={`text-sm font-semibold ${
-                    isSelected ? 'ring-4 ring-[#3ec6c6] ring-opacity-50' : ''
-                  }`}
-                />
+                  <div 
+                    className={`transition-all duration-200 ${
+                      isSelected 
+                        ? 'transform scale-110' 
+                        : ''
+                    }`}
+                    style={{
+                      transform: `scale(${isSelected ? 1.1 : 1}) rotate(${getRotation(option.label)}deg)`,
+                      filter: isSelected 
+                        ? 'drop-shadow(0 8px 25px rgba(0,0,0,0.15))' 
+                        : 'none'
+                    }}
+                  >
+                    <StickyNote
+                      content={option.label}
+                      backgroundColor={option.color}
+                      width={100}
+                      height={80}
+                      rotation={0} // Rotation is now handled by parent
+                      className={`text-sm font-semibold ${
+                        isSelected ? 'ring-4 ring-[#3ec6c6] ring-opacity-50' : ''
+                      }`}
+                    />
+                  </div>
               </div>
             );
           })}
@@ -561,14 +573,22 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
                     tabIndex={0}
                     aria-label={`Remove ${interest} custom interest`}
                   >
-                    <StickyNote
-                      content={interest}
-                      backgroundColor={getInterestColor(interest)}
-                      width={100}
-                      height={80}
-                      rotation={getRotation(interest)}
-                      className="text-sm font-semibold ring-4 ring-[#3ec6c6] ring-opacity-50"
-                    />
+                    <div 
+                      className="transition-all duration-200 transform scale-110"
+                      style={{
+                        transform: `scale(1.1) rotate(${getRotation(interest)}deg)`,
+                        filter: 'drop-shadow(0 8px 25px rgba(0,0,0,0.15))'
+                      }}
+                    >
+                      <StickyNote
+                        content={interest}
+                        backgroundColor={getInterestColor(interest)}
+                        width={100}
+                        height={80}
+                        rotation={0} // Rotation is now handled by parent
+                        className="text-sm font-semibold ring-4 ring-[#3ec6c6] ring-opacity-50"
+                      />
+                    </div>
                     <Button
                       type="button"
                       variant="ghost"
