@@ -24,6 +24,14 @@ interface Step1Data {
 interface Step2Data {
   interests: string[];
 }
+
+/**
+ * Interface for Step 3 data structure
+ */
+interface Step3Data {
+  linkedinUrl: string;
+}
+
 /**
  * Interface for the complete signup flow data
  */
@@ -686,6 +694,272 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
     </div>
   );
 };
+
+/**
+ * Step 3 Component - LinkedIn Profile
+ */
+interface Step3Props {
+  data: Step3Data;
+  onDataChange: (data: Step3Data) => void;
+  onComplete: () => void;
+  onBack: () => void;
+}
+
+const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack }) => {
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationError, setValidationError] = useState("");
+  const [isValid, setIsValid] = useState(false);
+  const [username, setUsername] = useState("");
+
+  /**
+   * Validate LinkedIn URL format
+   */
+  const validateLinkedInUrl = (url: string): { isValid: boolean; error?: string; username?: string } => {
+    if (!url.trim()) {
+      return { isValid: true }; // Empty is valid (optional field)
+    }
+
+    // Common LinkedIn URL patterns
+    const patterns = [
+      /^https?:\/\/(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/,
+      /^(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/,
+      /^linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        const extractedUsername = match[2] || match[1];
+        return { 
+          isValid: true, 
+          username: extractedUsername 
+        };
+      }
+    }
+
+    return { 
+      isValid: false, 
+      error: "Please enter a valid LinkedIn profile URL (e.g., linkedin.com/in/your-profile)" 
+    };
+  };
+
+  /**
+   * Normalize LinkedIn URL
+   */
+  const normalizeLinkedInUrl = (url: string): string => {
+    if (!url.trim()) return "";
+    
+    let normalizedUrl = url.trim();
+    
+    // Add protocol if missing
+    if (!normalizedUrl.startsWith('http')) {
+      normalizedUrl = 'https://' + normalizedUrl;
+    }
+    
+    // Add www if missing
+    if (normalizedUrl.startsWith('https://linkedin.com')) {
+      normalizedUrl = normalizedUrl.replace('https://linkedin.com', 'https://www.linkedin.com');
+    }
+    
+    // Remove trailing slash
+    normalizedUrl = normalizedUrl.replace(/\/$/, '');
+    
+    return normalizedUrl;
+  };
+
+  /**
+   * Handle URL input change with debounced validation
+   */
+  const handleUrlChange = (url: string) => {
+    onDataChange({ ...data, linkedinUrl: url });
+    
+    // Clear previous states
+    setValidationError("");
+    setIsValid(false);
+    setUsername("");
+    
+    if (!url.trim()) {
+      return; // Empty is valid
+    }
+
+    setIsValidating(true);
+    
+    // Debounced validation
+    const timeoutId = setTimeout(() => {
+      const validation = validateLinkedInUrl(url);
+      
+      if (validation.isValid) {
+        setIsValid(true);
+        setUsername(validation.username || "");
+        // Auto-normalize the URL
+        const normalizedUrl = normalizeLinkedInUrl(url);
+        if (normalizedUrl !== url) {
+          onDataChange({ ...data, linkedinUrl: normalizedUrl });
+        }
+      } else {
+        setValidationError(validation.error || "Invalid URL format");
+      }
+      
+      setIsValidating(false);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  };
+
+  /**
+   * Handle form submission
+   */
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Final validation
+    if (data.linkedinUrl.trim()) {
+      const validation = validateLinkedInUrl(data.linkedinUrl);
+      if (!validation.isValid) {
+        setValidationError(validation.error || "Invalid LinkedIn URL");
+        return;
+      }
+    }
+    
+    onComplete();
+  };
+
+  return (
+    <div className="form-container space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#0077b5] to-[#005582] rounded-2xl flex items-center justify-center shadow-lg">
+            <svg
+              className="w-8 h-8 text-white"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19a.66.66 0 000 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z" />
+            </svg>
+          </div>
+        </div>
+        
+        <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+          Connect Your LinkedIn Profile
+        </h2>
+        <p className="text-gray-600 text-base max-w-md mx-auto">
+          Adding your LinkedIn profile helps others connect with you professionally (optional)
+        </p>
+      </div>
+
+      {/* LinkedIn URL Input */}
+      <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="linkedin-url" className="block text-sm font-medium text-gray-900">
+              LinkedIn Profile URL
+            </label>
+            <div className="relative">
+              <Input
+                id="linkedin-url"
+                type="url"
+                value={data.linkedinUrl}
+                onChange={(e) => handleUrlChange(e.target.value)}
+                placeholder="https://www.linkedin.com/in/your-profile"
+                className={`text-sm leading-relaxed pr-10 ${
+                  validationError 
+                    ? "border-red-300 focus:border-red-500 focus:ring-red-500" 
+                    : isValid 
+                    ? "border-green-300 focus:border-green-500 focus:ring-green-500"
+                    : "focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
+                }`}
+                aria-describedby={validationError ? "linkedin-error" : undefined}
+                aria-invalid={!!validationError}
+              />
+              
+              {/* Loading/Status Icon */}
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                {isValidating && (
+                  <div className="w-4 h-4 border-2 border-[#3ec6c6] border-t-transparent rounded-full animate-spin"></div>
+                )}
+                {!isValidating && isValid && (
+                  <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {!isValidating && validationError && (
+                  <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+            </div>
+            
+            {/* Error Message */}
+            {validationError && (
+              <p id="linkedin-error" className="text-sm text-red-600" role="alert">
+                {validationError}
+              </p>
+            )}
+            
+            {/* Success Message with Username */}
+            {isValid && username && (
+              <p className="text-sm text-green-600">
+                ✓ Valid LinkedIn profile: <span className="font-medium">@{username}</span>
+              </p>
+            )}
+          </div>
+          
+          {/* Help Text */}
+          <div className="space-y-2">
+            <p className="text-xs text-gray-500">
+              Accepted formats:
+            </p>
+            <ul className="text-xs text-gray-500 space-y-1 list-disc list-inside">
+              <li>https://www.linkedin.com/in/your-profile</li>
+              <li>linkedin.com/in/your-profile</li>
+              <li>www.linkedin.com/in/your-profile</li>
+            </ul>
+          </div>
+        </form>
+      </div>
+
+      {/* Footer */}
+      <div className="space-y-4 pt-6">
+        <p className="text-sm text-gray-500 text-center">
+          This helps others find and connect with you professionally
+        </p>
+        
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onBack}
+            className="flex-1 h-12 text-base font-semibold rounded-xl"
+            aria-label="Go back to previous step"
+          >
+            Back
+          </Button>
+          
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!!validationError || isValidating}
+            className="next-button flex-1 h-12 bg-[#0077b5] hover:bg-[#005582] text-white text-base font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Complete signup"
+          >
+            {isValidating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Validating...
+              </>
+            ) : (
+              "Complete Setup"
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /**
  * Progress Indicator Component
  */
