@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { XIcon, PlusIcon } from "lucide-react";
 import { Button } from "../components/ui/button";
