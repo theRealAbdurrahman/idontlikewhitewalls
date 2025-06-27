@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { CalendarIcon, MapPinIcon, UsersIcon, BookmarkIcon } from "lucide-react";
+import { CalendarIcon, MapPinIcon, UsersIcon, BookmarkIcon, PlusIcon } from "lucide-react";
 import { format, isAfter, isBefore, parseISO, isToday, isTomorrow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -314,6 +314,13 @@ export const Events: React.FC = () => {
   const handleEventClick = (eventId: string) => {
     navigate(`/events/${eventId}`);
   };
+  
+  /**
+   * Handle creating new event
+   */
+  const handleCreateEvent = () => {
+    navigate("/create-event");
+  };
 
   /**
    * Handle join event
@@ -519,6 +526,15 @@ export const Events: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Floating Action Button */}
+      <Button
+        onClick={handleCreateEvent}
+        className="w-[50px] h-[50px] fixed bottom-[103px] right-[30px] bg-[#3ec6c6] hover:bg-[#2ea5a5] rounded-full shadow-[0px_4px_8px_#00000040] p-0 flex items-center justify-center z-20 transition-all duration-200 hover:scale-105"
+        aria-label="Create new event"
+      >
+        <PlusIcon className="w-[22px] h-[22px] text-white" />
+      </Button>
     </>
   );
 };
