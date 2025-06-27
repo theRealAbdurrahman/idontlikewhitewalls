@@ -226,14 +226,6 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
   };
 
   /**
-   * Handle form submission
-   */
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onNext();
-  };
-
-  /**
    * Handle key press for custom label input
    */
   const handleCustomLabelKeyPress = (e: React.KeyboardEvent) => {
@@ -387,22 +379,6 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="space-y-4 pt-4">
-        <p className="text-sm text-gray-500 text-center">
-          This will not appear on your public profile
-        </p>
-        
-        <Button
-          type="submit"
-          onClick={handleSubmit}
-          className="next-button w-full h-12 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white text-base font-semibold rounded-xl"
-          aria-label="Continue to next step"
-        >
-          Next
-        </Button>
       </div>
     </div>
   );
@@ -663,34 +639,6 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
           )}
         </div>
       </div>
-
-      {/* Footer */}
-      <div className="space-y-4 pt-6">
-        <p className="text-sm text-gray-500 text-center">
-          Selected: {data.interests.length} interest{data.interests.length !== 1 ? 's' : ''}
-        </p>
-        
-        <div className="flex gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onBack}
-            className="flex-1 h-12 text-base font-semibold rounded-xl"
-            aria-label="Go back to previous step"
-          >
-            Back
-          </Button>
-          
-          <Button
-            type="button"
-            onClick={onNext}
-            className="next-button flex-1 h-12 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white text-base font-semibold rounded-xl"
-            aria-label="Continue to next step"
-          >
-            Next
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };
@@ -806,24 +754,6 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
     return () => clearTimeout(timeoutId);
   };
 
-  /**
-   * Handle form submission
-   */
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Final validation
-    if (data.linkedinUrl.trim()) {
-      const validation = validateLinkedInUrl(data.linkedinUrl);
-      if (!validation.isValid) {
-        setValidationError(validation.error || "Invalid LinkedIn URL");
-        return;
-      }
-    }
-    
-    onComplete();
-  };
-
   return (
     <div className="form-container space-y-8">
       {/* Header */}
@@ -851,7 +781,7 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
 
       {/* LinkedIn URL Input */}
       <div className="space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="linkedin-url" className="block text-sm font-medium text-gray-900">
               LinkedIn Profile URL
@@ -918,42 +848,6 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
               <li>www.linkedin.com/in/your-profile</li>
             </ul>
           </div>
-        </form>
-      </div>
-
-      {/* Footer */}
-      <div className="space-y-4 pt-6">
-        <p className="text-sm text-gray-500 text-center">
-          This helps others find and connect with you professionally
-        </p>
-        
-        <div className="flex gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onBack}
-            className="flex-1 h-12 text-base font-semibold rounded-xl"
-            aria-label="Go back to previous step"
-          >
-            Back
-          </Button>
-          
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!!validationError || isValidating}
-            className="next-button flex-1 h-12 bg-[#0077b5] hover:bg-[#005582] text-white text-base font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Complete signup"
-          >
-            {isValidating ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Validating...
-              </>
-            ) : (
-              "Complete Setup"
-            )}
-          </Button>
         </div>
       </div>
     </div>
@@ -1002,6 +896,13 @@ export const SignupFlow: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // State for step 3 validation
+  const [step3Validation, setStep3Validation] = useState({
+    isValidating: false,
+    validationError: "",
+    isValid: false
+  });
+  
   // State management
   const [currentStep, setCurrentStep] = useState(1);
   const [signupData, setSignupData] = useState<SignupFlowData>({
@@ -1048,14 +949,55 @@ export const SignupFlow: React.FC = () => {
     }));
   };
   /**
+   * Validate LinkedIn URL for step 3
+   */
+  const validateLinkedInUrl = (url: string): { isValid: boolean; error?: string } => {
+    if (!url.trim()) {
+      return { isValid: true }; // Empty is valid (optional field)
+    }
+
+    // Common LinkedIn URL patterns
+    const patterns = [
+      /^https?:\/\/(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/,
+      /^(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/,
+      /^linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        return { isValid: true };
+      }
+    }
+
+    return { 
+      isValid: false, 
+      error: "Please enter a valid LinkedIn profile URL" 
+    };
+  };
+
+  /**
    * Handle navigation to next step
    */
   const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep(prev => prev + 1);
-    } else {
+    // Validate current step before proceeding
+    if (currentStep === 3) {
+      // Validate LinkedIn URL before completing
+      if (signupData.step3.linkedinUrl.trim()) {
+        const validation = validateLinkedInUrl(signupData.step3.linkedinUrl);
+        if (!validation.isValid) {
+          toast({
+            title: "Invalid LinkedIn URL",
+            description: validation.error,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
       // Complete signup flow
       handleComplete();
+    } else {
+      setCurrentStep(prev => prev + 1);
     }
   };
 
@@ -1074,7 +1016,7 @@ export const SignupFlow: React.FC = () => {
     if (currentStep < 3) {
       setCurrentStep(prev => prev + 1);
     } else {
-      // skip to home
+      // Skip to home
       navigate("/home");
     }
   };
@@ -1101,6 +1043,44 @@ export const SignupFlow: React.FC = () => {
     navigate("/home");
   };
 
+  /**
+   * Get the appropriate button text and state for current step
+   */
+  const getButtonConfig = () => {
+    switch (currentStep) {
+      case 1:
+        return {
+          showBack: false,
+          nextText: "Next",
+          nextDisabled: false,
+          footerNote: "This will not appear on your public profile"
+        };
+      case 2:
+        return {
+          showBack: true,
+          nextText: "Next",
+          nextDisabled: false,
+          footerNote: `Selected: ${signupData.step2.interests.length} interest${signupData.step2.interests.length !== 1 ? 's' : ''}`
+        };
+      case 3:
+        return {
+          showBack: true,
+          nextText: "Complete Setup",
+          nextDisabled: step3Validation.isValidating,
+          footerNote: "This helps others find and connect with you professionally"
+        };
+      default:
+        return {
+          showBack: false,
+          nextText: "Next",
+          nextDisabled: false,
+          footerNote: ""
+        };
+    }
+  };
+
+  const buttonConfig = getButtonConfig();
+
   return (
     <>
       <style>{customStyles}</style>
@@ -1126,7 +1106,7 @@ export const SignupFlow: React.FC = () => {
         </header>
 
         {/* Main Content */}
-        <div className="pt-20 px-4 py-6">
+        <div className="pt-20 px-4 py-6 pb-32">
           <div className="max-w-2xl mx-auto">
             {/* Progress Indicator */}
             <ProgressIndicator currentStep={currentStep} totalSteps={3} />
@@ -1162,6 +1142,49 @@ export const SignupFlow: React.FC = () => {
                 )}
               </CardContent>
             </Card>
+          </div>
+        </div>
+
+        {/* Fixed Footer with Navigation Buttons */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+          <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+            {/* Footer Note */}
+            {buttonConfig.footerNote && (
+              <p className="text-sm text-gray-500 text-center">
+                {buttonConfig.footerNote}
+              </p>
+            )}
+            
+            {/* Navigation Buttons */}
+            <div className={`flex gap-3 ${buttonConfig.showBack ? '' : 'justify-center'}`}>
+              {buttonConfig.showBack && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBack}
+                  className="flex-1 h-12 text-base font-semibold rounded-xl"
+                  aria-label="Go back to previous step"
+                >
+                  Back
+                </Button>
+              )}
+              
+              <Button
+                type="button"
+                onClick={handleNext}
+                disabled={buttonConfig.nextDisabled}
+                className={`next-button h-12 text-base font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed ${
+                  buttonConfig.showBack ? 'flex-1' : 'w-full max-w-xs'
+                } ${
+                  currentStep === 3 
+                    ? "bg-[#0077b5] hover:bg-[#005582]" 
+                    : "bg-[#3ec6c6] hover:bg-[#2ea5a5]"
+                } text-white`}
+                aria-label={currentStep === 3 ? "Complete signup" : "Continue to next step"}
+              >
+                {buttonConfig.nextText}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
