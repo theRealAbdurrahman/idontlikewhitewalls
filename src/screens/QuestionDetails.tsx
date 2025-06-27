@@ -341,6 +341,8 @@ export const QuestionDetails: React.FC = () => {
    * Handle user interactions
    */
   const handleUserProfileClick = (userId: string) => {
+    console.log("User profile clicked:", userId);
+
     navigate(`/profile/${userId}`);
   };
 
@@ -359,6 +361,12 @@ export const QuestionDetails: React.FC = () => {
       navigate(`/chat/${newThreadId}`);
     }
   };
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent question click event
+    if (!question?.isAnonymous) {
+      navigate(`/profile/${question?.authorId}`);
+    }
+  };
 
   /**
    * Enhanced user interaction item renderer
@@ -373,7 +381,8 @@ export const QuestionDetails: React.FC = () => {
         onClick={() => handleUserProfileClick(interaction.userId)}
       >
         <div className="relative">
-          <Avatar className="w-12 h-12 ring-2 ring-transparent group-hover:ring-gray-200 transition-all duration-200">
+          <Avatar className="w-12 h-12 ring-2 ring-transparent group-hover:ring-gray-200 transition-all duration-200" onClick={handleAuthorClick}
+          >
             <AvatarImage src={interaction.userAvatar} alt={interaction.userName} />
             <AvatarFallback className="bg-gradient-to-br from-gray-100 to-gray-200">
               {interaction.userName[0]}
@@ -568,7 +577,7 @@ export const QuestionDetails: React.FC = () => {
               {/* Enhanced Header with better typography */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3 flex-1">
-                  <Avatar className="w-10 h-10 ring-2 ring-gray-100">
+                  <Avatar className="w-10 h-10 ring-2 ring-gray-100" onClick={handleAuthorClick}>
                     <AvatarImage
                       src={question.isAnonymous ? undefined : (question.authorAvatar || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1")}
                       alt={question.isAnonymous ? "Anonymous" : question.authorName}

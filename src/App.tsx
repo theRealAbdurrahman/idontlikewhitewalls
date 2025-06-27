@@ -16,6 +16,7 @@ import { ProfilePage } from "./screens/ProfilePage";
 import { Chat } from "./screens/Chat";
 import { SuggestFeature } from "./screens/SuggestFeature";
 import { Callback } from "./screens/Callback";
+import { AuthProvider } from "./contexts/AuthContext";
 
 import { LogtoProvider, LogtoConfig } from '@logto/react';
 import { Login } from "./screens/Login";
@@ -28,29 +29,32 @@ const config: LogtoConfig = {
 export const App = (): JSX.Element => {
   return (
     <LogtoProvider config={config}>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/events/:id" element={<EventDetails />} />
-          <Route path="/questions/:id" element={<QuestionDetails />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/chat/:id" element={<Chat />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/:id" element={<UserProfile />} />
-          <Route path="/user/:id" element={<ProfilePage />} />
-          <Route path="/create-question" element={<CreateQuestion />} />
-          <Route path="/create-event" element={<CreateEvent />} />
-          <Route path="/create-community" element={<CreateCommunity />} />
-          <Route path="/communities" element={<Communities />} />
-          <Route path="/suggest-feature" element={<SuggestFeature />} />
-          <Route path="/callback" element={<Callback />} />
-          <Route path="*" element={<Navigate to="/home" replace />} />
-        </Routes>
-      </Layout>
+      {/* bolt is fucking stupid and made the questions added to the state in the auth provider */}
+      {/* for now I am leaving it here, then later we need to refactor this */}
+      {/* by refactor this I mean refactor everything */}
+      <AuthProvider>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/events/:id" element={<EventDetails />} />
+            <Route path="/questions/:id" element={<QuestionDetails />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/chat/:id" element={<Chat />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/profile/:id" element={<ProfilePage />} />
+            <Route path="/create-question" element={<CreateQuestion />} />
+            <Route path="/create-event" element={<CreateEvent />} />
+            <Route path="/create-community" element={<CreateCommunity />} />
+            <Route path="/communities" element={<Communities />} />
+            <Route path="/suggest-feature" element={<SuggestFeature />} />
+            <Route path="/callback" element={<Callback />} />
+            <Route path="*" element={<Navigate to="/home" replace />} />
+          </Routes>
+        </Layout>
+      </AuthProvider>
     </LogtoProvider>
   );
 };

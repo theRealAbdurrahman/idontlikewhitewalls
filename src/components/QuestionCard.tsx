@@ -2,17 +2,28 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { MoreVerticalIcon, BookmarkIcon, ArrowUpIcon } from "lucide-react";
-import { 
-  useCreateInteractionApiV1InteractionsPost, 
-  useDeleteInteractionApiV1InteractionsInteractionIdDelete 
+import {
+  useCreateInteractionApiV1InteractionsPost,
+  useDeleteInteractionApiV1InteractionsInteractionIdDelete
 } from "../api-client/api-client";
 import { InteractionTarget, InteractionType } from "../api-client/models";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
+import { Checkbox } from "./ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import { Textarea } from "./ui/textarea";
 import { useAuthStore } from "../stores/authStore";
 import { useAppStore } from "../stores/appStore";
+import { useToast } from "../hooks/use-toast";
 
 /**
  * Custom styles for SVG icon color filtering
@@ -62,19 +73,85 @@ interface QuestionCardProps {
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const { user } = useAuthStore();
   const { chatThreads, messages } = useAppStore();
+  const { toast } = useToast();
   const navigate = useNavigate();
-  
+
+  // Local state for report modal
+  const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
+  const [reportReasons, setReportReasons] = React.useState<string[]>([]);
+  const [reportDetails, setReportDetails] = React.useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = React.useState(false);
+
   // API mutations for interactions
   const createInteractionMutation = useCreateInteractionApiV1InteractionsPost();
-  const deleteInteractionMutation = useDeleteInteractionApiV1InteractionsInteractionIdDelete();
-  
+
   // Check if this is the current user's own question
   const isOwnQuestion = question.authorId === user?.id;
+
+  /**
+   * Handle report submission
+   */
+  const handleReportSubmit = async () => {
+    if (reportReasons.length === 0) {
+      toast({
+        title: "Please select at least one reason",
+        description: "You must select at least one reason for reporting this question.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmittingReport(true);
+
+    try {
+      // Simulate API call to submit report
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      console.log("Report submitted:", {
+        questionId: question.id,
+        reasons: reportReasons,
+        details: reportDetails.trim(),
+        reportedBy: user?.id,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Reset form and close modal
+      setReportReasons([]);
+      setReportDetails("");
+      setIsReportModalOpen(false);
+
+      toast({
+        title: "Report submitted",
+        description: "Thank you for helping keep our community safe.",
+      });
+
+    } catch (error) {
+      console.error("Failed to submit report:", error);
+      toast({
+        title: "Failed to submit report",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+  /**
+   * Handle checkbox change for report reasons
+   */
+  const handleReasonChange = (reason: string, checked: boolean) => {
+    if (checked) {
+      setReportReasons(prev => [...prev, reason]);
+    } else {
+      setReportReasons(prev => prev.filter(r => r !== reason));
+    }
+  };
 
   const handleUpvote = () => {
     // Don't allow interaction with own questions
     if (!user || isOwnQuestion) return;
-    
+
     // Use API to toggle upvote
     if (question.isUpvoted) {
       // TODO: Need to track interaction IDs to delete specific interactions
@@ -102,7 +179,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const handleMeToo = () => {
     // Don't allow interaction with own questions
     if (!user || isOwnQuestion) return;
-    
+
     // Use API to toggle me too
     if (question.isMeToo) {
       // TODO: Need to track interaction IDs to delete specific interactions
@@ -130,7 +207,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const handleBookmark = () => {
     // Allow bookmarking own questions
     if (!user) return;
-    
+
     // Use API to toggle bookmark
     if (question.isBookmarked) {
       // TODO: Need to track interaction IDs to delete specific interactions
@@ -158,15 +235,15 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const handleCanHelp = () => {
     // Don't allow offering help on own questions
     if (!user || !question || isOwnQuestion) return;
-    
+
     // Generate thread ID for this help conversation
     const threadId = `help-${question.id}-${user.id}`;
-    
+
     // Check if there's already a thread with messages (not just preview)
     const existingThread = chatThreads.find(thread => thread.id === threadId);
     const threadMessages = messages[threadId] || [];
     const hasActualMessages = threadMessages.some(msg => msg.type !== "preview" && msg.senderId === user.id);
-    
+
     if (existingThread && hasActualMessages) {
       // Navigate to existing chat thread without question parameter
       navigate(`/chat/${threadId}`);
@@ -192,7 +269,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent question click event
     if (!question.isAnonymous) {
-      navigate(`/user/${question.authorId}`);
+      navigate(`/profile/${question.authorId}`);
     }
   };
 
@@ -204,7 +281,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <Avatar 
+              <Avatar
                 className={`w-[35px] h-[35px] ${!question.isAnonymous ? 'cursor-pointer hover:ring-2 hover:ring-gray-200 transition-all' : ''}`}
                 onClick={handleAuthorClick}
               >
@@ -219,7 +296,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
               </Avatar>
 
               <div className="flex flex-col">
-                <span 
+                <span
                   className={`font-medium text-[#484848] text-base ${!question.isAnonymous ? 'cursor-pointer hover:text-gray-600 transition-colors' : ''}`}
                   onClick={handleAuthorClick}
                 >
@@ -248,17 +325,20 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                   e.stopPropagation(); // Prevent question click event
                   handleBookmark();
                 }}
-                className={`w-6 h-6 p-0 ${
-                  question.isBookmarked ? "text-yellow-500" : "text-gray-400"
-                }`}
+                className={`w-6 h-6 p-0 ${question.isBookmarked ? "text-yellow-500" : "text-gray-400"
+                  }`}
               >
                 <BookmarkIcon className="w-5 h-5" fill={question.isBookmarked ? "currentColor" : "none"} />
               </Button>
+
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={(e) => e.stopPropagation()} // Prevent question click event
-                className="w-6 h-6 p-0 text-gray-400"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent question click event
+                  setIsReportModalOpen(true);
+                }}
+                className="w-6 h-6 p-0 text-gray-400 hover:text-gray-600"
               >
                 <MoreVerticalIcon className="w-5 h-5" />
               </Button>
@@ -313,9 +393,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 handleUpvote();
               }}
               disabled={createInteractionMutation.isPending || isOwnQuestion}
-              className={`h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${
-                question.isUpvoted ? "bg-blue-50 border-blue-200 text-blue-600" : ""
-              } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${question.isUpvoted ? "bg-blue-50 border-blue-200 text-blue-600" : ""
+                } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <ArrowUpIcon className={`w-4 h-4 mr-2 ${question.isUpvoted ? "text-blue-600" : ""}`} />
               <span className="font-medium text-sm">
@@ -331,14 +410,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 handleMeToo();
               }}
               disabled={createInteractionMutation.isPending || isOwnQuestion}
-              className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${
-                question.isMeToo ? "bg-orange-50 text-orange-600" : ""
-              } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${question.isMeToo ? "bg-orange-50 text-orange-600" : ""
+                } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <img 
-                src="/Metoo (1).svg" 
-                alt="Me too" 
-                className={`w-6 h-6 mr-1 ${question.isMeToo ? "filter-orange" : ""}`} 
+              <img
+                src="/Metoo (1).svg"
+                alt="Me too"
+                className={`w-6 h-6 mr-1 ${question.isMeToo ? "filter-orange" : ""}`}
               />
               <span className="font-normal text-sm mr-1">Me too</span>
               <span className="font-medium text-sm">{question.meTooCount}</span>
@@ -352,14 +430,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 handleCanHelp();
               }}
               disabled={createInteractionMutation.isPending || isOwnQuestion}
-              className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors ${
-                isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
-              <img 
-                src="/I Can Help.svg" 
-                alt="I can help" 
-                className="w-6 h-6 mr-1" 
+              <img
+                src="/I Can Help.svg"
+                alt="I can help"
+                className="w-6 h-6 mr-1"
               />
               <span className="font-normal text-sm mr-1">I can help</span>
               <span className="font-medium text-sm">{question.canHelpCount}</span>
@@ -367,6 +444,100 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Report Modal */}
+      <Dialog open={isReportModalOpen} onOpenChange={setIsReportModalOpen}>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-2xl m-auto">
+          <DialogHeader className="p-6 pb-4">
+            <DialogTitle className="text-xl font-semibold">Report Question</DialogTitle>
+            <DialogDescription className="text-gray-600">
+              Help us understand what's happening
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="px-6 pb-4 space-y-4">
+            {/* Reason Selection with Checkboxes */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-900">
+                Why are you reporting this question? (Select all that apply) *
+              </label>
+              <div className="space-y-2">
+                {[
+                  "It's spam",
+                  "Nudity or sexual activity",
+                  "Hate speech or symbols",
+                  "Violence or dangerous organizations",
+                  "Bullying or harassment"
+                ].map((reason) => (
+                  <div key={reason} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={`reason-${reason}`}
+                      checked={reportReasons.includes(reason)}
+                      onCheckedChange={(checked) => handleReasonChange(reason, checked as boolean)}
+                      className="data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                    />
+                    <label
+                      htmlFor={`reason-${reason}`}
+                      className="text-sm text-gray-900 cursor-pointer flex-1"
+                    >
+                      {reason}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Additional Details */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-900">
+                Additional details (optional)
+              </label>
+              <Textarea
+                value={reportDetails}
+                onChange={(e) => setReportDetails(e.target.value)}
+                placeholder="Please provide any additional context that would help us understand the issue..."
+                className="min-h-[80px] resize-none"
+                maxLength={500}
+                disabled={isSubmittingReport}
+              />
+              <div className="flex justify-end">
+                <span className="text-xs text-gray-500">
+                  {reportDetails.length}/500
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="px-6 py-4 bg-gray-50 border-t border-gray-100 gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReportReasons([]);
+                setReportDetails("");
+                setIsReportModalOpen(false);
+              }}
+              disabled={isSubmittingReport}
+              className="px-6"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleReportSubmit}
+              disabled={reportReasons.length === 0 || isSubmittingReport}
+              className="bg-red-600 hover:bg-red-700 text-white px-6"
+            >
+              {isSubmittingReport ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Submitting...
+                </>
+              ) : (
+                "Submit Report"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

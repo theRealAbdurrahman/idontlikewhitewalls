@@ -65,7 +65,7 @@ export const Header: React.FC = () => {
   const config = getHeaderConfig();
 
   const handleAvatarClick = () => {
-    navigate("/profile");
+    navigate(`/profile/${user?.id}`);
   };
 
   const handleBackClick = () => {

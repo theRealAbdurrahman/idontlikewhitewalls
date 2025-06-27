@@ -1,5 +1,4 @@
-import React from "react";
-import { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { PlusIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useReadQuestionsApiV1QuestionsGet } from "../api-client/api-client";
@@ -16,11 +15,14 @@ export const Home: React.FC = () => {
   const { isAuthenticated, signOut } = useLogto();
   const navigate = useNavigate();
 
-  if (!isAuthenticated) {
-    navigate('/login');
-    // TODO: implement non logged in user to navigate the questions
-    // prompt for login if press interactions
-  }
+  // FIX: Only navigate after render, not during render
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      // TODO: implement non logged in user to navigate the questions
+      // prompt for login if press interactions
+    }
+  }, [isAuthenticated, navigate]);
 
   const { activeFilters, sortBy } = useAppStore();
 
@@ -137,7 +139,7 @@ export const Home: React.FC = () => {
   return (
     <>
       {/* Question Feed */}
-      <Button onClick={() => signOut(`http://localhost:5173`)}>Sign Out</Button>
+      {/* <Button onClick={() => signOut(`http://localhost:5173`)}>Sign Out</Button> */}
       <div className="px-2.5 py-3">
         <div className="flex flex-col gap-[15px]">
           {filteredQuestions.length > 0 ? (
