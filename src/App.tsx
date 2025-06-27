@@ -29,7 +29,7 @@ const config: LogtoConfig = {
 
 export const App = (): JSX.Element => {
   return (
-    <LogtoProvider config={config}>
+   
       {/* bolt is fucking stupid and made the questions added to the state in the auth provider */}
       {/* for now I am leaving it here, then later we need to refactor this */}
       {/* by refactor this I mean refactor everything */}
@@ -57,6 +57,6 @@ export const App = (): JSX.Element => {
           </Routes>
         </Layout>
       </AuthProvider>
-    </LogtoProvider>
+   
   );
 };
