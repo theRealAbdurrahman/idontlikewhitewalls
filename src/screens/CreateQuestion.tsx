@@ -56,6 +56,16 @@ export const CreateQuestion: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEventsDropdownOpen, setIsEventsDropdownOpen] = useState(false);
   const [isVisibilityDropdownOpen, setIsVisibilityDropdownOpen] = useState(false);
+  
+  // Custom styles for the sticky header
+  const headerStyles = `
+    .create-question-header {
+      backdrop-filter: blur(20px);
+      background: rgba(251, 251, 251, 0.95);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+  `;
 
   // Transform API events data for the component
   const events = React.useMemo(() => {
@@ -313,8 +323,12 @@ export const CreateQuestion: React.FC = () => {
 
   return (
     <div className="bg-[#fbfbfb] min-h-screen flex flex-col">
-      {/* Sticky Header - FIXED LAYOUT */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-4 bg-[#fbfbfb] border-b border-gray-200">
+      {/* Inject custom styles */}
+      <style>{headerStyles}</style>
+      
+      {/* Sticky Header with Backdrop Blur */}
+      <header className="sticky top-0 z-50 create-question-header">
+        <div className="flex items-center justify-between px-4 py-4">
         {/* Left Side - Events Dropdown ONLY */}
         <DropdownMenu open={isEventsDropdownOpen} onOpenChange={setIsEventsDropdownOpen}>
           <DropdownMenuTrigger asChild>
@@ -382,6 +396,7 @@ export const CreateQuestion: React.FC = () => {
         >
           <XIcon className="w-5 h-5" />
         </Button>
+        </div>
       </header>
 
       {/* Form Container */}
