@@ -48,7 +48,7 @@ export const CreateQuestion: React.FC = () => {
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedEvents, setSelectedEvents] = useState<string[]>(['']); // Default to first event
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([]); // No default selection
   const [visibility, setVisibility] = useState<"anyone" | "network" | "event">("anyone");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [tempVisibility, setTempVisibility] = useState<"anyone" | "network" | "event">("anyone");
@@ -234,8 +234,9 @@ export const CreateQuestion: React.FC = () => {
       return;
     }
 
-    // Validation: check if at least one event is selected
-    if (selectedEvents.length === 0) {
+    // Validation: check if at least one valid event is selected
+    const validSelectedEvents = selectedEvents.filter(eventId => eventId && eventId.trim() !== '');
+    if (validSelectedEvents.length === 0) {
       toast({
         title: "Event required",
         description: "Please select at least one event to post this question.",
@@ -257,8 +258,8 @@ export const CreateQuestion: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Create questions for each selected event
-      const questionPromises = selectedEvents.map(async (eventId) => {
+      // Create questions for each valid selected event
+      const questionPromises = validSelectedEvents.map(async (eventId) => {
         return createQuestionMutation.mutateAsync({
           data: {
             event_id: eventId,
@@ -280,7 +281,7 @@ export const CreateQuestion: React.FC = () => {
       // Show success message
       toast({
         title: "Question posted!",
-        description: `Your question has been posted to ${selectedEvents.length} event${selectedEvents.length > 1 ? 's' : ''}.`,
+        description: `Your question has been posted to ${validSelectedEvents.length} event${validSelectedEvents.length > 1 ? 's' : ''}.`,
       });
 
       // Navigate back to home
