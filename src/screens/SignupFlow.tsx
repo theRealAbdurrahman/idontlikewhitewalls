@@ -787,7 +787,7 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
       <div className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="full-name" className="block text-sm font-medium text-gray-900">
-            Full Name
+            Full Name *
           </label>
           <Input
             id="full-name"
@@ -798,9 +798,6 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
             className="text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
             aria-describedby="full-name-help"
           />
-          <p id="full-name-help" className="text-xs text-gray-500">
-            This will be displayed to viewers of your profile
-          </p>
         </div>
       </div>
 
@@ -878,12 +875,6 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
               </p>
             )}
 
-            {/* Help Text */}
-            {!validationError && (
-              <p id="linkedin-help" className="text-xs text-gray-500">
-                This will be displayed to viewers of your profile
-              </p>
-            )}
           </div>
         </div>
       </div>
@@ -901,7 +892,7 @@ interface ProgressIndicatorProps {
 
 const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ currentStep, totalSteps }) => {
   return (
-    <div className="flex items-center justify-center space-x-2 my-6">
+    <div className="flex items-center justify-center space-x-2 my-2">
       <span className="text-sm font-medium text-gray-600">
         Step {currentStep} of {totalSteps}
       </span>
@@ -1140,7 +1131,7 @@ export const SignupFlow: React.FC = () => {
           showBack: true,
           nextText: "Complete Setup",
           nextDisabled: step3Validation.isValidating || !signupData.step3.fullName.trim(),
-          footerNote: "Your profile information helps others connect with you"
+          // footerNote: "Your profile information helps others connect with you"
         };
       default:
         return {
@@ -1260,7 +1251,7 @@ export const SignupFlow: React.FC = () => {
                 disabled={buttonConfig.nextDisabled}
                 className={`next-button h-12 text-base font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed ${buttonConfig.showBack ? 'flex-1' : 'w-full max-w-xs'
                   } ${currentStep === 3
-                    ? "bg-[#0077b5] hover:bg-[#005582] text-white"
+                  ? "bg-[#FFCA28] hover:bg-[#e6b324] text-black"
                     : "bg-[#FFCA28] hover:bg-[#e6b324] text-black"
                   }`}
                 aria-label={currentStep === 3 ? "Complete signup" : "Continue to next step"}
