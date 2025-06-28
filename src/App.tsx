@@ -20,6 +20,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { LogtoProvider, LogtoConfig } from '@logto/react';
 import { Login } from "./screens/Login";
 import { SignupFlow } from "./screens/SignupFlow";
+import { Logout } from "./screens/Logout";
 
 const config: LogtoConfig = {
   endpoint: 'https://y42e79.logto.app/',
@@ -52,6 +53,7 @@ export const App = (): JSX.Element => {
             <Route path="/communities" element={<Communities />} />
             <Route path="/suggest-feature" element={<SuggestFeature />} />
             <Route path="/callback" element={<Callback />} />
+            <Route path="/logout" element={<Logout />} />
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
         </Layout>

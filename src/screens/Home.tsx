@@ -12,17 +12,17 @@ import { QuestionRead } from '../api-client/models/questionRead';
  */
 export const Home: React.FC = () => {
   
-  const { isAuthenticated, signOut } = useLogto();
+  const { isAuthenticated } = useLogto();
   const navigate = useNavigate();
 
   // FIX: Only navigate after render, not during render
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      // TODO: implement non logged in user to navigate the questions
-      // prompt for login if press interactions
-    }
-  }, [isAuthenticated, navigate]);
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     navigate('/login');
+  //     // TODO: implement non logged in user to navigate the questions
+  //     // prompt for login if press interactions
+  //   }
+  // }, [isAuthenticated]);
 
   const { activeFilters, sortBy } = useAppStore();
 
