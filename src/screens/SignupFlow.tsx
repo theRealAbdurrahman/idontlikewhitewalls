@@ -26,9 +26,10 @@ interface Step2Data {
 }
 
 /**
- * Interface for Step 3 data structure
+ * Interface for Step 3 data structure - Updated with fullName
  */
 interface Step3Data {
+  fullName: string;
   linkedinUrl: string;
 }
 
@@ -648,7 +649,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
 };
 
 /**
- * Step 3 Component - LinkedIn Profile
+ * Step 3 Component - Profile Details (Updated)
  */
 interface Step3Props {
   data: Step3Data;
@@ -664,15 +665,18 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
   const [username, setUsername] = useState("");
 
   /**
-   * Validate LinkedIn URL format
+   * Validate LinkedIn URL format - Updated with new accepted formats
    */
   const validateLinkedInUrl = (url: string): { isValid: boolean; error?: string; username?: string } => {
     if (!url.trim()) {
       return { isValid: true }; // Empty is valid (optional field)
     }
 
-    // Common LinkedIn URL patterns
+    // Updated LinkedIn URL patterns to match the new accepted formats
     const patterns = [
+      // Just the username (new format)
+      /^([a-zA-Z0-9\-]+)$/,
+      // Full URL patterns
       /^https?:\/\/(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/,
       /^(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/,
       /^linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/
@@ -681,7 +685,7 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match) {
-        const extractedUsername = match[2] || match[1];
+        const extractedUsername = match[2] || match[1]; // Handle both cases
         return {
           isValid: true,
           username: extractedUsername
@@ -691,17 +695,22 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
 
     return {
       isValid: false,
-      error: "Please enter a valid LinkedIn profile URL (e.g., linkedin.com/in/your-profile)"
+      error: "Invalid format"
     };
   };
 
   /**
-   * Normalize LinkedIn URL
+   * Normalize LinkedIn URL - Updated to handle new formats
    */
   const normalizeLinkedInUrl = (url: string): string => {
     if (!url.trim()) return "";
 
     let normalizedUrl = url.trim();
+
+    // If it's just a username, convert to full URL
+    if (/^[a-zA-Z0-9\-]+$/.test(normalizedUrl)) {
+      return `https://www.linkedin.com/in/${normalizedUrl}`;
+    }
 
     // Add protocol if missing
     if (!normalizedUrl.startsWith('http')) {
@@ -758,33 +767,54 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
     return () => clearTimeout(timeoutId);
   };
 
+  /**
+   * Handle full name input change
+   */
+  const handleFullNameChange = (fullName: string) => {
+    onDataChange({ ...data, fullName });
+  };
+
   return (
     <div className="form-container space-y-8">
       {/* Header */}
       <div className="text-center space-y-4">
-        <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#0077b5] to-[#005582] rounded-2xl flex items-center justify-center shadow-lg">
-            <svg
-              className="w-8 h-8 text-white"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19a.66.66 0 000 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z" />
-            </svg>
-          </div>
-        </div>
-
         <h2 className="text-2xl font-bold text-gray-900 leading-tight">
-          Connect Your LinkedIn Profile
+          Profile Details
         </h2>
-        <p className="text-gray-600 text-base max-w-md mx-auto">
-          Adding your LinkedIn profile helps others connect with you professionally (optional)
-        </p>
       </div>
 
-      {/* LinkedIn URL Input */}
+      {/* Full Name Field */}
       <div className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="full-name" className="block text-sm font-medium text-gray-900">
+            Full Name
+          </label>
+          <Input
+            id="full-name"
+            type="text"
+            value={data.fullName}
+            onChange={(e) => handleFullNameChange(e.target.value)}
+            placeholder="e.g., Jordan Lee"
+            className="text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
+            aria-describedby="full-name-help"
+          />
+          <p id="full-name-help" className="text-xs text-gray-500">
+            This will be displayed to viewers of your profile
+          </p>
+        </div>
+      </div>
+
+      {/* LinkedIn Profile Section */}
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Connect Your LinkedIn Profile
+          </h3>
+          <p className="text-sm text-gray-600">
+            This helps others see who you are when responding to your questions or offering to help <em>(Optional, but recommended)</em>
+          </p>
+        </div>
+
         <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="linkedin-url" className="block text-sm font-medium text-gray-900">
@@ -793,17 +823,17 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
             <div className="relative">
               <Input
                 id="linkedin-url"
-                type="url"
+                type="text"
                 value={data.linkedinUrl}
                 onChange={(e) => handleUrlChange(e.target.value)}
-                placeholder="https://www.linkedin.com/in/your-profile"
+                placeholder="e.g., https://www.linkedin.com/in/jordanlee"
                 className={`text-sm leading-relaxed pr-10 ${validationError
                   ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                   : isValid
                     ? "border-green-300 focus:border-green-500 focus:ring-green-500"
                     : "focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
                   }`}
-                aria-describedby={validationError ? "linkedin-error" : undefined}
+                aria-describedby={validationError ? "linkedin-error" : "linkedin-help"}
                 aria-invalid={!!validationError}
               />
 
@@ -825,11 +855,20 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
               </div>
             </div>
 
-            {/* Error Message */}
+            {/* Error Message with Accepted Formats */}
             {validationError && (
-              <p id="linkedin-error" className="text-sm text-red-600" role="alert">
-                {validationError}
-              </p>
+              <div id="linkedin-error" className="space-y-2" role="alert">
+                <p className="text-sm text-red-600">{validationError}</p>
+                <div className="text-xs text-gray-600">
+                  <p className="font-medium mb-1">Accepted formats:</p>
+                  <ul className="space-y-1 list-disc list-inside pl-2">
+                    <li>your-profile</li>
+                    <li>https://www.linkedin.com/in/your-profile</li>
+                    <li>linkedin.com/in/your-profile</li>
+                    <li>www.linkedin.com/in/your-profile</li>
+                  </ul>
+                </div>
+              </div>
             )}
 
             {/* Success Message with Username */}
@@ -838,18 +877,13 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
                 ✓ Valid LinkedIn profile: <span className="font-medium">@{username}</span>
               </p>
             )}
-          </div>
 
-          {/* Help Text */}
-          <div className="space-y-2">
-            <p className="text-xs text-gray-500">
-              Accepted formats:
-            </p>
-            <ul className="text-xs text-gray-500 space-y-1 list-disc list-inside">
-              <li>https://www.linkedin.com/in/your-profile</li>
-              <li>linkedin.com/in/your-profile</li>
-              <li>www.linkedin.com/in/your-profile</li>
-            </ul>
+            {/* Help Text */}
+            {!validationError && (
+              <p id="linkedin-help" className="text-xs text-gray-500">
+                This will be displayed to viewers of your profile
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -907,7 +941,7 @@ export const SignupFlow: React.FC = () => {
     isValid: false
   });
 
-  // State management
+  // State management - Updated with fullName
   const [currentStep, setCurrentStep] = useState(1);
   const [signupData, setSignupData] = useState<SignupFlowData>({
     step1: {
@@ -919,6 +953,7 @@ export const SignupFlow: React.FC = () => {
       interests: []
     },
     step3: {
+      fullName: "",
       linkedinUrl: ""
     }
   });
@@ -974,15 +1009,18 @@ export const SignupFlow: React.FC = () => {
     }));
   };
   /**
-   * Validate LinkedIn URL for step 3
+   * Validate LinkedIn URL for step 3 - Updated validation
    */
   const validateLinkedInUrl = (url: string): { isValid: boolean; error?: string } => {
     if (!url.trim()) {
       return { isValid: true }; // Empty is valid (optional field)
     }
 
-    // Common LinkedIn URL patterns
+    // Updated LinkedIn URL patterns to match the new accepted formats
     const patterns = [
+      // Just the username
+      /^[a-zA-Z0-9\-]+$/,
+      // Full URL patterns
       /^https?:\/\/(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/,
       /^(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/,
       /^linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/
@@ -997,7 +1035,7 @@ export const SignupFlow: React.FC = () => {
 
     return {
       isValid: false,
-      error: "Please enter a valid LinkedIn profile URL"
+      error: "Invalid format"
     };
   };
 
@@ -1007,7 +1045,17 @@ export const SignupFlow: React.FC = () => {
   const handleNext = () => {
     // Validate current step before proceeding
     if (currentStep === 3) {
-      // Validate LinkedIn URL before completing
+      // Validate required fields for step 3
+      if (!signupData.step3.fullName.trim()) {
+        toast({
+          title: "Full name required",
+          description: "Please enter your full name to continue.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate LinkedIn URL if provided
       if (signupData.step3.linkedinUrl.trim()) {
         const validation = validateLinkedInUrl(signupData.step3.linkedinUrl);
         if (!validation.isValid) {
@@ -1091,8 +1139,8 @@ export const SignupFlow: React.FC = () => {
         return {
           showBack: true,
           nextText: "Complete Setup",
-          nextDisabled: step3Validation.isValidating,
-          footerNote: "This helps others find and connect with you professionally"
+          nextDisabled: step3Validation.isValidating || !signupData.step3.fullName.trim(),
+          footerNote: "Your profile information helps others connect with you"
         };
       default:
         return {
