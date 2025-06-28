@@ -347,7 +347,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
             value={data.connectDetails}
             onChange={(e) => onDataChange({ ...data, connectDetails: e.target.value })}
             placeholder="Describe what you do professionally and what you're passionate about in your work. How would you want someone to introduce you at an event?"
-            className="min-h-[100px] resize-none text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
+            className="min-h-[125px] resize-none text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
             aria-label="Professional description and introduction"
           />
         </div>
@@ -364,7 +364,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
             value={data.offerings}
             onChange={(e) => onDataChange({ ...data, offerings: e.target.value })}
             placeholder="What unique insights, expertise, connections, or resources can you offer to support others? Think beyond just your job title: What problems do you love solving?"
-            className="min-h-[100px] resize-none text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
+            className="min-h-[145px] resize-none text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
             aria-label="What you can offer to support others"
           />
         </div>
@@ -853,7 +853,7 @@ interface ProgressIndicatorProps {
 
 const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ currentStep, totalSteps }) => {
   return (
-    <div className="flex items-center justify-center space-x-2 mb-6">
+    <div className="flex items-center justify-center space-x-2 my-6">
       <span className="text-sm font-medium text-gray-600">
         Step {currentStep} of {totalSteps}
       </span>
