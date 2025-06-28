@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { XIcon, ImageIcon, MicIcon, SparklesIcon, MessageCircleIcon, ChevronDownIcon } from "lucide-react";
 import { useCreateQuestionApiV1QuestionsPost, useReadEventsApiV1EventsGet } from "../api-client/api-client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import {
@@ -38,6 +39,7 @@ export const CreateQuestion: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Fetch events data from API
   const { data: eventsData, isLoading: eventsLoading } = useReadEventsApiV1EventsGet();
@@ -294,6 +296,9 @@ export const CreateQuestion: React.FC = () => {
       const createdQuestions = await Promise.all(questionPromises);
       
       console.log("Questions created successfully:", createdQuestions);
+
+      // Invalidate questions cache to refresh the feed
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
 
       // Show success message
       toast({
