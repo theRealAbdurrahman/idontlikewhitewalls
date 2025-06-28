@@ -1,8 +1,15 @@
 import * as React from "react";
-import type { ToastConfig } from "../components/ui/toast";
 
 const TOAST_LIMIT = 5;
 const TOAST_REMOVE_DELAY = 1000000;
+
+/**
+ * Base toast configuration interface
+ */
+interface ToastConfig {
+  open?: boolean;
+  className?: string;
+}
 
 /**
  * Enhanced toast configuration for the useToast hook
@@ -342,4 +349,4 @@ function useToast() {
 }
 
 export { useToast, toast };
-export type { ToasterToast };
+export type { ToasterToast, ToastConfig };
