@@ -91,10 +91,10 @@ const INTEREST_OPTIONS = [
   { label: "Caregiver", color: "#FFB6C1" },
   { label: "Intuitive", color: "#FFB6C1" },
 
-  // 808080 - Medium Gray
-  { label: "Coordinator", color: "#808080" },
-  { label: "Planner", color: "#808080" },
-  { label: "Efficient", color: "#808080" },
+  // 6A5ACD - Slate Blue (replaced gray)
+  { label: "Coordinator", color: "#6A5ACD" },
+  { label: "Planner", color: "#6A5ACD" },
+  { label: "Efficient", color: "#6A5ACD" },
 
   // 4ECDC4 - Medium Turquoise
   { label: "Guardian", color: "#4ECDC4" },
