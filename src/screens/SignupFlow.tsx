@@ -54,65 +54,77 @@ const CONNECTION_LABELS = [
 ] as const;
 
 /**
- * Pre-defined personality archetype and interest options with specific colors for sticky notes
- * Updated with new interest options as requested
+ * App Color Palette - Consistent colors used throughout the application
+ */
+const APP_COLORS = [
+  "#FFB6C1", // Light Pink
+  "#87CEEB", // Light Sky Blue
+  "#FFE066", // Yellow
+  "#4ECDC4", // Medium Turquoise
+  "#DDA0DD", // Plum
+  "#FF6B6B", // Light Red
+  "#90EE90", // Light Green
+  "#6A5ACD", // Slate Blue
+  "#4682B4", // Steel Blue
+] as const;
+
+/**
+ * All interest options shuffled together and using app color palette
+ * Mixed personality archetypes and interests for better variety
  */
 const INTEREST_OPTIONS = [
-  // Original personality archetypes
-  { label: "Empath", color: "#FFB6C1" },        // Light Pink
-  { label: "Strategist", color: "#87CEEB" },    // Light Sky Blue
-  { label: "Mentor", color: "#FFE066" },        // Yellow
-  { label: "Guardian", color: "#4ECDC4" },      // Medium Turquoise
-  { label: "Storyteller", color: "#DDA0DD" },   // Plum
-  { label: "Catalyst", color: "#FF6B6B" },      // Light Red
-  { label: "Host", color: "#90EE90" },          // Light Green
-  { label: "Planner", color: "#6A5ACD" },       // Slate Blue
-  { label: "Engineer", color: "#4682B4" },      // Steel Blue
-  { label: "Intuitive", color: "#FFB6C1" },     // Light Pink
-  { label: "Connector", color: "#90EE90" },     // Light Green
-  { label: "Logical", color: "#87CEEB" },       // Light Sky Blue
-  { label: "Artist", color: "#DDA0DD" },        // Plum
-  { label: "Protective", color: "#4ECDC4" },    // Medium Turquoise
-  { label: "Coordinator", color: "#6A5ACD" },   // Slate Blue
-  { label: "Grounded", color: "#4682B4" },      // Steel Blue
-  { label: "Coach", color: "#FFE066" },         // Yellow
-  { label: "Explorer", color: "#FF6B6B" },      // Light Red
-  { label: "Caregiver", color: "#FFB6C1" },     // Light Pink
-  { label: "Balanced", color: "#90EE90" },      // Light Green
-  { label: "Visionary", color: "#87CEEB" },     // Light Sky Blue
-  { label: "Creative", color: "#DDA0DD" },      // Plum
-  { label: "Loyal", color: "#4ECDC4" },         // Medium Turquoise
-  { label: "Efficient", color: "#6A5ACD" },     // Slate Blue
-  { label: "Architect", color: "#4682B4" },     // Steel Blue
-  { label: "Healer", color: "#FFE066" },        // Yellow
-  { label: "Rebel", color: "#FF6B6B" },         // Light Red
-
-  // New interest options as requested
-  { label: "Reading", color: "#000080" },       // Navy
-  { label: "Photography", color: "#FF7F50" },   // Coral
-  { label: "Travel", color: "#40E0D0" },        // Turquoise
-  { label: "Music", color: "#0074D9" },         // Blue
-  { label: "Hiking", color: "#808000" },        // Olive
-  { label: "Cooking", color: "#FF851B" },       // Orange
-  { label: "Writing", color: "#228B22" },       // Forest Green
-  { label: "Running", color: "#DC143C" },       // Crimson
-  { label: "Art", color: "#FF00FF" },           // Magenta
-  { label: "Yoga", color: "#E6E6FA" },          // Lavender
-  { label: "Gaming", color: "#00FFFF" },        // Electric Blue
-  { label: "Dancing", color: "#FFC0CB" },       // Pink
-  { label: "Volunteering", color: "#FFD700" },  // Sunshine Yellow
-  { label: "Tech", color: "#C0C0C0" },          // Silver
-  { label: "Food", color: "#800020" },          // Burgundy
-  { label: "Sports", color: "#4682B4" },        // Steel Blue
-  { label: "Growth", color: "#800080" },        // Purple
-  { label: "Cycling", color: "#32CD32" },       // Lime Green
-  { label: "Sailing", color: "#006994" },       // Ocean Blue
-  { label: "Surfing", color: "#4169E1" },       // Wave Blue
-  { label: "Religion", color: "#FFD700" },      // Gold
-  { label: "Spirituality", color: "#FFFFF0" },  // Ivory
-  { label: "Animals", color: "#FFDAB9" },       // Peach
-  { label: "Gardening", color: "#90EE90" },     // Garden Green
-  { label: "Movies", color: "#36454F" },        // Charcoal
+  { label: "Travel", color: "#4ECDC4" },         // Medium Turquoise
+  { label: "Empath", color: "#FFB6C1" },         // Light Pink
+  { label: "Photography", color: "#FF6B6B" },    // Light Red
+  { label: "Strategist", color: "#87CEEB" },     // Light Sky Blue
+  { label: "Cooking", color: "#FFE066" },        // Yellow
+  { label: "Mentor", color: "#DDA0DD" },         // Plum
+  { label: "Gaming", color: "#6A5ACD" },         // Slate Blue
+  { label: "Guardian", color: "#4682B4" },       // Steel Blue
+  { label: "Yoga", color: "#90EE90" },           // Light Green
+  { label: "Storyteller", color: "#FFB6C1" },    // Light Pink
+  { label: "Reading", color: "#87CEEB" },        // Light Sky Blue
+  { label: "Catalyst", color: "#FF6B6B" },       // Light Red
+  { label: "Music", color: "#4ECDC4" },          // Medium Turquoise
+  { label: "Host", color: "#FFE066" },           // Yellow
+  { label: "Hiking", color: "#DDA0DD" },         // Plum
+  { label: "Planner", color: "#6A5ACD" },        // Slate Blue
+  { label: "Writing", color: "#4682B4" },        // Steel Blue
+  { label: "Engineer", color: "#90EE90" },       // Light Green
+  { label: "Running", color: "#FFB6C1" },        // Light Pink
+  { label: "Intuitive", color: "#87CEEB" },      // Light Sky Blue
+  { label: "Art", color: "#FF6B6B" },            // Light Red
+  { label: "Connector", color: "#4ECDC4" },      // Medium Turquoise
+  { label: "Dancing", color: "#FFE066" },        // Yellow
+  { label: "Logical", color: "#DDA0DD" },        // Plum
+  { label: "Volunteering", color: "#6A5ACD" },   // Slate Blue
+  { label: "Artist", color: "#4682B4" },         // Steel Blue
+  { label: "Tech", color: "#90EE90" },           // Light Green
+  { label: "Protective", color: "#FFB6C1" },     // Light Pink
+  { label: "Food", color: "#87CEEB" },           // Light Sky Blue
+  { label: "Coordinator", color: "#FF6B6B" },    // Light Red
+  { label: "Sports", color: "#4ECDC4" },         // Medium Turquoise
+  { label: "Grounded", color: "#FFE066" },       // Yellow
+  { label: "Growth", color: "#DDA0DD" },         // Plum
+  { label: "Coach", color: "#6A5ACD" },          // Slate Blue
+  { label: "Cycling", color: "#4682B4" },        // Steel Blue
+  { label: "Explorer", color: "#90EE90" },       // Light Green
+  { label: "Sailing", color: "#FFB6C1" },        // Light Pink
+  { label: "Caregiver", color: "#87CEEB" },      // Light Sky Blue
+  { label: "Surfing", color: "#FF6B6B" },        // Light Red
+  { label: "Balanced", color: "#4ECDC4" },       // Medium Turquoise
+  { label: "Religion", color: "#FFE066" },       // Yellow
+  { label: "Visionary", color: "#DDA0DD" },      // Plum
+  { label: "Spirituality", color: "#6A5ACD" },   // Slate Blue
+  { label: "Creative", color: "#4682B4" },       // Steel Blue
+  { label: "Animals", color: "#90EE90" },        // Light Green
+  { label: "Loyal", color: "#FFB6C1" },          // Light Pink
+  { label: "Gardening", color: "#87CEEB" },      // Light Sky Blue
+  { label: "Efficient", color: "#FF6B6B" },      // Light Red
+  { label: "Movies", color: "#4ECDC4" },         // Medium Turquoise
+  { label: "Architect", color: "#FFE066" },      // Yellow
+  { label: "Healer", color: "#DDA0DD" },         // Plum
+  { label: "Rebel", color: "#6A5ACD" },          // Slate Blue
 ] as const;
 
 /**
@@ -490,13 +502,12 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
     const predefined = INTEREST_OPTIONS.find(option => option.label === interest);
     if (predefined) return predefined.color;
 
-    // Generate consistent color for custom interests based on string hash
-    const colors = ["#FFE066", "#FF6B6B", "#4ECDC4", "#95E1D3", "#FFB347", "#DDA0DD"];
+    // Generate consistent color for custom interests using app color palette
     let hash = 0;
     for (let i = 0; i < interest.length; i++) {
       hash = interest.charCodeAt(i) + ((hash << 5) - hash);
     }
-    return colors[Math.abs(hash) % colors.length];
+    return APP_COLORS[Math.abs(hash) % APP_COLORS.length];
   };
 
   /**
