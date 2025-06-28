@@ -14,7 +14,9 @@ import {
   TrashIcon,
   EditIcon as Edit2Icon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
 } from "lucide-react";
 import { 
   useUserProfile,
@@ -79,7 +81,106 @@ interface PrivateNote {
 type ProfileViewType = "standard" | "funky";
 
 /**
- * Custom styles for animations, transitions, and swipe functionality
+ * Props for the CollapsibleText component
+ */
+interface CollapsibleTextProps {
+  text: string;
+  maxLines?: number;
+  className?: string;
+  showIndicator?: boolean;
+}
+
+/**
+ * CollapsibleText component that shows limited lines initially and expands on click
+ */
+const CollapsibleText: React.FC<CollapsibleTextProps> = ({ 
+  text, 
+  maxLines = 4, 
+  className = "", 
+  showIndicator = true 
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [needsTruncation, setNeedsTruncation] = useState(false);
+  const textRef = useRef<HTMLDivElement>(null);
+  const measuringRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Check if text needs truncation by comparing full height vs limited height
+   */
+  useEffect(() => {
+    const checkTruncation = () => {
+      if (!textRef.current || !measuringRef.current) return;
+
+      const fullHeight = measuringRef.current.scrollHeight;
+      const lineHeight = parseInt(getComputedStyle(measuringRef.current).lineHeight, 10);
+      const maxHeight = lineHeight * maxLines;
+
+      setNeedsTruncation(fullHeight > maxHeight);
+    };
+
+    // Check truncation after component mounts and text changes
+    checkTruncation();
+    
+    // Also check on window resize in case layout changes
+    window.addEventListener('resize', checkTruncation);
+    return () => window.removeEventListener('resize', checkTruncation);
+  }, [text, maxLines]);
+
+  /**
+   * Toggle expanded state
+   */
+  const handleToggle = () => {
+    if (needsTruncation) {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
+  return (
+    <div className="collapsible-text-container">
+      {/* Hidden measuring element to determine full height */}
+      <div 
+        ref={measuringRef}
+        className={`collapsible-text-measuring ${className}`}
+        aria-hidden="true"
+      >
+        {text}
+      </div>
+
+      {/* Visible text element */}
+      <div 
+        ref={textRef}
+        className={`collapsible-text ${className} ${needsTruncation ? 'truncatable' : ''} ${isExpanded ? 'expanded' : 'collapsed'}`}
+        onClick={handleToggle}
+        style={{
+          cursor: needsTruncation ? 'pointer' : 'default',
+          '--max-lines': maxLines
+        } as React.CSSProperties}
+      >
+        {text}
+        
+        {/* Expand/Collapse Indicator */}
+        {needsTruncation && showIndicator && (
+          <div className="collapsible-text-indicator">
+            {isExpanded ? (
+              <div className="indicator-content">
+                <span className="indicator-text">Show less</span>
+                <ChevronUpIcon className="indicator-icon" />
+              </div>
+            ) : (
+              <div className="indicator-content">
+                <span className="indicator-text">Show more</span>
+                <ChevronDownIcon className="indicator-icon" />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Custom styles for animations, transitions, swipe functionality, and collapsible text
  */
 const customStyles = `
   .profile-collapse {
@@ -226,7 +327,98 @@ const customStyles = `
     font-weight: 500;
   }
 
-  /* Bio/ConnectDetails text styling to preserve line breaks */
+  /* Collapsible text component styles */
+  .collapsible-text-container {
+    position: relative;
+  }
+  
+  .collapsible-text-measuring {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    width: 100%;
+    visibility: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.6;
+  }
+  
+  .collapsible-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.6;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .collapsible-text.truncatable {
+    user-select: none;
+  }
+  
+  .collapsible-text.truncatable:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    padding: 8px;
+    margin: -8px;
+  }
+  
+  .collapsible-text.collapsed.truncatable {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--max-lines);
+    overflow: hidden;
+    max-height: calc(1.6em * var(--max-lines));
+  }
+  
+  .collapsible-text.expanded {
+    display: block;
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .collapsible-text-indicator {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 8px;
+    padding: 4px 8px;
+    border-radius: 20px;
+    background-color: rgba(62, 198, 198, 0.1);
+    color: #3ec6c6;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease-out;
+    cursor: pointer;
+    border: 1px solid rgba(62, 198, 198, 0.2);
+  }
+  
+  .collapsible-text-indicator:hover {
+    background-color: rgba(62, 198, 198, 0.15);
+    border-color: rgba(62, 198, 198, 0.3);
+    transform: translateY(-1px);
+  }
+  
+  .indicator-content {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .indicator-text {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .indicator-icon {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s ease-out;
+  }
+  
+  .collapsible-text.expanded .indicator-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Base connect details text styling to preserve line breaks */
   .connect-details-text {
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -568,10 +760,13 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                   )}
                 </div>
                 
-                {/* ConnectDetails Section - Updated to use connectDetails from signup step 2 */}
-                <div className="connect-details-text text-gray-700 leading-relaxed">
-                  {renderConnectDetails(profileUser.connectDetails)}
-                </div>
+                {/* CollapsibleText Section - Updated to use CollapsibleText component */}
+                <CollapsibleText 
+                  text={renderConnectDetails(profileUser.connectDetails)}
+                  maxLines={4}
+                  className="connect-details-text text-gray-700 leading-relaxed"
+                  showIndicator={true}
+                />
               </CardContent>
             </Card>
           </div>
@@ -620,9 +815,14 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                     )}
                   </div>
                   
-                  {/* ConnectDetails for Funky Profile - Also updated to use connectDetails */}
-                  <div className="connect-details-text text-gray-700 leading-relaxed mb-6">
-                    {renderConnectDetails(profileUser.connectDetails)}
+                  {/* CollapsibleText for Funky Profile - Also updated to use CollapsibleText component */}
+                  <div className="mb-6">
+                    <CollapsibleText 
+                      text={renderConnectDetails(profileUser.connectDetails)}
+                      maxLines={4}
+                      className="connect-details-text text-gray-700 leading-relaxed"
+                      showIndicator={true}
+                    />
                   </div>
                   
                   {/* Virtue Tags using StickyNote */}
