@@ -251,7 +251,7 @@ const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
     company: undefined, // Not available in API yet
     location: undefined, // Not available in API yet  
     // Use bio field as connectDetails from signup step 2
-    connectDetails: apiUser.bio && apiUser.bio.trim() ? apiUser.bio : DEFAULT_CONNECT_DETAILS,
+    connectDetails: apiUser.connectDetails && apiUser.connectDetails.trim() ? apiUser.connectDetails : DEFAULT_CONNECT_DETAILS,
     avatar: apiUser.profile_picture || undefined,
     website: undefined, // Not available in API yet
     linkedinUrl: apiUser.linkedin_url || undefined,
@@ -444,15 +444,6 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
 
   return (
     <div className="px-4 pb-6">
-      {/* Profile View Labels */}
-      <div className="flex justify-between px-2 mb-2">
-        <div className={`profile-view-label ${currentProfileView === "standard" ? "text-[#3ec6c6] font-semibold" : ""}`}>
-          Professional
-        </div>
-        <div className={`profile-view-label ${currentProfileView === "funky" ? "text-[#3ec6c6] font-semibold" : ""}`}>
-          Personal
-        </div>
-      </div>
 
       <div 
         ref={containerRef}
@@ -529,11 +520,8 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                     {profileUser.location && (
                       <p className="text-gray-500 text-sm mb-3">{profileUser.location}</p>
                     )}
-                    
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                      <span>{profileUser.mutualConnections} mutual connections</span>
-                      <span>• Joined {formatDistanceToNow(new Date(profileUser.joinedAt), { addSuffix: true })}</span>
-                    </div>
+                    {/* TODO: add the virtues and tags here */}
+
                   </div>
                 </div>
                 

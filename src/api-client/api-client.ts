@@ -94,6 +94,7 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
   last_active_at: string | null;
+  connectDetails: string | null; //  connect details (not in API yet)
 }
 
 /**
