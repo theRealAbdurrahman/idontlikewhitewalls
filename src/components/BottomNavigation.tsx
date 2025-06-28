@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { BellIcon, MessageCircleIcon, HomeIcon } from "lucide-react";
 import { Button } from "./ui/button";
@@ -12,6 +12,7 @@ import { useAppStore } from "../stores/appStore";
 export const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [activePath, setActivePath] = useState(location.pathname);
   const { unreadNotifications, unreadMessages } = useAppStore();
 
   // Navigation items configuration - ordered left to right
@@ -40,6 +41,7 @@ export const BottomNavigation: React.FC = () => {
   ];
 
   const handleNavigation = (path: string) => {
+    setActivePath(path);
     navigate(path);
   };
 
@@ -61,28 +63,17 @@ export const BottomNavigation: React.FC = () => {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleNavigation(item.path)}
-                  className={`rounded-full p-0 transition-all duration-200 w-14 h-14 ${
+                  className={`hover:bg-transparent rounded-full p-0 transition-all duration-200 w-14 h-14 ${
                     isActive 
                       ? item.isCenter
-                        ? "bg-[#F9DF8E] text-black shadow-lg scale-105" // Enhanced active state for center
-                        : "bg-[#F9DF8E] text-black"
-                      : "text-gray-600 hover:text-black hover:bg-gray-100"
+                      ? "bg-[#F9DF8E] text-black shadow-lg scale-105 hover:bg-[#F9DF8E]" // Enhanced active state for center
+                      : "bg-[#F9DF8E] text-black hover:bg-[#F9DF8E]"
+                    : "text-gray-600 hover:text-black"
                   }`}
                 >
                   <Icon className={`${item.isCenter ? 'w-6 h-6' : 'w-5 h-5'}`} />
                 </Button>
-                
-                {/* Badge for unread items */}
-                {item.badge > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className={`absolute -top-1 -right-1 w-5 h-5 p-0 bg-red-500 text-white text-xs rounded-full flex items-center justify-center z-10 ${
-                      item.isCenter ? 'w-6 h-6 text-sm' : ''
-                    }`}
-                  >
-                    {item.badge > 99 ? "99+" : item.badge}
-                  </Badge>
-                )}
+
               </div>
             </div>
           );

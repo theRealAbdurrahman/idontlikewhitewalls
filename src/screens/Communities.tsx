@@ -129,7 +129,7 @@ export const Communities: React.FC = () => {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-4 text-center bg-[#FBFBFB] rounded-2xl">
               <UsersIcon className="w-6 h-6 text-blue-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-blue-900">
                 {mockCommunities.reduce((sum, c) => sum + c.memberCount, 0).toLocaleString()}
@@ -139,7 +139,7 @@ export const Communities: React.FC = () => {
           </Card>
           
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-4 text-center bg-[#FBFBFB] rounded-2xl">
               <BuildingIcon className="w-6 h-6 text-green-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-green-900">{mockCommunities.length}</p>
               <p className="text-sm text-green-700">Communities</p>
@@ -147,7 +147,7 @@ export const Communities: React.FC = () => {
           </Card>
           
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-4 text-center bg-[#FBFBFB] rounded-2xl">
               <CalendarIcon className="w-6 h-6 text-purple-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-purple-900">
                 {mockCommunities.reduce((sum, c) => sum + c.eventCount, 0)}
@@ -165,7 +165,7 @@ export const Communities: React.FC = () => {
             key={community.id}
             className="cursor-pointer hover:shadow-md transition-shadow bg-white"
           >
-            <CardContent className="p-6">
+            <CardContent className="p-6 bg-[#FBFBFB] rounded-2xl">
               <div className="flex items-start gap-4">
                 {/* Community Logo/Avatar */}
                 <div className="flex-shrink-0">
@@ -267,7 +267,7 @@ export const Communities: React.FC = () => {
       {/* Empty State (hidden since we have mock data) */}
       {mockCommunities.length === 0 && (
         <Card className="bg-white">
-          <CardContent className="p-12 text-center">
+          <CardContent className="p-12 text-center bg-[#FBFBFB] rounded-2xl">
             <BuildingIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               No communities yet

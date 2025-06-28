@@ -319,7 +319,7 @@ export const CreateCommunity: React.FC = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Community Logo */}
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-6 bg-[#FBFBFB] rounded-2xl">
                   <FormField
                     control={form.control}
                     name="logo"
@@ -392,7 +392,7 @@ export const CreateCommunity: React.FC = () => {
 
               {/* Basic Information */}
               <Card>
-                <CardContent className="p-6 space-y-4">
+                <CardContent className="p-6 space-y-4 bg-[#FBFBFB] rounded-2xl">
                   {/* Community Name */}
                   <FormField
                     control={form.control}
@@ -608,7 +608,7 @@ export const CreateCommunity: React.FC = () => {
 
               {/* Community Settings */}
               <Card>
-                <CardContent className="p-6 space-y-4">
+                <CardContent className="p-6 space-y-4 bg-[#FBFBFB] rounded-2xl">
                   {/* Open/Closed Community */}
                   <FormField
                     control={form.control}
@@ -638,6 +638,7 @@ export const CreateCommunity: React.FC = () => {
                             checked={field.value}
                             onCheckedChange={field.onChange}
                             disabled={isSubmitting}
+                            className="data-[state=checked]:bg-green-500"
                           />
                         </FormControl>
                       </div>

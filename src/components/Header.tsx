@@ -119,7 +119,7 @@ export const Header: React.FC = () => {
             variant="ghost"
             size="icon"
             className="w-[40px] h-[40px] bg-[#e9e6d9] rounded-full p-0"
-            onClick={() => navigate("/create-event")}
+            onClick={() => navigate("/events")}
             title="Create Event"
           >
             <Building2Icon className="w-5 h-5" />

@@ -467,7 +467,7 @@ export const EventDetails: React.FC = () => {
         </header>
 
         {/* Event Banner Image */}
-        <div className="pt-20">
+        <div >
           <div className="flex justify-center items-center p-6">
             <div className="relative w-80 h-80 overflow-hidden rounded-2xl shadow-lg">
             <img

@@ -431,11 +431,11 @@ export const CreateEvent: React.FC = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Banner Image - Moved to top */}
               <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                <CardContent className="p-6 bg-[#FBFBFB] rounded-2xl">
+                  {/* <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
                     <ImageIcon className="w-5 h-5" />
                     Event Banner
-                  </h2>
+                  </h2> */}
 
                   <FormField
                     control={form.control}
@@ -506,11 +506,11 @@ export const CreateEvent: React.FC = () => {
 
               {/* Basic Information */}
               <Card>
-                <CardContent className="p-6 space-y-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <CardContent className="p-6 space-y-4 bg-[#FBFBFB] rounded-2xl">
+                  {/* <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <CalendarIcon className="w-5 h-5" />
                     Event Details
-                  </h2>
+                  </h2> */}
 
                   {/* Event Name */}
                   <FormField
@@ -669,11 +669,11 @@ export const CreateEvent: React.FC = () => {
 
               {/* Event Configuration */}
               <Card>
-                <CardContent className="p-6 space-y-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <CardContent className="p-6 space-y-4 bg-[#FBFBFB] rounded-2xl">
+                  {/* <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <UsersIcon className="w-5 h-5" />
                     Event Configuration
-                  </h2>
+                  </h2> */}
 
                   {/* Event Type */}
                   <FormField
@@ -746,11 +746,11 @@ export const CreateEvent: React.FC = () => {
 
               {/* Tags and Related Events */}
               <Card>
-                <CardContent className="p-6 space-y-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <CardContent className="p-6 space-y-4 bg-[#FBFBFB] rounded-2xl">
+                  {/* <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <TagIcon className="w-5 h-5" />
                     Tags & Related Events
-                  </h2>
+                  </h2> */}
 
                   {/* Tags */}
                   <FormItem>
@@ -927,11 +927,11 @@ export const CreateEvent: React.FC = () => {
 
               {/* Event Settings */}
               <Card>
-                <CardContent className="p-6 space-y-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <CardContent className="p-6 space-y-4 bg-[#FBFBFB] rounded-2xl">
+                  {/* <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <EyeIcon className="w-5 h-5" />
                     Event Settings
-                  </h2>
+                  </h2> */}
 
                   {/* Private Event */}
                   <div className="flex items-center justify-between">

@@ -393,13 +393,6 @@ export const Events: React.FC = () => {
     <>
       <style>{customStyles}</style>
       <div className="px-4 py-6">
-        {/* Simplified Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-black flex items-center gap-2">
-            <CalendarIcon className="w-6 h-6 text-[#3ec6c6]" />
-            Events
-          </h1>
-        </div>
 
         {/* Loading State */}
         {eventsLoading && (
