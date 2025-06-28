@@ -530,10 +530,10 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
                   <StickyNote
                     content={option.label}
                     backgroundColor={option.color}
-                    width={100}
+                    width={110}
                     height={80}
                     rotation={0} // Rotation is now handled by parent
-                    className={`text-sm text-nowrap font-semibold ${isSelected ? 'ring-4 ring-[#3ec6c6] ring-opacity-50' : ''
+                    className={`text-sm text-center text-nowrap font-semibold ${isSelected ? 'ring-4 ring-[#3ec6c6] ring-opacity-50' : ''
                       }`}
                   />
                 </div>
