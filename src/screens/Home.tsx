@@ -32,12 +32,15 @@ export const Home: React.FC = () => {
 
   const { activeFilters, sortBy } = useAppStore();
 
-  // Fetch questions from API
+  // Fetch questions from API with real-time polling
   const {
     data: questionsData,
     isLoading: questionsLoading,
     error: questionsError
-  } = useReadQuestionsApiV1QuestionsGet();
+  } = useReadQuestionsApiV1QuestionsGet(undefined, {
+    refetchInterval: 30000, // Poll every 30 seconds for real-time updates
+    refetchIntervalInBackground: false, // Only poll when tab is active
+  });
 
   // Transform API data to component format
   const questions = useMemo(() => {
