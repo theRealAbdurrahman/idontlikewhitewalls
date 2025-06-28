@@ -26,6 +26,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     !location.pathname.includes("/create-community") &&
     !location.pathname.includes("/suggest-feature") &&
     !location.pathname.includes("/login") &&
+    !location.pathname.includes("/profile") &&
     !location.pathname.includes("/signup");
   const showFilterBar = location.pathname === "/home";
 
@@ -37,6 +38,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     !location.pathname.includes("/create-event") &&
     !location.pathname.includes("/create-community") &&
     !location.pathname.includes("/suggest-feature") &&
+    !location.pathname.includes("/profile") &&
     !location.pathname.includes("/login") && !location.pathname.includes("/signup");
 
   return (
