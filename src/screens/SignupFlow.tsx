@@ -45,11 +45,11 @@ interface SignupFlowData {
  * Pre-defined connection preference labels - Updated with new categories
  */
 const CONNECTION_LABELS = [
-  "Technology & Product",
-  "Business & Strategy", 
-  "Creative & Design",
-  "Finance & Investment",
-  "Community & Impact"
+  "Tech",
+  "Business",
+  "Creative",
+  "Finance",
+  "Impact"
 ] as const;
 
 /**
@@ -244,7 +244,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
       {/* Question 1: Who would you like to connect with? */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-900 leading-tight">
-          Who would you like to connect with?
+          My professional background is...
         </h2>
         
         {/* Pre-defined Labels + Custom Labels + Add Custom Button - All in same row */}
@@ -301,8 +301,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
                 className="label-button flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50 border-dashed"
                 aria-label="Add custom connection preference"
               >
-                <PlusIcon className="w-4 h-4" />
-                Add custom
+                <PlusIcon className="w-4 h-4" /> more
               </Button>
             )}
           </div>
@@ -368,7 +367,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
             value={data.offerings}
             onChange={(e) => onDataChange({ ...data, offerings: e.target.value })}
             placeholder="What unique insights, expertise, connections, or resources can you offer to support others? Think beyond just your job title: What problems do you love solving?"
-            className="min-h-[145px] resize-none text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
+            className="min-h-[155px] resize-none text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
             aria-label="What you can offer to support others"
           />
         </div>
@@ -919,6 +918,8 @@ export const SignupFlow: React.FC = () => {
    * Scroll to top when step changes
    */
   useEffect(() => {
+    console.log(`Current step changed to ${currentStep}`);
+
     // Scroll to top of form container when step changes
     if (formContainerRef.current) {
       formContainerRef.current.scrollIntoView({ 
@@ -1068,7 +1069,7 @@ export const SignupFlow: React.FC = () => {
           showBack: false,
           nextText: "Next",
           nextDisabled: false,
-          footerNote: "This will not appear on your public profile"
+          // footerNote: "This will not appear on your public profile"
         };
       case 2:
         return {
@@ -1094,6 +1095,19 @@ export const SignupFlow: React.FC = () => {
     }
   };
 
+  const getHeaderTitle = () => {
+    switch (currentStep) {
+      case 1:
+        return "What I do";
+      case 2:
+        return "Who I am";
+      case 3:
+        return "Profile details";
+      default:
+        return "Sign Up";
+    }
+  };
+
   const buttonConfig = getButtonConfig();
 
   return (
@@ -1106,7 +1120,7 @@ export const SignupFlow: React.FC = () => {
             <div className="w-16" />
             
             <h1 className="text-lg font-semibold text-gray-900">
-              Complete Your Profile
+              {getHeaderTitle()}
             </h1>
             
             <Button
@@ -1121,8 +1135,8 @@ export const SignupFlow: React.FC = () => {
         </header>
 
         {/* Main Content */}
-        <div className="pt-20 px-4 py-6 pb-32">
-          <div ref={formContainerRef} className="max-w-2xl mx-auto">
+        <div ref={formContainerRef} className="pt-20 px-4 py-6 pb-32">
+          <div className="max-w-2xl mx-auto">
             {/* Progress Indicator */}
             <ProgressIndicator currentStep={currentStep} totalSteps={3} />
 
