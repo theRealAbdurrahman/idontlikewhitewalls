@@ -4,6 +4,11 @@ import { X, CheckCircle, AlertCircle, AlertTriangle, Info, Zap } from "lucide-re
 import { cn } from "../../lib/utils";
 
 /**
+ * Toast variant type definition
+ */
+export type ToastVariant = "default" | "success" | "error" | "warning" | "info";
+
+/**
  * Enhanced toast configuration interface
  */
 export interface ToastConfig {
@@ -11,7 +16,7 @@ export interface ToastConfig {
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactElement;
-  variant?: "default" | "success" | "error" | "warning" | "info";
+  variant?: ToastVariant;
   duration?: number; // Duration in milliseconds, 0 for persistent
   position?: "bottom" | "top" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
   dismissible?: boolean;
@@ -75,7 +80,7 @@ const toastVariants = cva(
 /**
  * Get appropriate icon for toast variant
  */
-const getVariantIcon = (variant: ToastConfig["variant"]) => {
+const getVariantIcon = (variant: ToastVariant) => {
   switch (variant) {
     case "success":
       return <CheckCircle className="h-5 w-5 text-green-600" />;
@@ -150,7 +155,8 @@ const useToastTimer = (
  * Enhanced Toast component with swipe gestures and improved accessibility
  */
 const Toast = React.forwardRef<
-  React.ElementRef<"div">,"div"> & ToastConfig
+  React.ElementRef<"div">,
+  React.ComponentPropsWithoutRef<"div"> & ToastConfig
 >(({
   className,
   variant = "default",
@@ -469,6 +475,7 @@ export {
   type ToastProps,
   type ToastActionElement,
   type ToastConfig,
+  type ToastVariant,
   Toast,
   ToastAction,
   ToastClose,
