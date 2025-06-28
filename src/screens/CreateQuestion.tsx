@@ -140,14 +140,6 @@ export const CreateQuestion: React.FC = () => {
     }));
   }, [eventsData?.data]);
 
-  /**
-   * Auto-select first event when events are loaded
-   */
-  React.useEffect(() => {
-    if (events.length > 0 && selectedEvents.length === 0) {
-      setSelectedEvents([events[0].id]);
-    }
-  }, [events, selectedEvents.length]);
 
   /**
    * Handle closing the create question screen
