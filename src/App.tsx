@@ -4,7 +4,6 @@ import { Home } from "./screens/Home";
 import { Events } from "./screens/Events";
 import { Messages } from "./screens/Messages";
 import { Notifications } from "./screens/Notifications";
-import { Profile } from "./screens/Profile";
 import { CreateQuestion } from "./screens/CreateQuestion";
 import { CreateEvent } from "./screens/CreateEvent";
 import { CreateCommunity } from "./screens/CreateCommunity";
