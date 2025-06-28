@@ -61,10 +61,10 @@ const INTEREST_OPTIONS = [
   { label: "Visionary", color: "#87CEEB" },
   { label: "Logical", color: "#87CEEB" },
 
-  // Brown - Dark Brown
-  { label: "Architect", color: "#8B4513" },
-  { label: "Engineer", color: "#8B4513" },
-  { label: "Grounded", color: "#8B4513" },
+  // 4682B4 - Steel Blue (replaced brown)
+  { label: "Architect", color: "#4682B4" },
+  { label: "Engineer", color: "#4682B4" },
+  { label: "Grounded", color: "#4682B4" },
 
   // DDA0DD - Plum
   { label: "Artist", color: "#DDA0DD" },
@@ -91,7 +91,7 @@ const INTEREST_OPTIONS = [
   { label: "Caregiver", color: "#FFB6C1" },
   { label: "Intuitive", color: "#FFB6C1" },
 
-  // Gray - Medium Gray
+  // 808080 - Medium Gray
   { label: "Coordinator", color: "#808080" },
   { label: "Planner", color: "#808080" },
   { label: "Efficient", color: "#808080" },
