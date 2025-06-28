@@ -76,6 +76,95 @@ export type UserCreate = import('./models').UserCreate;
 export type UserRead = import('./models').UserRead;
 export type UserUpdate = import('./models').UserUpdate;
 
+/**
+ * User Profile interface matching the API response structure
+ * This represents the detailed user profile response from /api/v1/users/[user_id]
+ */
+export interface UserProfile {
+  id: string;
+  linkedin_url: string | null;
+  auth_id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  profile_picture: string | null;
+  bio: string | null;
+  title: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  last_active_at: string | null;
+}
+
+/**
+ * Fetch a single user profile by ID from the API
+ * @param userId - The unique identifier for the user
+ * @returns Promise resolving to the user profile data
+ */
+export const fetchUserProfile = async (userId: string): Promise<UserProfile> => {
+  if (!userId || userId.trim() === '') {
+    throw new Error('User ID is required');
+  }
+
+  try {
+    const response = await customInstance<UserProfile>({
+      url: `/api/v1/users/${encodeURIComponent(userId)}`,
+      method: 'GET',
+    });
+
+    return response.data;
+  } catch (error: any) {
+    // Enhanced error handling with specific error messages
+    if (error?.response?.status === 404) {
+      throw new Error('User profile not found');
+    } else if (error?.response?.status === 403) {
+      throw new Error('Access denied to user profile');
+    } else if (error?.response?.status === 401) {
+      throw new Error('Authentication required');
+    } else if (error?.response?.status >= 500) {
+      throw new Error('Server error occurred while fetching profile');
+    } else if (!navigator.onLine) {
+      throw new Error('No internet connection');
+    } else {
+      throw new Error(error?.message || 'Failed to fetch user profile');
+    }
+  }
+};
+
+/**
+ * React Query hook for fetching user profile data
+ * @param userId - The unique identifier for the user
+ * @param options - Optional React Query configuration
+ * @returns React Query result with user profile data, loading state, and error handling
+ */
+export const useUserProfile = (
+  userId: string | undefined,
+  options?: Omit<UseQueryOptions<UserProfile, Error>, 'queryKey' | 'queryFn'>
+) => {
+  return useQuery<UserProfile, Error>({
+    queryKey: ['userProfile', userId],
+    queryFn: () => {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+      return fetchUserProfile(userId);
+    },
+    enabled: !!userId && userId.trim() !== '', // Only run query if userId is provided and not empty
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    retry: (failureCount, error: any) => {
+      // Don't retry on 404 (user not found) or 403 (access denied)
+      if (error?.message?.includes('not found') || error?.message?.includes('Access denied')) {
+        return false;
+      }
+      // Retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    ...options,
+  });
+};
+
 // API function signatures
 export const readEventsApiV1EventsGet = (
   params?: { skip?: number; limit?: number },

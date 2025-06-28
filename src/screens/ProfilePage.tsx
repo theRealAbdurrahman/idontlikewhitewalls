@@ -15,8 +15,8 @@ import {
   EditIcon as Edit2Icon
 } from "lucide-react";
 import { 
-  useReadUsersApiV1UsersGet,
-  useCreateUserApiV1UsersPost 
+  useUserProfile,
+  UserProfile as ApiUserProfile
 } from "../api-client/api-client";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
@@ -38,7 +38,7 @@ import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
 
 /**
- * Interface for user profile data
+ * Interface for user profile data used in the component
  */
 interface UserProfile {
   id: string;
@@ -121,9 +121,9 @@ const customStyles = `
 `;
 
 /**
- * Transform API UserRead to UserProfile interface
+ * Transform API UserProfile to component UserProfile interface
  */
-const transformApiUserToProfile = (apiUser: any): UserProfile => {
+const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
   return {
     id: apiUser.id,
     name: `${apiUser.first_name || ''} ${apiUser.last_name || ''}`.trim() || 'Unknown User',
@@ -138,15 +138,15 @@ const transformApiUserToProfile = (apiUser: any): UserProfile => {
     tiktokUrl: undefined, // Not available in API yet
     verified: false, // Default value - could be enhanced later
     isConnected: false, // Default value - would need connection status API
-    mutualConnections: 0, // Default value - would need mutual connections API
-    joinedAt: apiUser.created_at || new Date().toISOString(),
+    mutualConnections: Math.floor(Math.random() * 20), // Mock value for now
+    joinedAt: apiUser.created_at,
     profileVersion: "standard" as const, // Default profile version
     virtues: undefined, // Not available in API yet
   };
 };
 
 /**
- * ProfilePage component for viewing user profiles with API integration
+ * ProfilePage component for viewing user profiles with dedicated API integration
  */
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -170,83 +170,66 @@ export const ProfilePage: React.FC = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   const profileSectionRef = useRef<HTMLDivElement>(null);
 
-  // Fetch users from API using React Query
+  // Fetch user profile from API using the new dedicated hook
   const { 
-    data: usersData, 
-    isLoading: usersLoading, 
-    error: usersError,
-    refetch: refetchUsers 
-  } = useReadUsersApiV1UsersGet({
-    skip: 0,
-    limit: 100 // Get a reasonable number of users to search through
+    data: userProfileData, 
+    isLoading: profileLoading, 
+    error: profileError,
+    refetch: refetchProfile 
+  } = useUserProfile(id, {
+    onSuccess: (data) => {
+      console.log("✅ User profile loaded successfully:", data);
+    },
+    onError: (error) => {
+      console.error("❌ Failed to load user profile:", error);
+    }
   });
 
   /**
-   * Load user profile data from API
+   * Load and transform user profile data from API
    */
   useEffect(() => {
     if (!id) {
-      console.error("No user ID provided in URL params");
+      console.error("❌ No user ID provided in URL params");
       return;
     }
 
-    if (usersLoading) {
-      console.log("Loading users from API...");
+    if (profileLoading) {
+      console.log("🔄 Loading user profile from API...");
       return;
     }
 
-    if (usersError) {
-      console.error("Error loading users from API:", usersError);
-      toast({
-        title: "Failed to load profile",
-        description: "Unable to connect to the server. Please try again.",
-        variant: "destructive",
-      });
+    if (profileError) {
+      console.error("❌ Error loading user profile:", profileError);
+      // Error is handled by the error state below
       return;
     }
 
-    if (usersData?.data) {
-      console.log("Users data received:", usersData.data);
+    if (userProfileData) {
+      console.log("📋 Transforming API user profile data:", userProfileData);
       
-      // Find the specific user by ID
-      const foundUser = usersData.data.find(user => user.id === id);
+      // Transform API user data to our profile format
+      const transformedProfile = transformApiUserToProfile(userProfileData);
+      setProfileUser(transformedProfile);
       
-      if (foundUser) {
-        console.log("Found user:", foundUser);
-        
-        // Transform API user data to our profile format
-        const transformedProfile = transformApiUserToProfile(foundUser);
-        setProfileUser(transformedProfile);
-        
-        // Load user's questions
-        const userQuestionsList = questions.filter(q => q.authorId === id);
-        setUserQuestions(userQuestionsList);
-        
-        // Load private notes from localStorage
-        if (currentUser?.id) {
-          const notesKey = `profile-notes-${currentUser.id}-${id}`;
-          const savedNotes = localStorage.getItem(notesKey);
-          if (savedNotes) {
-            try {
-              setPrivateNotes(JSON.parse(savedNotes));
-            } catch (error) {
-              console.error("Error parsing saved notes:", error);
-            }
+      // Load user's questions
+      const userQuestionsList = questions.filter(q => q.authorId === id);
+      setUserQuestions(userQuestionsList);
+      
+      // Load private notes from localStorage
+      if (currentUser?.id) {
+        const notesKey = `profile-notes-${currentUser.id}-${id}`;
+        const savedNotes = localStorage.getItem(notesKey);
+        if (savedNotes) {
+          try {
+            setPrivateNotes(JSON.parse(savedNotes));
+          } catch (error) {
+            console.error("❌ Error parsing saved notes:", error);
           }
         }
-      } else {
-        console.log("User not found in API response. Available users:", usersData.data.map(u => ({ id: u.id, name: `${u.first_name} ${u.last_name}` })));
-        
-        // User not found in API response
-        setProfileUser(null);
-        toast({
-          title: "Profile not found",
-          description: "This user profile doesn't exist or has been removed.",
-          variant: "destructive",
-        });
       }
     }
-  }, [id, usersData, usersLoading, usersError, questions, currentUser?.id, toast]);
+  }, [id, userProfileData, profileLoading, profileError, questions, currentUser?.id]);
 
   /**
    * Handle scroll for profile collapse effect
@@ -401,18 +384,12 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleRetry = () => {
-    refetchUsers();
-  };
-
-  const handleAuthorClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent question click event
-    if (!profileUser?.id) return;
-    // Already on profile page, so just scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    console.log("🔄 Retrying profile fetch...");
+    refetchProfile();
   };
 
   // Loading state
-  if (usersLoading) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -431,19 +408,34 @@ export const ProfilePage: React.FC = () => {
   }
 
   // Error state
-  if (usersError) {
+  if (profileError) {
+    const errorMessage = profileError.message || 'Unknown error occurred';
+    const isNotFound = errorMessage.includes('not found');
+    const isAccessDenied = errorMessage.includes('Access denied');
+    const isConnectionError = errorMessage.includes('internet') || errorMessage.includes('network');
+
     return (
       <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <UserPlusIcon className="w-8 h-8 text-red-500" />
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+              isNotFound ? 'bg-gray-100' : 'bg-red-100'
+            }`}>
+              <UserPlusIcon className={`w-8 h-8 ${
+                isNotFound ? 'text-gray-400' : 'text-red-500'
+              }`} />
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Failed to load profile
+              {isNotFound ? 'Profile not found' : 
+               isAccessDenied ? 'Access denied' :
+               isConnectionError ? 'Connection error' :
+               'Failed to load profile'}
             </h2>
             <p className="text-gray-600 mb-6">
-              There was an error connecting to the server. Please check your connection and try again.
+              {isNotFound ? 'This user profile doesn\'t exist or has been removed.' :
+               isAccessDenied ? 'You don\'t have permission to view this profile.' :
+               isConnectionError ? 'Please check your internet connection and try again.' :
+               'There was an error loading the profile. Please try again.'}
             </p>
             <div className="flex gap-3">
               <Button 
@@ -453,12 +445,14 @@ export const ProfilePage: React.FC = () => {
               >
                 Go Back
               </Button>
-              <Button 
-                onClick={handleRetry}
-                className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-              >
-                Try Again
-              </Button>
+              {!isNotFound && !isAccessDenied && (
+                <Button 
+                  onClick={handleRetry}
+                  className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                >
+                  Try Again
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -466,7 +460,7 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  // Profile not found state
+  // Profile not found state (shouldn't happen with new API, but keeping as fallback)
   if (!profileUser) {
     return (
       <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
