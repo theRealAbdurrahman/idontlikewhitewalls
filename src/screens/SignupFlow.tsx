@@ -56,50 +56,35 @@ const CONNECTION_LABELS = [
  * Pre-defined personality archetype options with specific colors for sticky notes
  */
 const INTEREST_OPTIONS = [
-  // 87CEEB - Light Sky Blue
-  { label: "Strategist", color: "#87CEEB" },
-  { label: "Visionary", color: "#87CEEB" },
-  { label: "Logical", color: "#87CEEB" },
+  { label: "Empath", color: "#FFB6C1" },        // Light Pink
+  { label: "Strategist", color: "#87CEEB" },    // Light Sky Blue
+  { label: "Mentor", color: "#FFE066" },        // Yellow
+  { label: "Guardian", color: "#4ECDC4" },      // Medium Turquoise
+  { label: "Storyteller", color: "#DDA0DD" },   // Plum
+  { label: "Catalyst", color: "#FF6B6B" },      // Light Red
+  { label: "Host", color: "#90EE90" },          // Light Green
+  { label: "Planner", color: "#6A5ACD" },       // Slate Blue
+  { label: "Engineer", color: "#4682B4" },      // Steel Blue
 
-  // 4682B4 - Steel Blue (replaced brown)
-  { label: "Architect", color: "#4682B4" },
-  { label: "Engineer", color: "#4682B4" },
-  { label: "Grounded", color: "#4682B4" },
+  { label: "Intuitive", color: "#FFB6C1" },     // Light Pink
+  { label: "Connector", color: "#90EE90" },     // Light Green
+  { label: "Logical", color: "#87CEEB" },       // Light Sky Blue
+  { label: "Artist", color: "#DDA0DD" },        // Plum
+  { label: "Protective", color: "#4ECDC4" },    // Medium Turquoise
+  { label: "Coordinator", color: "#6A5ACD" },   // Slate Blue
+  { label: "Grounded", color: "#4682B4" },      // Steel Blue
+  { label: "Coach", color: "#FFE066" },         // Yellow
+  { label: "Explorer", color: "#FF6B6B" },      // Light Red
 
-  // DDA0DD - Plum
-  { label: "Artist", color: "#DDA0DD" },
-  { label: "Storyteller", color: "#DDA0DD" },
-  { label: "Creative", color: "#DDA0DD" },
-
-  // 90EE90 - Light Green
-  { label: "Host", color: "#90EE90" },
-  { label: "Connector", color: "#90EE90" },
-  { label: "Balanced", color: "#90EE90" },
-
-  // FF6B6B - Light Red
-  { label: "Catalyst", color: "#FF6B6B" },
-  { label: "Rebel", color: "#FF6B6B" },
-  { label: "Explorer", color: "#FF6B6B" },
-
-  // FFE066 - Yellow
-  { label: "Mentor", color: "#FFE066" },
-  { label: "Healer", color: "#FFE066" },
-  { label: "Coach", color: "#FFE066" },
-
-  // FFB6C1 - Light Pink
-  { label: "Empath", color: "#FFB6C1" },
-  { label: "Caregiver", color: "#FFB6C1" },
-  { label: "Intuitive", color: "#FFB6C1" },
-
-  // 6A5ACD - Slate Blue (replaced gray)
-  { label: "Coordinator", color: "#6A5ACD" },
-  { label: "Planner", color: "#6A5ACD" },
-  { label: "Efficient", color: "#6A5ACD" },
-
-  // 4ECDC4 - Medium Turquoise
-  { label: "Guardian", color: "#4ECDC4" },
-  { label: "Loyal", color: "#4ECDC4" },
-  { label: "Protective", color: "#4ECDC4" },
+  { label: "Caregiver", color: "#FFB6C1" },     // Light Pink
+  { label: "Balanced", color: "#90EE90" },      // Light Green
+  { label: "Visionary", color: "#87CEEB" },     // Light Sky Blue
+  { label: "Creative", color: "#DDA0DD" },      // Plum
+  { label: "Loyal", color: "#4ECDC4" },         // Medium Turquoise
+  { label: "Efficient", color: "#6A5ACD" },     // Slate Blue
+  { label: "Architect", color: "#4682B4" },     // Steel Blue
+  { label: "Healer", color: "#FFE066" },        // Yellow
+  { label: "Rebel", color: "#FF6B6B" },         // Light Red
 ] as const;
 
 /**
@@ -169,7 +154,7 @@ const customStyles = `
   
   .interest-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 16px;
     justify-items: center;
   }
@@ -502,7 +487,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-gray-900 leading-tight">
-          Which personality archetypes resonate with you?
+          What lights you up outside of work?
         </h2>
         <p className="text-gray-600 text-base">
           Select your interests and what you'd like to be seen for to help others connect with you on a personal level.
@@ -548,7 +533,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
                     width={100}
                     height={80}
                     rotation={0} // Rotation is now handled by parent
-                    className={`text-sm font-semibold ${isSelected ? 'ring-4 ring-[#3ec6c6] ring-opacity-50' : ''
+                    className={`text-sm text-nowrap font-semibold ${isSelected ? 'ring-4 ring-[#3ec6c6] ring-opacity-50' : ''
                       }`}
                   />
                 </div>
