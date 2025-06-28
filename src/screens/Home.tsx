@@ -162,9 +162,9 @@ export const Home: React.FC = () => {
       {/* Floating Action Button */}
       <Button
         onClick={handleCreateQuestion}
-        className="w-[50px] h-[50px] fixed bottom-[103px] right-[30px] bg-[#3ec6c6] hover:bg-[#2ea5a5] rounded-full shadow-[0px_4px_8px_#00000040] p-0 flex items-center justify-center z-20"
+        className="w-[50px] h-[50px] fixed bottom-[103px] right-[30px] bg-[#FFCA28] hover:bg-[#e6b324] rounded-full shadow-[0px_4px_8px_#00000040] p-0 flex items-center justify-center z-20"
       >
-        <PlusIcon className="w-[22px] h-[22px] text-white" />
+        <PlusIcon className="w-[22px] h-[22px] text-black" />
       </Button>
 
       {/* Bottom Gradient */}
