@@ -439,7 +439,8 @@ export const CreateQuestion: React.FC = () => {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Briefly describe what you need help with (optional)  #tags"
+                placeholder="Briefly describe what you need help with (optional)
+ #tags"
                 className="w-full h-40 text-base placeholder-gray-400 border-none bg-transparent focus:outline-none resize-none leading-relaxed"
                 maxLength={1000}
                 disabled={isSubmitting}
