@@ -836,9 +836,6 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
             className="text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
             aria-describedby="full-name-help"
           />
-          <p id="full-name-help" className="text-xs text-gray-500">
-            This will be displayed to viewers of your profile
-          </p>
         </div>
       </div>
 
@@ -916,10 +913,6 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
               </p>
             )}
 
-            {/* Help Text */}
-            <p id="linkedin-help" className="text-xs text-gray-500">
-              This will be displayed to viewers of your profile
-            </p>
           </div>
         </div>
       </div>
