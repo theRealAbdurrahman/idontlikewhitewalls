@@ -60,42 +60,42 @@ const INTEREST_OPTIONS = [
   { label: "Strategist", color: "#87CEEB" },
   { label: "Visionary", color: "#87CEEB" },
   { label: "Logical", color: "#87CEEB" },
-  
+
   // Brown - Dark Brown
   { label: "Architect", color: "#8B4513" },
   { label: "Engineer", color: "#8B4513" },
   { label: "Grounded", color: "#8B4513" },
-  
+
   // DDA0DD - Plum
   { label: "Artist", color: "#DDA0DD" },
   { label: "Storyteller", color: "#DDA0DD" },
   { label: "Creative", color: "#DDA0DD" },
-  
+
   // 90EE90 - Light Green
   { label: "Host", color: "#90EE90" },
   { label: "Connector", color: "#90EE90" },
   { label: "Balanced", color: "#90EE90" },
-  
+
   // FF6B6B - Light Red
   { label: "Catalyst", color: "#FF6B6B" },
   { label: "Rebel", color: "#FF6B6B" },
   { label: "Explorer", color: "#FF6B6B" },
-  
+
   // FFE066 - Yellow
   { label: "Mentor", color: "#FFE066" },
   { label: "Healer", color: "#FFE066" },
   { label: "Coach", color: "#FFE066" },
-  
+
   // FFB6C1 - Light Pink
   { label: "Empath", color: "#FFB6C1" },
   { label: "Caregiver", color: "#FFB6C1" },
   { label: "Intuitive", color: "#FFB6C1" },
-  
+
   // Gray - Medium Gray
   { label: "Coordinator", color: "#808080" },
   { label: "Planner", color: "#808080" },
   { label: "Efficient", color: "#808080" },
-  
+
   // 4ECDC4 - Medium Turquoise
   { label: "Guardian", color: "#4ECDC4" },
   { label: "Loyal", color: "#4ECDC4" },
@@ -225,7 +225,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
     const updatedLabels = data.connectWith.includes(label)
       ? data.connectWith.filter(l => l !== label)
       : [...data.connectWith, label];
-    
+
     onDataChange({
       ...data,
       connectWith: updatedLabels
@@ -276,7 +276,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
         <h2 className="text-xl font-semibold text-gray-900 leading-tight">
           My professional background is...
         </h2>
-        
+
         {/* Pre-defined Labels + Custom Labels + Add Custom Button - All in same row */}
         <div className="space-y-3">
           <div className="flex flex-wrap gap-3">
@@ -287,18 +287,17 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
                 type="button"
                 variant={data.connectWith.includes(label) ? "default" : "outline"}
                 onClick={() => handleLabelToggle(label)}
-                className={`label-button px-4 py-2 rounded-full text-sm font-medium ${
-                  data.connectWith.includes(label)
-                    ? "bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white border-[#3ec6c6]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
+                className={`label-button px-4 py-2 rounded-full text-sm font-medium ${data.connectWith.includes(label)
+                  ? "bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white border-[#3ec6c6]"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  }`}
                 aria-pressed={data.connectWith.includes(label)}
                 aria-label={`Toggle ${label} connection preference`}
               >
                 {label}
               </Button>
             ))}
-            
+
             {/* Custom Labels */}
             {data.connectWith
               .filter(label => !CONNECTION_LABELS.includes(label as any))
@@ -335,7 +334,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
               </Button>
             )}
           </div>
-          
+
           {/* Custom Label Input Form - Only shows when adding */}
           {isAddingCustom && (
             <div className="custom-input-container flex gap-2 max-w-xs">
@@ -373,7 +372,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
             </div>
           )}
         </div>
-        
+
         {/* Details Textarea - Updated placeholder and removed length restrictions */}
         <div className="space-y-2">
           <Textarea
@@ -391,7 +390,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
         <h2 className="text-xl font-semibold text-gray-900 leading-tight">
           I can help others with...
         </h2>
-        
+
         <div className="space-y-2">
           <Textarea
             value={data.offerings}
@@ -427,7 +426,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
     const updatedInterests = data.interests.includes(interest)
       ? data.interests.filter(i => i !== interest)
       : [...data.interests, interest];
-    
+
     onDataChange({
       ...data,
       interests: updatedInterests
@@ -477,7 +476,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
   const getInterestColor = (interest: string): string => {
     const predefined = INTEREST_OPTIONS.find(option => option.label === interest);
     if (predefined) return predefined.color;
-    
+
     // Generate consistent color for custom interests based on string hash
     const colors = ["#FFE066", "#FF6B6B", "#4ECDC4", "#95E1D3", "#FFB347", "#DDA0DD"];
     let hash = 0;
@@ -506,7 +505,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
           Which personality archetypes resonate with you?
         </h2>
         <p className="text-gray-600 text-base">
-          Select the archetypes that best describe your personality and working style
+          Select your interests and what you'd like to be seen for to help others connect with you on a personal level.
         </p>
       </div>
 
@@ -531,30 +530,28 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
                 aria-pressed={isSelected}
                 aria-label={`Toggle ${option.label} personality archetype`}
               >
-                  <div 
-                    className={`transition-all duration-200 ${
-                      isSelected 
-                        ? 'transform scale-110' 
-                        : ''
+                <div
+                  className={`transition-all duration-200 ${isSelected
+                    ? 'transform scale-110'
+                    : ''
                     }`}
-                    style={{
-                      transform: `scale(${isSelected ? 1.1 : 1}) rotate(${getRotation(option.label)}deg)`,
-                      filter: isSelected 
-                        ? 'drop-shadow(0 8px 25px rgba(0,0,0,0.15))' 
-                        : 'none'
-                    }}
-                  >
-                    <StickyNote
-                      content={option.label}
-                      backgroundColor={option.color}
-                      width={100}
-                      height={80}
-                      rotation={0} // Rotation is now handled by parent
-                      className={`text-sm font-semibold ${
-                        isSelected ? 'ring-4 ring-[#3ec6c6] ring-opacity-50' : ''
+                  style={{
+                    transform: `scale(${isSelected ? 1.1 : 1}) rotate(${getRotation(option.label)}deg)`,
+                    filter: isSelected
+                      ? 'drop-shadow(0 8px 25px rgba(0,0,0,0.15))'
+                      : 'none'
+                  }}
+                >
+                  <StickyNote
+                    content={option.label}
+                    backgroundColor={option.color}
+                    width={100}
+                    height={80}
+                    rotation={0} // Rotation is now handled by parent
+                    className={`text-sm font-semibold ${isSelected ? 'ring-4 ring-[#3ec6c6] ring-opacity-50' : ''
                       }`}
-                    />
-                  </div>
+                  />
+                </div>
               </div>
             );
           })}
@@ -564,52 +561,52 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
         {data.interests
           .filter(interest => !INTEREST_OPTIONS.some(option => option.label === interest))
           .length > 0 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 text-center">
-              Your Custom Archetypes
-            </h3>
-            <div className="interest-grid">
-              {data.interests
-                .filter(interest => !INTEREST_OPTIONS.some(option => option.label === interest))
-                .map((interest) => (
-                  <div
-                    key={interest}
-                    className="interest-note selected relative"
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Remove ${interest} custom archetype`}
-                  >
-                    <div 
-                      className="transition-all duration-200 transform scale-110"
-                      style={{
-                        transform: `scale(1.1) rotate(${getRotation(interest)}deg)`,
-                        filter: 'drop-shadow(0 8px 25px rgba(0,0,0,0.15))'
-                      }}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 text-center">
+                Your Custom Archetypes
+              </h3>
+              <div className="interest-grid">
+                {data.interests
+                  .filter(interest => !INTEREST_OPTIONS.some(option => option.label === interest))
+                  .map((interest) => (
+                    <div
+                      key={interest}
+                      className="interest-note selected relative"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Remove ${interest} custom archetype`}
                     >
-                      <StickyNote
-                        content={interest}
-                        backgroundColor={getInterestColor(interest)}
-                        width={100}
-                        height={80}
-                        rotation={0} // Rotation is now handled by parent
-                        className="text-sm font-semibold ring-4 ring-[#3ec6c6] ring-opacity-50"
-                      />
+                      <div
+                        className="transition-all duration-200 transform scale-110"
+                        style={{
+                          transform: `scale(1.1) rotate(${getRotation(interest)}deg)`,
+                          filter: 'drop-shadow(0 8px 25px rgba(0,0,0,0.15))'
+                        }}
+                      >
+                        <StickyNote
+                          content={interest}
+                          backgroundColor={getInterestColor(interest)}
+                          width={100}
+                          height={80}
+                          rotation={0} // Rotation is now handled by parent
+                          className="text-sm font-semibold ring-4 ring-[#3ec6c6] ring-opacity-50"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveInterest(interest)}
+                        className="absolute -top-2 -right-2 w-6 h-6 p-0 bg-red-500 hover:bg-red-600 text-white rounded-full z-10"
+                        aria-label={`Remove ${interest} archetype`}
+                      >
+                        <XIcon className="w-3 h-3" />
+                      </Button>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveInterest(interest)}
-                      className="absolute -top-2 -right-2 w-6 h-6 p-0 bg-red-500 hover:bg-red-600 text-white rounded-full z-10"
-                      aria-label={`Remove ${interest} archetype`}
-                    >
-                      <XIcon className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ))}
+                  ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Add Custom Archetype */}
         <div className="flex justify-center">
@@ -700,16 +697,16 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
       const match = url.match(pattern);
       if (match) {
         const extractedUsername = match[2] || match[1];
-        return { 
-          isValid: true, 
-          username: extractedUsername 
+        return {
+          isValid: true,
+          username: extractedUsername
         };
       }
     }
 
-    return { 
-      isValid: false, 
-      error: "Please enter a valid LinkedIn profile URL (e.g., linkedin.com/in/your-profile)" 
+    return {
+      isValid: false,
+      error: "Please enter a valid LinkedIn profile URL (e.g., linkedin.com/in/your-profile)"
     };
   };
 
@@ -718,22 +715,22 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
    */
   const normalizeLinkedInUrl = (url: string): string => {
     if (!url.trim()) return "";
-    
+
     let normalizedUrl = url.trim();
-    
+
     // Add protocol if missing
     if (!normalizedUrl.startsWith('http')) {
       normalizedUrl = 'https://' + normalizedUrl;
     }
-    
+
     // Add www if missing
     if (normalizedUrl.startsWith('https://linkedin.com')) {
       normalizedUrl = normalizedUrl.replace('https://linkedin.com', 'https://www.linkedin.com');
     }
-    
+
     // Remove trailing slash
     normalizedUrl = normalizedUrl.replace(/\/$/, '');
-    
+
     return normalizedUrl;
   };
 
@@ -742,22 +739,22 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
    */
   const handleUrlChange = (url: string) => {
     onDataChange({ ...data, linkedinUrl: url });
-    
+
     // Clear previous states
     setValidationError("");
     setIsValid(false);
     setUsername("");
-    
+
     if (!url.trim()) {
       return; // Empty is valid
     }
 
     setIsValidating(true);
-    
+
     // Debounced validation
     const timeoutId = setTimeout(() => {
       const validation = validateLinkedInUrl(url);
-      
+
       if (validation.isValid) {
         setIsValid(true);
         setUsername(validation.username || "");
@@ -769,7 +766,7 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
       } else {
         setValidationError(validation.error || "Invalid URL format");
       }
-      
+
       setIsValidating(false);
     }, 500);
 
@@ -792,7 +789,7 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
             </svg>
           </div>
         </div>
-        
+
         <h2 className="text-2xl font-bold text-gray-900 leading-tight">
           Connect Your LinkedIn Profile
         </h2>
@@ -815,17 +812,16 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
                 value={data.linkedinUrl}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 placeholder="https://www.linkedin.com/in/your-profile"
-                className={`text-sm leading-relaxed pr-10 ${
-                  validationError 
-                    ? "border-red-300 focus:border-red-500 focus:ring-red-500" 
-                    : isValid 
+                className={`text-sm leading-relaxed pr-10 ${validationError
+                  ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                  : isValid
                     ? "border-green-300 focus:border-green-500 focus:ring-green-500"
                     : "focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
-                }`}
+                  }`}
                 aria-describedby={validationError ? "linkedin-error" : undefined}
                 aria-invalid={!!validationError}
               />
-              
+
               {/* Loading/Status Icon */}
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 {isValidating && (
@@ -843,14 +839,14 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
                 )}
               </div>
             </div>
-            
+
             {/* Error Message */}
             {validationError && (
               <p id="linkedin-error" className="text-sm text-red-600" role="alert">
                 {validationError}
               </p>
             )}
-            
+
             {/* Success Message with Username */}
             {isValid && username && (
               <p className="text-sm text-green-600">
@@ -858,7 +854,7 @@ const Step3: React.FC<Step3Props> = ({ data, onDataChange, onComplete, onBack })
               </p>
             )}
           </div>
-          
+
           {/* Help Text */}
           <div className="space-y-2">
             <p className="text-xs text-gray-500">
@@ -894,16 +890,14 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ currentStep, tota
         {Array.from({ length: totalSteps }, (_, index) => (
           <div
             key={index}
-            className={`progress-step w-2 h-2 rounded-full transition-all duration-300 ${
-              index < currentStep
-                ? "bg-[#3ec6c6]"
-                : index === currentStep - 1
+            className={`progress-step w-2 h-2 rounded-full transition-all duration-300 ${index < currentStep
+              ? "bg-[#3ec6c6]"
+              : index === currentStep - 1
                 ? "bg-[#3ec6c6] scale-110"
                 : "bg-gray-300"
-            }`}
-            aria-label={`Step ${index + 1} ${
-              index < currentStep ? "completed" : index === currentStep - 1 ? "current" : "upcoming"
-            }`}
+              }`}
+            aria-label={`Step ${index + 1} ${index < currentStep ? "completed" : index === currentStep - 1 ? "current" : "upcoming"
+              }`}
           />
         ))}
       </div>
@@ -917,17 +911,17 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ currentStep, tota
 export const SignupFlow: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   // Ref for scrolling to top of form
   const formContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // State for step 3 validation
   const [step3Validation, setStep3Validation] = useState({
     isValidating: false,
     validationError: "",
     isValid: false
   });
-  
+
   // State management
   const [currentStep, setCurrentStep] = useState(1);
   const [signupData, setSignupData] = useState<SignupFlowData>({
@@ -952,15 +946,15 @@ export const SignupFlow: React.FC = () => {
 
     // Scroll to top of form container when step changes
     if (formContainerRef.current) {
-      formContainerRef.current.scrollIntoView({ 
+      formContainerRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       });
     } else {
       // Fallback: scroll to top of page
-      window.scrollTo({ 
-        top: 0, 
-        behavior: 'smooth' 
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
       });
     }
   }, [currentStep]);
@@ -1016,9 +1010,9 @@ export const SignupFlow: React.FC = () => {
       }
     }
 
-    return { 
-      isValid: false, 
-      error: "Please enter a valid LinkedIn profile URL" 
+    return {
+      isValid: false,
+      error: "Please enter a valid LinkedIn profile URL"
     };
   };
 
@@ -1073,12 +1067,12 @@ export const SignupFlow: React.FC = () => {
   const handleComplete = () => {
     // TODO: Submit data to backend
     console.log("Signup flow completed:", signupData);
-    
+
     toast({
       title: "Welcome to Meetball!",
       description: "Your profile has been set up successfully.",
     });
-    
+
     navigate("/home");
   };
 
@@ -1145,14 +1139,14 @@ export const SignupFlow: React.FC = () => {
       <style>{customStyles}</style>
       <div className="bg-[#f0efeb] min-h-screen">
         {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-40 signup-header shadow-sm">
+        <header className="fixed top-0 left-0 right-0 z-40 signup-header shadow-sm mb-6">
           <div className="flex items-center justify-between h-20 px-4 pt-8">
             <div className="w-16" />
-            
+
             <h1 className="text-lg font-semibold text-gray-900">
               {getHeaderTitle()}
             </h1>
-            
+
             <Button
               variant="ghost"
               onClick={handleSkip}
@@ -1167,11 +1161,9 @@ export const SignupFlow: React.FC = () => {
         {/* Main Content */}
         <div ref={formContainerRef} className="pt-20 px-4 py-6 pb-32">
           <div className="max-w-2xl mx-auto">
-            {/* Progress Indicator */}
-            <ProgressIndicator currentStep={currentStep} totalSteps={3} />
 
             {/* Form Container */}
-            <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm mt-6">
               <CardContent className="p-6">
                 {currentStep === 1 && (
                   <Step1
@@ -1181,7 +1173,7 @@ export const SignupFlow: React.FC = () => {
                     onSkip={handleSkip}
                   />
                 )}
-                
+
                 {currentStep === 2 && (
                   <Step2
                     data={signupData.step2}
@@ -1190,7 +1182,7 @@ export const SignupFlow: React.FC = () => {
                     onBack={handleBack}
                   />
                 )}
-                
+
                 {currentStep === 3 && (
                   <Step3
                     data={signupData.step3}
@@ -1213,7 +1205,8 @@ export const SignupFlow: React.FC = () => {
                 {buttonConfig.footerNote}
               </p>
             )}
-            
+            {/* Progress Indicator */}
+            <ProgressIndicator currentStep={currentStep} totalSteps={3} />
             {/* Navigation Buttons */}
             <div className={`flex gap-3 ${buttonConfig.showBack ? '' : 'justify-center'}`}>
               {buttonConfig.showBack && (
@@ -1227,18 +1220,16 @@ export const SignupFlow: React.FC = () => {
                   Back
                 </Button>
               )}
-              
+
               <Button
                 type="button"
                 onClick={handleNext}
                 disabled={buttonConfig.nextDisabled}
-                className={`next-button h-12 text-base font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed ${
-                  buttonConfig.showBack ? 'flex-1' : 'w-full max-w-xs'
-                } ${
-                  currentStep === 3 
-                    ? "bg-[#0077b5] hover:bg-[#005582] text-white" 
+                className={`next-button h-12 text-base font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed ${buttonConfig.showBack ? 'flex-1' : 'w-full max-w-xs'
+                  } ${currentStep === 3
+                    ? "bg-[#0077b5] hover:bg-[#005582] text-white"
                     : "bg-[#FFCA28] hover:bg-[#e6b324] text-black"
-                }`}
+                  }`}
                 aria-label={currentStep === 3 ? "Complete signup" : "Continue to next step"}
               >
                 {buttonConfig.nextText}
