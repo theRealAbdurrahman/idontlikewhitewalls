@@ -97,7 +97,7 @@ const CollapsibleText: React.FC<CollapsibleTextProps> = ({
   text, 
   maxLines = 4, 
   className = "", 
-  showIndicator = true 
+  showIndicator = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsTruncation, setNeedsTruncation] = useState(false);
@@ -429,7 +429,7 @@ const customStyles = `
 /**
  * Default placeholder text for connectDetails when not available
  */
-const DEFAULT_CONNECT_DETAILS = "Hi there! I'm excited to connect with others who share my interests in technology and innovation. Let's collaborate and create something amazing together.";
+const DEFAULT_CONNECT_DETAILS = "Hi there! I'm excited to connect with others who share my interests in technology and innovation. Let's collaborate and create something amazing together. Hi there! I'm excited to connect with others who share my interests in technology and innovation. Let's collaborate and create something amazing together. Hi there! I'm excited to connect with others who share my interests in technology and innovation. Let's collaborate and create something amazing together.";
 
 /**
  * Transform API UserProfile to component UserProfile interface
@@ -765,7 +765,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                   text={renderConnectDetails(profileUser.connectDetails)}
                   maxLines={4}
                   className="connect-details-text text-gray-700 leading-relaxed"
-                  showIndicator={true}
+                  showIndicator={false}
                 />
               </CardContent>
             </Card>
@@ -821,7 +821,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                       text={renderConnectDetails(profileUser.connectDetails)}
                       maxLines={4}
                       className="connect-details-text text-gray-700 leading-relaxed"
-                      showIndicator={true}
+                      showIndicator={false}
                     />
                   </div>
                   
