@@ -170,20 +170,28 @@ export const ProfilePage: React.FC = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   const profileSectionRef = useRef<HTMLDivElement>(null);
 
-  // Fetch user profile from API using the new dedicated hook
+  // Fetch user profile from API using the new dedicated hook (React Query v5 compatible)
   const { 
     data: userProfileData, 
     isLoading: profileLoading, 
     error: profileError,
     refetch: refetchProfile 
-  } = useUserProfile(id, {
-    onSuccess: (data) => {
-      console.log("✅ User profile loaded successfully:", data);
-    },
-    onError: (error) => {
-      console.error("❌ Failed to load user profile:", error);
+  } = useUserProfile(id);
+
+  /**
+   * Handle success and error cases using useEffect (React Query v5 pattern)
+   */
+  useEffect(() => {
+    if (userProfileData) {
+      console.log("✅ User profile loaded successfully:", userProfileData);
     }
-  });
+  }, [userProfileData]);
+
+  useEffect(() => {
+    if (profileError) {
+      console.error("❌ Failed to load user profile:", profileError);
+    }
+  }, [profileError]);
 
   /**
    * Load and transform user profile data from API
