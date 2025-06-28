@@ -635,7 +635,7 @@ export const CreateQuestion: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={!isFormValid}
-                  className="bg-[#ffb300] hover:bg-[#ffd580] text-black px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-2"
+                  className="bg-[#FFCA28] hover:bg-[#e6b324] text-black px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-2"
                 >
                   {isSubmitting ? (
                     <>
