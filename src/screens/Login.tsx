@@ -1,6 +1,7 @@
 import React from "react";
 import { useLogto } from "@logto/react";
 import { useNavigate } from 'react-router-dom';
+import { getAuthCallbackUrl } from '../utils/auth';
 
 
 export const Login: React.FC = () => {
@@ -28,7 +29,7 @@ export const Login: React.FC = () => {
         {/* Buttons */}
         <div className="backdrop-blur-lg bg-white/60 border border-white/30 rounded-2xl shadow-lg px-6 py-4 w-full max-w-[300px] text-center">
           <button className="w-full h-[45px] bg-[#0077b5] text-white rounded-full font-medium shadow hover:bg-[#005582] transition mb-3"
-            onClick={() => signIn(`https://app.meetball.fun/callback`)}>
+            onClick={() => signIn(getAuthCallbackUrl())}>
             Login to Meetball
           </button>
           <p className="text-gray-700 text-sm" onClick={() => navigate('/signup')}>Or sign up</p>

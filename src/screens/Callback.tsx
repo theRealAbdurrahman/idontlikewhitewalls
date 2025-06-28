@@ -10,7 +10,11 @@ export const Callback = () => {
     // Only navigate when authentication is complete (not loading)
     if (!isLoading && isAuthenticated && !error) {
       console.log("Authentication successful");
-      navigate('/home');
+      // Check if we have a stored path to redirect to
+      const redirectPath = sessionStorage.getItem('redirectPath') || '/home';
+      // Clear the stored path
+      sessionStorage.removeItem('redirectPath');
+      navigate(redirectPath);
     }
   }, [isLoading, error, isAuthenticated, navigate]);
 

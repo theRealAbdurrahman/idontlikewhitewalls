@@ -7,22 +7,26 @@ import { QuestionCard } from "../components/QuestionCard";
 import { useAppStore } from "../stores/appStore";
 import { useLogto } from '@logto/react';
 import { QuestionRead } from '../api-client/models/questionRead';
+import { getAuthCallbackUrl } from '../utils/auth';
+import { EnvDebug } from '../components/EnvDebug';
 /**
  * Home screen component displaying the main question feed
  */
 export const Home: React.FC = () => {
   
-  const { isAuthenticated } = useLogto();
+  const { isAuthenticated, isLoading, signIn } = useLogto();
   const navigate = useNavigate();
 
-  // FIX: Only navigate after render, not during render
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     navigate('/login');
-  //     // TODO: implement non logged in user to navigate the questions
-  //     // prompt for login if press interactions
-  //   }
-  // }, [isAuthenticated]);
+  useEffect(() => {
+    // Only attempt authentication if not already in process
+    if (!isLoading && !isAuthenticated) {
+      // Get environment-specific callback URL
+      const callbackUrl = getAuthCallbackUrl();
+      // Store current path before redirecting to auth
+      sessionStorage.setItem('redirectPath', window.location.pathname);
+      signIn(callbackUrl);
+    }
+  }, [isAuthenticated, isLoading, signIn]);
 
   const { activeFilters, sortBy } = useAppStore();
 
@@ -138,6 +142,16 @@ export const Home: React.FC = () => {
 
   return (
     <>
+      {/* Environment Debug - Only shown in development */}
+      {import.meta.env.MODE === 'development' && (
+        <div className="px-2.5 py-3 mb-2 border-b border-gray-200">
+          <details>
+            <summary className="cursor-pointer font-medium text-gray-700">Environment Debug Info</summary>
+            <EnvDebug />
+          </details>
+        </div>
+      )}
+      
       {/* Question Feed */}
       {/* <Button onClick={() => signOut(`http://localhost:5173`)}>Sign Out</Button> */}
       <div className="px-2.5 py-3">
