@@ -68,7 +68,23 @@ export const CreateQuestion: React.FC = () => {
 
   // Transform API events data for the component
   const events = React.useMemo(() => {
-    if (!eventsData?.data) {
+    // Handle API response format mismatch (backend returns array, client expects {data: array})
+    const getEventsArray = (data: any) => {
+      // Check if data is an array (actual backend format)
+      if (Array.isArray(data)) {
+        return data;
+      }
+      // Check if data has a data property that is an array (expected format)
+      else if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+        return data.data;
+      }
+      // Return null if no valid data
+      return null;
+    };
+
+    const eventsArray = getEventsArray(eventsData?.data);
+    
+    if (!eventsArray) {
       // Fallback to mock events if API data not available
       return [
         {
@@ -106,7 +122,7 @@ export const CreateQuestion: React.FC = () => {
       ];
     }
     
-    return eventsData.data.map((event) => ({
+    return eventsArray.map((event) => ({
       id: event.id,
       name: event.name,
       description: event.description || "",
@@ -123,6 +139,15 @@ export const CreateQuestion: React.FC = () => {
       status: "upcoming" as const,
     }));
   }, [eventsData?.data]);
+
+  /**
+   * Auto-select first event when events are loaded
+   */
+  React.useEffect(() => {
+    if (events.length > 0 && selectedEvents.length === 0) {
+      setSelectedEvents([events[0].id]);
+    }
+  }, [events, selectedEvents.length]);
 
   /**
    * Handle closing the create question screen
