@@ -247,9 +247,10 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
           Who would you like to connect with?
         </h2>
         
-        {/* Pre-defined Labels */}
+        {/* Pre-defined Labels + Custom Labels + Add Custom Button - All in same row */}
         <div className="space-y-3">
           <div className="flex flex-wrap gap-3">
+            {/* Pre-defined Labels */}
             {CONNECTION_LABELS.map((label) => (
               <Button
                 key={label}
@@ -290,10 +291,24 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
                   </Button>
                 </Badge>
               ))}
+
+            {/* Add Custom Label Button - Now inline with other labels */}
+            {!isAddingCustom && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddingCustom(true)}
+                className="label-button flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50 border-dashed"
+                aria-label="Add custom connection preference"
+              >
+                <PlusIcon className="w-4 h-4" />
+                Add custom
+              </Button>
+            )}
           </div>
           
-          {/* Add Custom Label */}
-          {isAddingCustom ? (
+          {/* Custom Label Input Form - Only shows when adding */}
+          {isAddingCustom && (
             <div className="custom-input-container flex gap-2 max-w-xs">
               <Input
                 value={customLabel}
@@ -327,17 +342,6 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
                 Cancel
               </Button>
             </div>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsAddingCustom(true)}
-              className="label-button flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50 border-dashed"
-              aria-label="Add custom connection preference"
-            >
-              <PlusIcon className="w-4 h-4" />
-              Add custom
-            </Button>
           )}
         </div>
         
