@@ -1085,7 +1085,7 @@ export const SignupFlow: React.FC = () => {
           showBack: true,
           nextText: "Next",
           nextDisabled: false,
-          footerNote: `Selected: ${signupData.step2.interests.length} archetype${signupData.step2.interests.length !== 1 ? 's' : ''}`
+          // footerNote: `Selected: ${signupData.step2.interests.length} archetype${signupData.step2.interests.length !== 1 ? 's' : ''}`
         };
       case 3:
         return {
@@ -1182,7 +1182,7 @@ export const SignupFlow: React.FC = () => {
         </div>
 
         {/* Fixed Footer with Navigation Buttons */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+        <div className="fixed z-10 bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
           <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
             {/* Footer Note */}
             {buttonConfig.footerNote && (
