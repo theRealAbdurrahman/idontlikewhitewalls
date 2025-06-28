@@ -23,7 +23,7 @@ import { SignupFlow } from "./screens/SignupFlow";
 import { Logout } from "./screens/Logout";
 
 const config: LogtoConfig = {
-  endpoint: 'https://y42e79.logto.app/',
+  endpoint: 'https://login.meetball.fun',
   appId: 'uhmy6e6frjsbed2pwni1u',
 };
 

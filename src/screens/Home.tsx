@@ -25,6 +25,7 @@ export const Home: React.FC = () => {
       // Store current path before redirecting to auth
       sessionStorage.setItem('redirectPath', window.location.pathname);
       signIn(callbackUrl);
+      console.log(callbackUrl);
     }
   }, [isAuthenticated, isLoading, signIn]);
 
@@ -118,6 +119,16 @@ export const Home: React.FC = () => {
   const handleCreateQuestion = () => {
     navigate("/create-question");
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="px-2.5 py-2.5">
+        <div className="flex items-center justify-center py-8">
+          <p className="text-gray-500 text-base">Please login to view questions</p>
+        </div>
+      </div>
+    );
+  }
 
   // Handle loading and error states
   if (questionsLoading) {
