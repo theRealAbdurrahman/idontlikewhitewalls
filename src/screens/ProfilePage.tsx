@@ -48,7 +48,7 @@ interface UserProfile {
   title?: string;
   company?: string;
   location?: string;
-  bio?: string;
+  connectDetails?: string;
   avatar?: string;
   website?: string;
   linkedinUrl?: string;
@@ -225,10 +225,23 @@ const customStyles = `
     margin-bottom: 8px;
     font-weight: 500;
   }
+
+  /* Bio/ConnectDetails text styling to preserve line breaks */
+  .connect-details-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.6;
+  }
 `;
 
 /**
+ * Default placeholder text for connectDetails when not available
+ */
+const DEFAULT_CONNECT_DETAILS = "Hi there! I'm excited to connect with others who share my interests in technology and innovation. Let's collaborate and create something amazing together.";
+
+/**
  * Transform API UserProfile to component UserProfile interface
+ * Now uses bio field as connectDetails from signup step 2
  */
 const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
   return {
@@ -237,7 +250,8 @@ const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
     title: apiUser.title || undefined,
     company: undefined, // Not available in API yet
     location: undefined, // Not available in API yet  
-    bio: apiUser.bio || undefined,
+    // Use bio field as connectDetails from signup step 2
+    connectDetails: apiUser.bio && apiUser.bio.trim() ? apiUser.bio : DEFAULT_CONNECT_DETAILS,
     avatar: apiUser.profile_picture || undefined,
     website: undefined, // Not available in API yet
     linkedinUrl: apiUser.linkedin_url || undefined,
@@ -250,6 +264,21 @@ const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
     profileVersion: "standard" as const, // Default profile version
     virtues: ["Creative", "Innovative", "Collaborative", "Authentic", "Empathetic", "Visionary"], // Mock virtues for funky profile
   };
+};
+
+/**
+ * Utility function to safely render connectDetails with proper line breaks
+ * @param connectDetails - The connectDetails text from the user profile
+ * @returns The text to display, with fallback to default placeholder
+ */
+const renderConnectDetails = (connectDetails?: string): string => {
+  // Handle undefined, null, or empty strings
+  if (!connectDetails || connectDetails.trim() === '') {
+    return DEFAULT_CONNECT_DETAILS;
+  }
+  
+  // Return the connectDetails as-is to preserve original formatting
+  return connectDetails.trim();
 };
 
 /**
@@ -551,10 +580,10 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                   )}
                 </div>
                 
-                {/* Bio */}
-                {profileUser.bio && (
-                  <p className="text-gray-700 leading-relaxed">{profileUser.bio}</p>
-                )}
+                {/* ConnectDetails Section - Updated to use connectDetails from signup step 2 */}
+                <div className="connect-details-text text-gray-700 leading-relaxed">
+                  {renderConnectDetails(profileUser.connectDetails)}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -603,10 +632,10 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                     )}
                   </div>
                   
-                  {/* Bio */}
-                  {profileUser.bio && (
-                    <p className="text-gray-700 leading-relaxed mb-6">{profileUser.bio}</p>
-                  )}
+                  {/* ConnectDetails for Funky Profile - Also updated to use connectDetails */}
+                  <div className="connect-details-text text-gray-700 leading-relaxed mb-6">
+                    {renderConnectDetails(profileUser.connectDetails)}
+                  </div>
                   
                   {/* Virtue Tags using StickyNote */}
                   {profileUser.virtues && profileUser.virtues.length > 0 && (
