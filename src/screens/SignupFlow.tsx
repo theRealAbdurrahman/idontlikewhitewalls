@@ -42,13 +42,14 @@ interface SignupFlowData {
 }
 
 /**
- * Pre-defined connection preference labels
+ * Pre-defined connection preference labels - Updated with new categories
  */
 const CONNECTION_LABELS = [
-  "Coaching",
-  "Finance", 
-  "Career Upgrade",
-  "Mental Health"
+  "Technology & Product",
+  "Business & Strategy", 
+  "Creative & Design",
+  "Finance & Investment",
+  "Community & Impact"
 ] as const;
 
 /**
@@ -340,44 +341,32 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
           )}
         </div>
         
-        {/* Details Textarea */}
+        {/* Details Textarea - Updated placeholder and removed length restrictions */}
         <div className="space-y-2">
           <Textarea
             value={data.connectDetails}
             onChange={(e) => onDataChange({ ...data, connectDetails: e.target.value })}
-            placeholder="Add details or tags"
+            placeholder="Describe what you do professionally and what you're passionate about in your work. How would you want someone to introduce you at an event?"
             className="min-h-[100px] resize-none text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
-            maxLength={500}
-            aria-label="Additional details for connection preferences"
+            aria-label="Professional description and introduction"
           />
-          <div className="flex justify-end">
-            <span className="text-xs text-gray-500">
-              {data.connectDetails.length}/500
-            </span>
-          </div>
         </div>
       </div>
 
-      {/* Question 2: What can you offer? */}
+      {/* Question 2: I can help others with... - Updated question text */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-900 leading-tight">
-          What unique insights, expertise, connections or resources can you offer to support others?
+          I can help others with...
         </h2>
         
         <div className="space-y-2">
           <Textarea
             value={data.offerings}
             onChange={(e) => onDataChange({ ...data, offerings: e.target.value })}
-            placeholder="Add details or tags"
+            placeholder="What unique insights, expertise, connections, or resources can you offer to support others? Think beyond just your job title: What problems do you love solving?"
             className="min-h-[100px] resize-none text-sm leading-relaxed focus:ring-2 focus:ring-[#3ec6c6] focus:border-transparent"
-            maxLength={500}
             aria-label="What you can offer to support others"
           />
-          <div className="flex justify-end">
-            <span className="text-xs text-gray-500">
-              {data.offerings.length}/500
-            </span>
-          </div>
         </div>
       </div>
     </div>
