@@ -12,7 +12,9 @@ import {
   PlusIcon,
   HashIcon,
   TrashIcon,
-  EditIcon as Edit2Icon
+  EditIcon as Edit2Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from "lucide-react";
 import { 
   useUserProfile,
@@ -72,7 +74,12 @@ interface PrivateNote {
 }
 
 /**
- * Custom styles for animations and transitions
+ * Profile view types for swipeable interface
+ */
+type ProfileViewType = "standard" | "funky";
+
+/**
+ * Custom styles for animations, transitions, and swipe functionality
  */
 const customStyles = `
   .profile-collapse {
@@ -118,6 +125,106 @@ const customStyles = `
   .social-icon:hover {
     transform: scale(1.1);
   }
+
+  /* Swipeable profile section styles */
+  .swipeable-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    touch-action: pan-y pinch-zoom;
+  }
+  
+  .swipeable-content {
+    display: flex;
+    width: 200%;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .swipeable-content.swiping {
+    transition: none;
+  }
+  
+  .profile-view {
+    width: 50%;
+    flex-shrink: 0;
+  }
+  
+  .profile-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .profile-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #d1d5db;
+    transition: all 0.2s ease-out;
+    cursor: pointer;
+  }
+  
+  .profile-indicator.active {
+    background-color: #3ec6c6;
+    transform: scale(1.2);
+  }
+  
+  .profile-indicator:hover {
+    background-color: #9ca3af;
+  }
+  
+  .profile-indicator.active:hover {
+    background-color: #2ea5a5;
+  }
+  
+  .swipe-nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+    z-index: 10;
+    opacity: 0.7;
+  }
+  
+  .swipe-nav-button:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .swipe-nav-button.left {
+    left: 12px;
+  }
+  
+  .swipe-nav-button.right {
+    right: 12px;
+  }
+  
+  /* Hide nav buttons on mobile to prioritize touch gestures */
+  @media (max-width: 768px) {
+    .swipe-nav-button {
+      display: none;
+    }
+  }
+  
+  .profile-view-label {
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
 `;
 
 /**
@@ -141,8 +248,430 @@ const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
     mutualConnections: Math.floor(Math.random() * 20), // Mock value for now
     joinedAt: apiUser.created_at,
     profileVersion: "standard" as const, // Default profile version
-    virtues: undefined, // Not available in API yet
+    virtues: ["Creative", "Innovative", "Collaborative", "Authentic", "Empathetic", "Visionary"], // Mock virtues for funky profile
   };
+};
+
+/**
+ * Swipeable Profile Section Component
+ */
+interface SwipeableProfileProps {
+  profileUser: UserProfile;
+  currentProfileView: ProfileViewType;
+  onProfileViewChange: (view: ProfileViewType) => void;
+  onConnect: () => void;
+  onMessage: () => void;
+}
+
+const SwipeableProfile: React.FC<SwipeableProfileProps> = ({ 
+  profileUser, 
+  currentProfileView, 
+  onProfileViewChange,
+  onConnect,
+  onMessage 
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [currentX, setCurrentX] = useState(0);
+  const [translateX, setTranslateX] = useState(0);
+
+  /**
+   * Handle touch start for swipe gestures
+   */
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].clientX);
+    setCurrentX(e.touches[0].clientX);
+    
+    if (contentRef.current) {
+      contentRef.current.classList.add('swiping');
+    }
+  };
+
+  /**
+   * Handle touch move for swipe gestures
+   */
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    setCurrentX(e.touches[0].clientX);
+    const deltaX = e.touches[0].clientX - startX;
+    const containerWidth = containerRef.current?.offsetWidth || 0;
+    const maxTranslate = containerWidth * 0.3; // Limit swipe distance
+    
+    // Calculate new translate position
+    let newTranslateX = deltaX;
+    if (currentProfileView === "funky") {
+      newTranslateX = -containerWidth + deltaX;
+    }
+    
+    // Apply resistance at boundaries
+    if (newTranslateX > maxTranslate) {
+      newTranslateX = maxTranslate;
+    } else if (newTranslateX < -containerWidth - maxTranslate) {
+      newTranslateX = -containerWidth - maxTranslate;
+    }
+    
+    setTranslateX(newTranslateX);
+  };
+
+  /**
+   * Handle touch end to complete or cancel swipe
+   */
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    
+    if (contentRef.current) {
+      contentRef.current.classList.remove('swiping');
+    }
+    
+    const deltaX = currentX - startX;
+    const threshold = 50; // Minimum swipe distance to trigger change
+    
+    if (Math.abs(deltaX) > threshold) {
+      if (deltaX > 0 && currentProfileView === "funky") {
+        // Swipe right - go to standard
+        onProfileViewChange("standard");
+      } else if (deltaX < 0 && currentProfileView === "standard") {
+        // Swipe left - go to funky
+        onProfileViewChange("funky");
+      }
+    }
+    
+    // Reset translate position
+    setTranslateX(0);
+  };
+
+  /**
+   * Handle mouse events for desktop swipe simulation
+   */
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.clientX);
+    setCurrentX(e.clientX);
+    
+    if (contentRef.current) {
+      contentRef.current.classList.add('swiping');
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    setCurrentX(e.clientX);
+    const deltaX = e.clientX - startX;
+    const containerWidth = containerRef.current?.offsetWidth || 0;
+    const maxTranslate = containerWidth * 0.3;
+    
+    let newTranslateX = deltaX;
+    if (currentProfileView === "funky") {
+      newTranslateX = -containerWidth + deltaX;
+    }
+    
+    if (newTranslateX > maxTranslate) {
+      newTranslateX = maxTranslate;
+    } else if (newTranslateX < -containerWidth - maxTranslate) {
+      newTranslateX = -containerWidth - maxTranslate;
+    }
+    
+    setTranslateX(newTranslateX);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    
+    if (contentRef.current) {
+      contentRef.current.classList.remove('swiping');
+    }
+    
+    const deltaX = currentX - startX;
+    const threshold = 50;
+    
+    if (Math.abs(deltaX) > threshold) {
+      if (deltaX > 0 && currentProfileView === "funky") {
+        onProfileViewChange("standard");
+      } else if (deltaX < 0 && currentProfileView === "standard") {
+        onProfileViewChange("funky");
+      }
+    }
+    
+    setTranslateX(0);
+  };
+
+  /**
+   * Calculate transform position based on current view
+   */
+  const getTransformValue = () => {
+    const baseTransform = currentProfileView === "standard" ? 0 : -50;
+    const swipeOffset = isDragging ? (translateX / (containerRef.current?.offsetWidth || 1)) * 50 : 0;
+    return `translateX(${baseTransform + swipeOffset}%)`;
+  };
+
+  return (
+    <div className="px-4 pb-6">
+      {/* Profile View Labels */}
+      <div className="flex justify-between px-2 mb-2">
+        <div className={`profile-view-label ${currentProfileView === "standard" ? "text-[#3ec6c6] font-semibold" : ""}`}>
+          Professional
+        </div>
+        <div className={`profile-view-label ${currentProfileView === "funky" ? "text-[#3ec6c6] font-semibold" : ""}`}>
+          Personal
+        </div>
+      </div>
+
+      <div 
+        ref={containerRef}
+        className="swipeable-container relative"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        {/* Navigation buttons for desktop */}
+        <button
+          className="swipe-nav-button left"
+          onClick={() => onProfileViewChange("standard")}
+          disabled={currentProfileView === "standard"}
+          style={{ opacity: currentProfileView === "standard" ? 0.3 : 0.7 }}
+        >
+          <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
+        </button>
+        
+        <button
+          className="swipe-nav-button right"
+          onClick={() => onProfileViewChange("funky")}
+          disabled={currentProfileView === "funky"}
+          style={{ opacity: currentProfileView === "funky" ? 0.3 : 0.7 }}
+        >
+          <ChevronRightIcon className="w-5 h-5 text-gray-600" />
+        </button>
+
+        <div 
+          ref={contentRef}
+          className="swipeable-content"
+          style={{ transform: getTransformValue() }}
+        >
+          {/* Standard Profile View */}
+          <div className="profile-view">
+            <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="relative">
+                    <Avatar className="w-20 h-20 ring-4 ring-gray-100">
+                      <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
+                      <AvatarFallback className="text-2xl bg-gradient-to-br from-gray-100 to-gray-200">
+                        {profileUser.name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white border-2 border-gray-200 hover:bg-gray-50"
+                    >
+                      <EditIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h1 className="text-2xl font-bold text-gray-900">{profileUser.name}</h1>
+                      {profileUser.verified && (
+                        <Badge className="bg-blue-100 text-blue-800 text-xs">
+                          Verified
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {profileUser.title && profileUser.company && (
+                      <p className="text-gray-600 mb-1">
+                        {profileUser.title} at {profileUser.company}
+                      </p>
+                    )}
+                    
+                    {profileUser.location && (
+                      <p className="text-gray-500 text-sm mb-3">{profileUser.location}</p>
+                    )}
+                    
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                      <span>{profileUser.mutualConnections} mutual connections</span>
+                      <span>• Joined {formatDistanceToNow(new Date(profileUser.joinedAt), { addSuffix: true })}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3 mb-6">
+                  <Button
+                    onClick={onMessage}
+                    className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                  >
+                    <MessageCircleIcon className="w-4 h-4 mr-2" />
+                    Message
+                  </Button>
+                  
+                  <Button
+                    onClick={onConnect}
+                    variant="outline"
+                    className="flex-1"
+                    disabled={profileUser.isConnected}
+                  >
+                    <UserPlusIcon className="w-4 h-4 mr-2" />
+                    {profileUser.isConnected ? "Connected" : "Connect"}
+                  </Button>
+                  
+                  {profileUser.website && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => window.open(profileUser.website, '_blank')}
+                      className="social-icon"
+                    >
+                      <ExternalLinkIcon className="w-4 h-4" />
+                    </Button>
+                  )}
+                  
+                  {profileUser.linkedinUrl && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => window.open(profileUser.linkedinUrl, '_blank')}
+                      className="social-icon text-blue-600 hover:bg-blue-50"
+                    >
+                      <LinkedinIcon className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                
+                {/* Bio */}
+                {profileUser.bio && (
+                  <p className="text-gray-700 leading-relaxed">{profileUser.bio}</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Funky Profile View */}
+          <div className="profile-view">
+            <Card className="bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 rounded-2xl border-2 border-dashed border-purple-200 shadow-lg">
+              <CardContent className="p-6">
+                <div className="text-center mb-6">
+                  <div className="relative inline-block">
+                    <Avatar className="w-24 h-24 ring-4 ring-white shadow-lg">
+                      <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
+                      <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-400 to-pink-400 text-white">
+                        {profileUser.name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center animate-bounce">
+                      ✨
+                    </div>
+                  </div>
+                  
+                  <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{profileUser.name}</h1>
+                  <p className="text-purple-600 font-semibold mb-4">What lights you up outside of work?</p>
+                  
+                  {/* Social Media Links */}
+                  <div className="flex justify-center gap-3 mb-6">
+                    {profileUser.instagramUrl && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => window.open(profileUser.instagramUrl, '_blank')}
+                        className="social-icon text-pink-600 hover:bg-pink-50 border-pink-200"
+                      >
+                        <InstagramIcon className="w-5 h-5" />
+                      </Button>
+                    )}
+                    {profileUser.tiktokUrl && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => window.open(profileUser.tiktokUrl, '_blank')}
+                        className="social-icon text-black hover:bg-gray-50"
+                      >
+                        <span className="font-bold text-sm">TT</span>
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Bio */}
+                  {profileUser.bio && (
+                    <p className="text-gray-700 leading-relaxed mb-6">{profileUser.bio}</p>
+                  )}
+                  
+                  {/* Virtue Tags using StickyNote */}
+                  {profileUser.virtues && profileUser.virtues.length > 0 && (
+                    <div className="flex justify-center gap-4 flex-wrap mb-6">
+                      {profileUser.virtues.slice(0, 6).map((virtue, index) => (
+                        <div key={virtue} className={`virtue-tag`}>
+                          <StickyNote
+                            content={virtue}
+                            backgroundColor={
+                              index % 4 === 0 ? "#FFE066" :
+                              index % 4 === 1 ? "#FF6B6B" :
+                              index % 4 === 2 ? "#4ECDC4" : "#95E1D3"
+                            }
+                            width={80}
+                            height={60}
+                            rotation={index % 2 === 0 ? 5 : -5}
+                            className="text-xs font-semibold"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={onMessage}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  >
+                    <MessageCircleIcon className="w-4 h-4 mr-2" />
+                    Message
+                  </Button>
+                  
+                  <Button
+                    onClick={onConnect}
+                    variant="outline"
+                    className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
+                    disabled={profileUser.isConnected}
+                  >
+                    <UserPlusIcon className="w-4 h-4 mr-2" />
+                    {profileUser.isConnected ? "Connected" : "Connect"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Profile View Indicators */}
+      <div className="profile-indicators">
+        <div 
+          className={`profile-indicator ${currentProfileView === "standard" ? "active" : ""}`}
+          onClick={() => onProfileViewChange("standard")}
+          aria-label="Switch to professional profile view"
+        />
+        <div 
+          className={`profile-indicator ${currentProfileView === "funky" ? "active" : ""}`}
+          onClick={() => onProfileViewChange("funky")}
+          aria-label="Switch to personal profile view"
+        />
+      </div>
+    </div>
+  );
 };
 
 /**
@@ -165,6 +694,9 @@ export const ProfilePage: React.FC = () => {
   const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState("");
   const [editingNote, setEditingNote] = useState<PrivateNote | null>(null);
+  
+  // New state for swipeable profile views
+  const [currentProfileView, setCurrentProfileView] = useState<ProfileViewType>("standard");
   
   // Refs for scroll behavior
   const headerRef = useRef<HTMLDivElement>(null);
@@ -396,6 +928,13 @@ export const ProfilePage: React.FC = () => {
     refetchProfile();
   };
 
+  /**
+   * Handle profile view change
+   */
+  const handleProfileViewChange = (view: ProfileViewType) => {
+    setCurrentProfileView(view);
+  };
+
   // Loading state
   if (profileLoading) {
     return (
@@ -562,200 +1101,15 @@ export const ProfilePage: React.FC = () => {
           </div>
         </header>
 
-        {/* Profile Section */}
-        <div ref={profileSectionRef} className="pt-20 px-4 pb-6">
-          {profileUser.profileVersion === "standard" ? (
-            // Standard Profile Layout
-            <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="relative">
-                    <Avatar className="w-20 h-20 ring-4 ring-gray-100">
-                      <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
-                      <AvatarFallback className="text-2xl bg-gradient-to-br from-gray-100 to-gray-200">
-                        {profileUser.name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white border-2 border-gray-200 hover:bg-gray-50"
-                    >
-                      <EditIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h1 className="text-2xl font-bold text-gray-900">{profileUser.name}</h1>
-                      {profileUser.verified && (
-                        <Badge className="bg-blue-100 text-blue-800 text-xs">
-                          Verified
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {profileUser.title && profileUser.company && (
-                      <p className="text-gray-600 mb-1">
-                        {profileUser.title} at {profileUser.company}
-                      </p>
-                    )}
-                    
-                    {profileUser.location && (
-                      <p className="text-gray-500 text-sm mb-3">{profileUser.location}</p>
-                    )}
-                    
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                      <span>{profileUser.mutualConnections} mutual connections</span>
-                      <span>• Joined {formatDistanceToNow(new Date(profileUser.joinedAt), { addSuffix: true })}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Action Buttons */}
-                <div className="flex gap-3 mb-6">
-                  <Button
-                    onClick={handleMessage}
-                    className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-                  >
-                    <MessageCircleIcon className="w-4 h-4 mr-2" />
-                    Message
-                  </Button>
-                  
-                  <Button
-                    onClick={handleConnect}
-                    variant="outline"
-                    className="flex-1"
-                    disabled={profileUser.isConnected}
-                  >
-                    <UserPlusIcon className="w-4 h-4 mr-2" />
-                    {profileUser.isConnected ? "Connected" : "Connect"}
-                  </Button>
-                  
-                  {profileUser.website && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(profileUser.website, '_blank')}
-                      className="social-icon"
-                    >
-                      <ExternalLinkIcon className="w-4 h-4" />
-                    </Button>
-                  )}
-                  
-                  {profileUser.linkedinUrl && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(profileUser.linkedinUrl, '_blank')}
-                      className="social-icon text-blue-600 hover:bg-blue-50"
-                    >
-                      <LinkedinIcon className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-                
-                {/* Bio */}
-                {profileUser.bio && (
-                  <p className="text-gray-700 leading-relaxed">{profileUser.bio}</p>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            // Funky Profile Layout
-            <Card className="bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 rounded-2xl border-2 border-dashed border-purple-200 shadow-lg">
-              <CardContent className="p-6">
-                <div className="text-center mb-6">
-                  <div className="relative inline-block">
-                    <Avatar className="w-24 h-24 ring-4 ring-white shadow-lg">
-                      <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
-                      <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-400 to-pink-400 text-white">
-                        {profileUser.name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center animate-bounce">
-                      ✨
-                    </div>
-                  </div>
-                  
-                  <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{profileUser.name}</h1>
-                  <p className="text-purple-600 font-semibold mb-4">What lights you up outside of work?</p>
-                  
-                  {/* Social Media Links */}
-                  <div className="flex justify-center gap-3 mb-6">
-                    {profileUser.instagramUrl && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => window.open(profileUser.instagramUrl, '_blank')}
-                        className="social-icon text-pink-600 hover:bg-pink-50 border-pink-200"
-                      >
-                        <InstagramIcon className="w-5 h-5" />
-                      </Button>
-                    )}
-                    {profileUser.tiktokUrl && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => window.open(profileUser.tiktokUrl, '_blank')}
-                        className="social-icon text-black hover:bg-gray-50"
-                      >
-                        <span className="font-bold text-sm">TT</span>
-                      </Button>
-                    )}
-                  </div>
-                  
-                  {/* Bio */}
-                  {profileUser.bio && (
-                    <p className="text-gray-700 leading-relaxed mb-6">{profileUser.bio}</p>
-                  )}
-                  
-                  {/* Virtue Tags using StickyNote */}
-                  {profileUser.virtues && profileUser.virtues.length > 0 && (
-                    <div className="flex justify-center gap-4 flex-wrap">
-                      {profileUser.virtues.map((virtue, index) => (
-                        <div key={virtue} className={`virtue-tag`}>
-                          <StickyNote
-                            content={virtue}
-                            backgroundColor={
-                              index % 4 === 0 ? "#FFE066" :
-                              index % 4 === 1 ? "#FF6B6B" :
-                              index % 4 === 2 ? "#4ECDC4" : "#95E1D3"
-                            }
-                            width={80}
-                            height={60}
-                            rotation={index % 2 === 0 ? 5 : -5}
-                            className="text-xs font-semibold"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleMessage}
-                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-                  >
-                    <MessageCircleIcon className="w-4 h-4 mr-2" />
-                    Message
-                  </Button>
-                  
-                  <Button
-                    onClick={handleConnect}
-                    variant="outline"
-                    className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
-                    disabled={profileUser.isConnected}
-                  >
-                    <UserPlusIcon className="w-4 h-4 mr-2" />
-                    {profileUser.isConnected ? "Connected" : "Connect"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+        {/* Swipeable Profile Section */}
+        <div ref={profileSectionRef} className="pt-20">
+          <SwipeableProfile
+            profileUser={profileUser}
+            currentProfileView={currentProfileView}
+            onProfileViewChange={handleProfileViewChange}
+            onConnect={handleConnect}
+            onMessage={handleMessage}
+          />
         </div>
 
         {/* Tabbed Content */}
