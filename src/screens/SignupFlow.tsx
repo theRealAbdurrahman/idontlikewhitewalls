@@ -53,25 +53,55 @@ const CONNECTION_LABELS = [
 ] as const;
 
 /**
- * Pre-defined interests beyond work with colors for sticky notes
+ * Pre-defined personality archetype options with specific colors for sticky notes
  */
 const INTEREST_OPTIONS = [
-  { label: "Travel", color: "#FFE066" },
-  { label: "Cooking", color: "#FF6B6B" },
-  { label: "Photography", color: "#4ECDC4" },
-  { label: "Music", color: "#95E1D3" },
-  { label: "Sports", color: "#FFB347" },
-  { label: "Reading", color: "#DDA0DD" },
-  { label: "Gaming", color: "#87CEEB" },
-  { label: "Art", color: "#F0E68C" },
-  { label: "Fitness", color: "#98FB98" },
-  { label: "Movies", color: "#FFA07A" },
-  { label: "Nature", color: "#90EE90" },
-  { label: "Technology", color: "#ADD8E6" },
-  { label: "Fashion", color: "#FFB6C1" },
-  { label: "Dancing", color: "#FFEFD5" },
-  { label: "Writing", color: "#E6E6FA" },
+  // 87CEEB - Light Sky Blue
+  { label: "Strategist", color: "#87CEEB" },
+  { label: "Visionary", color: "#87CEEB" },
+  { label: "Logical", color: "#87CEEB" },
+  
+  // Brown - Dark Brown
+  { label: "Architect", color: "#8B4513" },
+  { label: "Engineer", color: "#8B4513" },
+  { label: "Grounded", color: "#8B4513" },
+  
+  // DDA0DD - Plum
+  { label: "Artist", color: "#DDA0DD" },
+  { label: "Storyteller", color: "#DDA0DD" },
+  { label: "Creative", color: "#DDA0DD" },
+  
+  // 90EE90 - Light Green
+  { label: "Host", color: "#90EE90" },
+  { label: "Connector", color: "#90EE90" },
+  { label: "Balanced", color: "#90EE90" },
+  
+  // FF6B6B - Light Red
+  { label: "Catalyst", color: "#FF6B6B" },
+  { label: "Rebel", color: "#FF6B6B" },
+  { label: "Explorer", color: "#FF6B6B" },
+  
+  // FFE066 - Yellow
+  { label: "Mentor", color: "#FFE066" },
+  { label: "Healer", color: "#FFE066" },
+  { label: "Coach", color: "#FFE066" },
+  
+  // FFB6C1 - Light Pink
+  { label: "Empath", color: "#FFB6C1" },
+  { label: "Caregiver", color: "#FFB6C1" },
+  { label: "Intuitive", color: "#FFB6C1" },
+  
+  // Gray - Medium Gray
+  { label: "Coordinator", color: "#808080" },
+  { label: "Planner", color: "#808080" },
+  { label: "Efficient", color: "#808080" },
+  
+  // 4ECDC4 - Medium Turquoise
+  { label: "Guardian", color: "#4ECDC4" },
+  { label: "Loyal", color: "#4ECDC4" },
+  { label: "Protective", color: "#4ECDC4" },
 ] as const;
+
 /**
  * Custom styles for animations and interactions
  */
@@ -241,7 +271,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
 
   return (
     <div className="form-container space-y-8">
-      {/* Question 1: Who would you like to connect with? */}
+      {/* Question 1: My professional background is... */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-900 leading-tight">
           My professional background is...
@@ -377,7 +407,7 @@ const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => 
 };
 
 /**
- * Step 2 Component - Interests Beyond Work
+ * Step 2 Component - Personality Archetypes
  */
 interface Step2Props {
   data: Step2Data;
@@ -473,14 +503,14 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-gray-900 leading-tight">
-          What lights you up outside of work?
+          Which personality archetypes resonate with you?
         </h2>
         <p className="text-gray-600 text-base">
-          Select your interests to help others connect with you on a personal level
+          Select the archetypes that best describe your personality and working style
         </p>
       </div>
 
-      {/* Interests Grid */}
+      {/* Personality Archetypes Grid */}
       <div className="space-y-6">
         <div className="interest-grid">
           {INTEREST_OPTIONS.map((option) => {
@@ -499,7 +529,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
                   }
                 }}
                 aria-pressed={isSelected}
-                aria-label={`Toggle ${option.label} interest`}
+                aria-label={`Toggle ${option.label} personality archetype`}
               >
                   <div 
                     className={`transition-all duration-200 ${
@@ -536,7 +566,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
           .length > 0 && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 text-center">
-              Your Custom Interests
+              Your Custom Archetypes
             </h3>
             <div className="interest-grid">
               {data.interests
@@ -547,7 +577,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
                     className="interest-note selected relative"
                     role="button"
                     tabIndex={0}
-                    aria-label={`Remove ${interest} custom interest`}
+                    aria-label={`Remove ${interest} custom archetype`}
                   >
                     <div 
                       className="transition-all duration-200 transform scale-110"
@@ -571,7 +601,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
                       size="sm"
                       onClick={() => handleRemoveInterest(interest)}
                       className="absolute -top-2 -right-2 w-6 h-6 p-0 bg-red-500 hover:bg-red-600 text-white rounded-full z-10"
-                      aria-label={`Remove ${interest} interest`}
+                      aria-label={`Remove ${interest} archetype`}
                     >
                       <XIcon className="w-3 h-3" />
                     </Button>
@@ -581,7 +611,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
           </div>
         )}
 
-        {/* Add Custom Interest */}
+        {/* Add Custom Archetype */}
         <div className="flex justify-center">
           {isAddingCustom ? (
             <div className="custom-interest-input flex gap-2 max-w-xs">
@@ -589,11 +619,11 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
                 value={customInterest}
                 onChange={(e) => setCustomInterest(e.target.value)}
                 onKeyPress={handleCustomInterestKeyPress}
-                placeholder="Enter your interest"
+                placeholder="Enter your archetype"
                 className="flex-1 text-sm"
                 maxLength={20}
                 autoFocus
-                aria-label="Custom interest"
+                aria-label="Custom personality archetype"
               />
               <Button
                 type="button"
@@ -623,7 +653,7 @@ const Step2: React.FC<Step2Props> = ({ data, onDataChange, onNext, onBack }) => 
               variant="outline"
               onClick={() => setIsAddingCustom(true)}
               className="label-button flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50 border-dashed"
-              aria-label="Add custom interest"
+              aria-label="Add custom personality archetype"
             >
               <PlusIcon className="w-4 h-4" />
               Add your own
@@ -1076,7 +1106,7 @@ export const SignupFlow: React.FC = () => {
           showBack: true,
           nextText: "Next",
           nextDisabled: false,
-          footerNote: `Selected: ${signupData.step2.interests.length} interest${signupData.step2.interests.length !== 1 ? 's' : ''}`
+          footerNote: `Selected: ${signupData.step2.interests.length} archetype${signupData.step2.interests.length !== 1 ? 's' : ''}`
         };
       case 3:
         return {
