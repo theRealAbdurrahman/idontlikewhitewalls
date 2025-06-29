@@ -76,6 +76,9 @@ export const Home: React.FC = () => {
     return rawQuestions.map((question) => {
       const userData = getQuestionUserData(question);
       
+      // Access interaction counts from backend response (they might not be in TypeScript types yet)
+      const questionWithCounts = question as any;
+      
       return {
         id: question.id,
         authorId: question.user_id,
@@ -90,9 +93,9 @@ export const Home: React.FC = () => {
         createdAt: question.created_at || new Date().toISOString(),
         visibility: "anyone" as const,
         isAnonymous: question.is_anonymous || false,
-        upvotes: 0, // Will be calculated from interactions
-        meTooCount: 0, // Will be calculated from interactions  
-        canHelpCount: 0, // Will be calculated from interactions
+        upvotes: questionWithCounts.uplifts_count || 0, // Real count from backend
+        meTooCount: questionWithCounts.me_too_count || 0, // Real count from backend  
+        canHelpCount: questionWithCounts.i_can_help_count || 0, // Real count from backend
         isUpvoted: false, // Will be determined from user's interactions
         isMeToo: false, // Will be determined from user's interactions
         isBookmarked: false, // Will be determined from user's interactions
