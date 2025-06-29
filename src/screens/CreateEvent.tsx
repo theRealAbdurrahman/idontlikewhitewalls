@@ -20,6 +20,7 @@ import {
   Edit2Icon
 } from "lucide-react";
 import { useCreateEventApiV1EventsPost } from "../api-client/api-client";
+import { useCacheManager } from "../hooks/useCacheManager";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -133,6 +134,7 @@ export const CreateEvent: React.FC = () => {
   const { user } = useAuthStore();
   const { events } = useAppStore();
   const { toast } = useToast();
+  const { afterEventCreate } = useCacheManager();
   
   // Local state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -355,6 +357,9 @@ export const CreateEvent: React.FC = () => {
       });
 
       console.log("Event created successfully:", response);
+
+      // Invalidate events cache using centralized cache manager
+      afterEventCreate(response.data?.id);
 
       // TODO: In a real app, you would also:
       // - Upload banner image to storage service
