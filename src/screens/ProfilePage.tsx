@@ -373,6 +373,7 @@ const customStyles = `
     border-radius: 8px;
     padding: 8px;
     margin: -8px;
+    margin-top: 16px;
   }
   
   .collapsible-text.collapsed.truncatable {
@@ -890,7 +891,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                 <CollapsibleText
                   text={renderConnectDetails(profileUser.connectDetails)}
                   maxLines={4}
-                  className="connect-details-text text-gray-700 leading-relaxed"
+                  className="connect-details-text text-gray-700 leading-relaxed mt-4"
                   showIndicator={false}
                 />
               </CardContent>
@@ -915,7 +916,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                   </div>
 
                   <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{profileUser.name}</h1>
-                  <p className="text-purple-600 font-semibold mb-4">What lights you up outside of work?</p>
+                  {/* <p className="text-purple-600 font-semibold mb-4">What lights you up outside of work?</p> */}
 
                   {/* Social Media Links */}
                   <div className="flex justify-center gap-3 mb-6">
@@ -943,12 +944,12 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
 
                   {/* CollapsibleText for Funky Profile - Also updated to use CollapsibleText component */}
                   <div className="mb-6">
-                    <CollapsibleText
+                    {/* <CollapsibleText
                       text={renderConnectDetails(profileUser.connectDetails)}
                       maxLines={4}
                       className="connect-details-text text-gray-700 leading-relaxed"
                       showIndicator={false}
-                    />
+                    /> */}
                   </div>
 
                   {/* Virtue Tags using StickyNote */}
