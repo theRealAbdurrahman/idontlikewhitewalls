@@ -16,7 +16,10 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronDownIcon,
-  ChevronUpIcon
+  ChevronUpIcon,
+  ShareIcon,
+  MoreVerticalIcon,
+  HandshakeIcon
 } from "lucide-react";
 import { 
   useUserProfile,
@@ -37,6 +40,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../components/ui/tooltip";
 import { useAuthStore } from "../stores/authStore";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
@@ -424,6 +433,76 @@ const customStyles = `
     word-wrap: break-word;
     line-height: 1.6;
   }
+  
+  .profile-content-shadow {
+    box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+  }
+  
+  .action-button-tooltip {
+    background: #333333;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 4px;
+    position: relative;
+  }
+  
+  .action-button-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -4px;
+    border-width: 4px;
+    border-style: solid;
+    border-color: #333333 transparent transparent transparent;
+  }
+  
+  .minimalist-action-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid #E0E0E0;
+    color: #424242;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+  }
+  
+  .minimalist-action-button:hover {
+    background: #F5F5F5;
+    transform: translateY(-0.5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .minimalist-action-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #FFE066;
+  }
+  
+  .minimalist-action-button.primary {
+    background: #FFE066;
+    border-color: #FFE066;
+    color: #424242;
+  }
+  
+  .minimalist-action-button.primary:hover {
+    background: #FFD93D;
+    border-color: #FFD93D;
+  }
+  
+  .minimalist-action-button.linkedin {
+    color: #0077b5;
+  }
+  
+  .minimalist-action-button.linkedin:hover {
+    background: #E7F3FF;
+    border-color: #0077b5;
+  }
 `;
 
 /**
@@ -497,6 +576,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
   const [startX, setStartX] = useState(0);
   const [currentX, setCurrentX] = useState(0);
   const [translateX, setTranslateX] = useState(0);
+  const { toast } = useToast();
 
   /**
    * Handle touch start for swipe gestures
@@ -634,6 +714,26 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
     return `translateX(${baseTransform + swipeOffset}%)`;
   };
 
+  const handleLinkedInProfile = () => {
+    if (profileUser.linkedinUrl) {
+      window.open(profileUser.linkedinUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      toast({
+        title: "LinkedIn profile not available",
+        description: "This user hasn't linked their LinkedIn profile.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleOtherLinks = () => {
+    // For now, just show a toast. In a real app, this would show a menu of links
+    toast({
+      title: "Other links",
+      description: "Additional profile links coming soon.",
+    });
+  };
+
   return (
     <div className="px-4 pb-6">
 
@@ -717,47 +817,74 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                   </div>
                 </div>
                 
-                {/* Action Buttons */}
-                <div className="flex gap-3 mb-6">
-                  <Button
-                    onClick={onMessage}
-                    className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-                  >
-                    <MessageCircleIcon className="w-4 h-4 mr-2" />
-                    Message
-                  </Button>
-                  
-                  <Button
-                    onClick={onConnect}
-                    variant="outline"
-                    className="flex-1"
-                    disabled={profileUser.isConnected}
-                  >
-                    <UserPlusIcon className="w-4 h-4 mr-2" />
-                    {profileUser.isConnected ? "Connected" : "Connect"}
-                  </Button>
-                  
-                  {profileUser.website && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(profileUser.website, '_blank')}
-                      className="social-icon"
-                    >
-                      <ExternalLinkIcon className="w-4 h-4" />
-                    </Button>
-                  )}
-                  
-                  {profileUser.linkedinUrl && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(profileUser.linkedinUrl, '_blank')}
-                      className="social-icon text-blue-600 hover:bg-blue-50"
-                    >
-                      <LinkedinIcon className="w-4 h-4" />
-                    </Button>
-                  )}
+                {/* Action Buttons - Enhanced with minimalistic design */}
+                <div className="flex justify-center gap-4 mt-6">
+                  <TooltipProvider>
+                    {/* Message Button */}
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={onMessage}
+                          className="minimalist-action-button primary"
+                          aria-label="Send message"
+                        >
+                          <MessageCircleIcon className="w-5 h-5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="action-button-tooltip">
+                        Message
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Connect Button */}
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={onConnect}
+                          className="minimalist-action-button"
+                          aria-label="Connect with user"
+                        >
+                          <HandshakeIcon className="w-5 h-5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="action-button-tooltip">
+                        Connect
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* LinkedIn Profile Button */}
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleLinkedInProfile}
+                          className="minimalist-action-button linkedin"
+                          aria-label="View LinkedIn profile"
+                          disabled={!profileUser.linkedinUrl}
+                        >
+                          <LinkedinIcon className="w-5 h-5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="action-button-tooltip">
+                        LinkedIn Profile
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Other Links Button */}
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleOtherLinks}
+                          className="minimalist-action-button"
+                          aria-label="View other links"
+                        >
+                          <ExternalLinkIcon className="w-5 h-5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="action-button-tooltip">
+                        Other Links
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 
                 {/* CollapsibleText Section - Updated to use CollapsibleText component */}
