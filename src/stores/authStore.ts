@@ -91,48 +91,51 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         set({ isAuthenticated: authenticated });
       },
 
-      updateUserFromLogto: (logtoUser: any) => {
-        if (!logtoUser) {
+      updateUserFromLogto: (backendUser: any) => {
+        if (!backendUser) {
           set({ user: null, isAuthenticated: false });
           return;
         }
 
-        // Transform Logto user claims to our User interface
+        // Transform backend UserProfile to our User interface
         const transformedUser: User = {
-          // Core identity from Logto
-          id: logtoUser.sub || logtoUser.id || `logto_${Date.now()}`,
-          sub: logtoUser.sub,
-          auth_id: logtoUser.sub,
-          name: logtoUser.name || logtoUser.username || `${logtoUser.given_name || ''} ${logtoUser.family_name || ''}`.trim() || 'User',
-          email: logtoUser.email || '',
+          // Use backend UUID as the primary ID
+          id: backendUser.id,
+          sub: backendUser.auth_id, // Store Logto sub for reference
+          auth_id: backendUser.auth_id,
           
-          // Profile pictures (try multiple sources)
-          avatar: logtoUser.picture || logtoUser.avatar,
-          picture: logtoUser.picture,
-          profile_picture: logtoUser.picture,
+          // Name composition
+          name: `${backendUser.first_name || ''} ${backendUser.last_name || ''}`.trim() || 'User',
+          email: backendUser.email || '',
+          
+          // Profile pictures
+          avatar: backendUser.profile_picture,
+          picture: backendUser.profile_picture,
+          profile_picture: backendUser.profile_picture,
           
           // Name breakdown
-          first_name: logtoUser.given_name || logtoUser.name?.split(' ')[0] || '',
-          last_name: logtoUser.family_name || logtoUser.name?.split(' ').slice(1).join(' ') || '',
+          first_name: backendUser.first_name || '',
+          last_name: backendUser.last_name || '',
           
           // Social profiles
-          linkedinId: logtoUser.linkedin_id,
-          linkedin_url: logtoUser.linkedin_url,
+          linkedin_url: backendUser.linkedin_url,
           
-          // Profile data (may come from OIDC claims)
-          bio: logtoUser.bio,
-          title: logtoUser.job_title || logtoUser.title,
-          company: logtoUser.company || logtoUser.organization,
-          location: logtoUser.location || logtoUser.address?.locality,
+          // Profile data
+          bio: backendUser.bio,
+          title: backendUser.title,
+          company: '', // Not in backend yet
+          location: '', // Not in backend yet
           
-          // Default stats (will be updated from backend later)
+          // Default stats (will be calculated from backend interactions later)
           connections: 0,
           meTooCount: 0,
           canHelpCount: 0,
           questionsCount: 0,
-          verified: logtoUser.email_verified || false,
-          joinedAt: new Date().toISOString(),
+          verified: backendUser.is_active || false,
+          joinedAt: backendUser.created_at || new Date().toISOString(),
         };
+
+        console.log('Storing backend user in AuthStore:', transformedUser);
 
         set({ 
           user: transformedUser, 

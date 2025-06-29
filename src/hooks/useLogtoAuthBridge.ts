@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLogto } from '@logto/react';
 import { useAuthStore } from '../stores/authStore';
+import { fetchCurrentUser, LogtoUserData } from '../api-client/api-client';
 
 /**
  * Hook that bridges Logto authentication with our AuthStore
@@ -38,17 +39,30 @@ export const useLogtoAuthBridge = () => {
           const claims = await getIdTokenClaims();
           
           // Combine user info with ID token claims for full profile
-          const fullUserData = {
-            ...user,
-            ...claims,
+          const logtoUserData: LogtoUserData = {
+            sub: claims?.sub || user?.sub || `logto_${Date.now()}`,
+            email: claims?.email || user?.email,
+            name: claims?.name || user?.name,
+            given_name: claims?.given_name || user?.given_name,
+            family_name: claims?.family_name || user?.family_name,
+            picture: claims?.picture || user?.picture,
+            bio: claims?.bio,
+            job_title: claims?.job_title,
+            linkedin_url: claims?.linkedin_url,
           };
           
-          console.log('Syncing Logto user data to AuthStore:', fullUserData);
-          updateUserFromLogto(fullUserData);
+          console.log('Fetching backend user for Logto data:', logtoUserData);
+          
+          // Get or create user in backend
+          const backendUser = await fetchCurrentUser(logtoUserData);
+          
+          console.log('Backend user received:', backendUser);
+          
+          // Store backend user data (with UUID) in auth store
+          updateUserFromLogto(backendUser);
         } catch (error) {
-          console.error('Failed to get user claims:', error);
-          // Fallback to basic user data
-          updateUserFromLogto(user);
+          console.error('Failed to sync user with backend:', error);
+          setError('Failed to sync user data');
         }
       } else if (!isAuthenticated) {
         // Clear user data when not authenticated
@@ -57,7 +71,7 @@ export const useLogtoAuthBridge = () => {
     };
 
     syncUserData();
-  }, [isAuthenticated, isLoading, user, getIdTokenClaims, updateUserFromLogto]);
+  }, [isAuthenticated, isLoading, user, getIdTokenClaims, updateUserFromLogto, setError]);
 
   return {
     isAuthenticated,
