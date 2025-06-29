@@ -227,11 +227,9 @@ export const LocationInput: React.FC<LocationInputProps> = ({
    * Initial request after 500ms, then recurring requests every 1200ms if input changed
    */
   useEffect(() => {
-    // Clear any existing timers
-    clearAllTimers();
-
     // If input is empty or too short, reset everything
     if (!inputValue.trim() || inputValue.length < 3) {
+      clearAllTimers();
       setSuggestions([]);
       setIsLoading(false);
       isFirstRequestModeRef.current = true;
@@ -247,15 +245,17 @@ export const LocationInput: React.FC<LocationInputProps> = ({
 
     // If we're in first request mode, start the initial timer
     if (isFirstRequestModeRef.current) {
+      clearAllTimers(); // Only clear timers when starting fresh
       startInitialTimer();
     }
-    // If we're in recurring mode and this is a new value, it will be picked up by the recurring timer
+    // If we're in recurring mode, let the existing timer handle the input change
+    // The recurring timer will detect the change and make a new request
 
-    // Cleanup function
+    // Cleanup function - only clear on unmount
     return () => {
-      clearAllTimers();
+      // Don't clear timers on every input change, only on unmount
     };
-  }, [inputValue, showSuggestions, startInitialTimer, clearAllTimers, cancelPreviousRequest]);
+  }, [inputValue, showSuggestions, startInitialTimer, cancelPreviousRequest]);
 
   /**
    * Cleanup effect - cancel requests and clear timers on component unmount
@@ -265,7 +265,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({
       clearAllTimers();
       cancelPreviousRequest();
     };
-  }, [clearAllTimers, cancelPreviousRequest]);
+  }, []);
 
   /**
    * Handle input change - provides immediate visual feedback
