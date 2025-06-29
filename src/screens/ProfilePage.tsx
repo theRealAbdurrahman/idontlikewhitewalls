@@ -13,15 +13,8 @@ import {
   HashIcon,
   TrashIcon,
   EditIcon as Edit2Icon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronDownIcon,
-  ChevronUpIcon
+  HandIcon
 } from "lucide-react";
-import { 
-  useUserProfile,
-  UserProfile as ApiUserProfile
-} from "../api-client/api-client";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -42,7 +35,7 @@ import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
 
 /**
- * Interface for user profile data used in the component
+ * Interface for user profile data
  */
 interface UserProfile {
   id: string;
@@ -50,7 +43,7 @@ interface UserProfile {
   title?: string;
   company?: string;
   location?: string;
-  connectDetails?: string;
+  bio?: string;
   avatar?: string;
   website?: string;
   linkedinUrl?: string;
@@ -62,6 +55,7 @@ interface UserProfile {
   joinedAt: string;
   profileVersion: "standard" | "funky";
   virtues?: string[];
+  connectDetails?: string; // Added connectDetails field
 }
 
 /**
@@ -76,12 +70,7 @@ interface PrivateNote {
 }
 
 /**
- * Profile view types for swipeable interface
- */
-type ProfileViewType = "standard" | "funky";
-
-/**
- * Props for the CollapsibleText component
+ * Interface for CollapsibleText component props
  */
 interface CollapsibleTextProps {
   text: string;
@@ -91,96 +80,222 @@ interface CollapsibleTextProps {
 }
 
 /**
- * CollapsibleText component that shows limited lines initially and expands on click
+ * CollapsibleText component for handling long text content
  */
 const CollapsibleText: React.FC<CollapsibleTextProps> = ({ 
   text, 
   maxLines = 4, 
-  className = "", 
-  showIndicator = false
+  className = "",
+  showIndicator = true 
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [needsTruncation, setNeedsTruncation] = useState(false);
+  const [shouldTruncate, setShouldTruncate] = useState(false);
   const textRef = useRef<HTMLDivElement>(null);
   const measuringRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * Check if text needs truncation by comparing full height vs limited height
-   */
   useEffect(() => {
     const checkTruncation = () => {
-      if (!textRef.current || !measuringRef.current) return;
-
-      const fullHeight = measuringRef.current.scrollHeight;
-      const lineHeight = parseInt(getComputedStyle(measuringRef.current).lineHeight, 10);
-      const maxHeight = lineHeight * maxLines;
-
-      setNeedsTruncation(fullHeight > maxHeight);
+      if (textRef.current && measuringRef.current) {
+        const fullHeight = measuringRef.current.scrollHeight;
+        const lineHeight = parseInt(window.getComputedStyle(measuringRef.current).lineHeight);
+        const maxHeight = lineHeight * maxLines;
+        setShouldTruncate(fullHeight > maxHeight);
+      }
     };
 
-    // Check truncation after component mounts and text changes
     checkTruncation();
-    
-    // Also check on window resize in case layout changes
     window.addEventListener('resize', checkTruncation);
     return () => window.removeEventListener('resize', checkTruncation);
   }, [text, maxLines]);
 
-  /**
-   * Toggle expanded state
-   */
   const handleToggle = () => {
-    if (needsTruncation) {
+    if (shouldTruncate) {
       setIsExpanded(!isExpanded);
     }
   };
 
   return (
-    <div className="collapsible-text-container">
-      {/* Hidden measuring element to determine full height */}
-      <div 
+    <div className={className}>
+      {/* Hidden measuring element */}
+      <div
         ref={measuringRef}
-        className={`collapsible-text-measuring ${className}`}
+        className="absolute invisible h-0 overflow-hidden"
+        style={{ width: textRef.current?.clientWidth || 'auto' }}
         aria-hidden="true"
       >
         {text}
       </div>
 
-      {/* Visible text element */}
-      <div 
+      {/* Visible text content */}
+      <div
         ref={textRef}
-        className={`collapsible-text ${className} ${needsTruncation ? 'truncatable' : ''} ${isExpanded ? 'expanded' : 'collapsed'}`}
-        onClick={handleToggle}
+        className={`leading-relaxed transition-all duration-300 ${
+          shouldTruncate && !isExpanded
+            ? `overflow-hidden text-ellipsis`
+            : ''
+        } ${shouldTruncate ? 'cursor-pointer hover:bg-gray-50 rounded-md p-2 -m-2' : ''}`}
         style={{
-          cursor: needsTruncation ? 'pointer' : 'default',
-          '--max-lines': maxLines
-        } as React.CSSProperties}
+          display: '-webkit-box',
+          WebkitLineClamp: shouldTruncate && !isExpanded ? maxLines : 'unset',
+          WebkitBoxOrient: 'vertical',
+          overflow: shouldTruncate && !isExpanded ? 'hidden' : 'visible',
+        }}
+        onClick={handleToggle}
+        role={shouldTruncate ? "button" : undefined}
+        tabIndex={shouldTruncate ? 0 : undefined}
+        onKeyPress={(e) => {
+          if (shouldTruncate && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            handleToggle();
+          }
+        }}
+        aria-expanded={shouldTruncate ? isExpanded : undefined}
+        aria-label={shouldTruncate ? `${isExpanded ? 'Collapse' : 'Expand'} text content` : undefined}
       >
         {text}
-        
-        {/* Expand/Collapse Indicator */}
-        {needsTruncation && showIndicator && (
-          <div className="collapsible-text-indicator">
-            {isExpanded ? (
-              <div className="indicator-content">
-                <span className="indicator-text">Show less</span>
-                <ChevronUpIcon className="indicator-icon" />
-              </div>
-            ) : (
-              <div className="indicator-content">
-                <span className="indicator-text">Show more</span>
-                <ChevronDownIcon className="indicator-icon" />
-              </div>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* Show more/less indicator */}
+      {shouldTruncate && showIndicator && (
+        <button
+          onClick={handleToggle}
+          className="mt-2 text-sm text-[#3ec6c6] hover:text-[#2ea5a5] flex items-center gap-1 font-medium transition-colors duration-200"
+          aria-label={isExpanded ? 'Show less text' : 'Show more text'}
+        >
+          {isExpanded ? (
+            <>
+              Show less
+              <svg className="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </>
+          ) : (
+            <>
+              Show more
+              <svg className="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 };
 
 /**
- * Custom styles for animations, transitions, swipe functionality, and collapsible text
+ * Interface for IconButton component props
+ */
+interface IconButtonProps {
+  icon: React.ReactNode;
+  tooltip: string;
+  onClick: () => void;
+  disabled?: boolean;
+  variant?: "default" | "primary" | "linkedin";
+  ariaLabel: string;
+}
+
+/**
+ * IconButton component with tooltip functionality
+ */
+const IconButton: React.FC<IconButtonProps> = ({ 
+  icon, 
+  tooltip, 
+  onClick, 
+  disabled = false, 
+  variant = "default",
+  ariaLabel 
+}) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipTimer, setTooltipTimer] = useState<NodeJS.Timeout | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const handleMouseEnter = () => {
+    if (disabled) return;
+    const timer = setTimeout(() => {
+      setShowTooltip(true);
+    }, 200);
+    setTooltipTimer(timer);
+  };
+
+  const handleMouseLeave = () => {
+    if (tooltipTimer) {
+      clearTimeout(tooltipTimer);
+      setTooltipTimer(null);
+    }
+    setShowTooltip(false);
+  };
+
+  const handleFocus = () => {
+    if (!disabled) {
+      setShowTooltip(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setShowTooltip(false);
+  };
+
+  const getButtonStyles = () => {
+    const baseStyles = "w-10 h-10 rounded-full p-0 transition-all duration-200 ease-in-out relative focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FFE066]";
+    
+    switch (variant) {
+      case "primary":
+        return `${baseStyles} bg-[#FFE066] text-gray-800 hover:bg-[#FFD700] hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none`;
+      case "linkedin":
+        return `${baseStyles} bg-[#F5F5F5] text-[#0077b5] hover:bg-[#0077b5] hover:text-white hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none`;
+      default:
+        return `${baseStyles} bg-[#F5F5F5] text-gray-600 hover:bg-[#FFE066] hover:text-gray-800 hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none`;
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={onClick}
+        disabled={disabled}
+        className={getButtonStyles()}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        aria-label={ariaLabel}
+        aria-describedby={showTooltip ? `tooltip-${ariaLabel.replace(/\s+/g, '-')}` : undefined}
+      >
+        {icon}
+      </button>
+      
+      {/* Tooltip */}
+      {showTooltip && (
+        <div
+          id={`tooltip-${ariaLabel.replace(/\s+/g, '-')}`}
+          role="tooltip"
+          className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm font-medium text-white bg-gray-800 rounded border-radius-4 shadow-lg whitespace-nowrap z-50 pointer-events-none"
+          style={{ 
+            background: '#333333',
+            borderRadius: '4px',
+            animation: 'fadeIn 0.2s ease-in-out'
+          }}
+        >
+          {tooltip}
+          {/* Tooltip arrow */}
+          <div 
+            className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0"
+            style={{
+              borderLeft: '4px solid transparent',
+              borderRight: '4px solid transparent',
+              borderTop: '4px solid #333333'
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Custom styles for animations and transitions
  */
 const customStyles = `
   .profile-collapse {
@@ -213,6 +328,11 @@ const customStyles = `
     50% { transform: translateY(-5px) rotate(1deg); }
   }
   
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+  
   .profile-header-sticky {
     backdrop-filter: blur(20px);
     background: rgba(240, 239, 235, 0.95);
@@ -226,673 +346,10 @@ const customStyles = `
   .social-icon:hover {
     transform: scale(1.1);
   }
-
-  /* Swipeable profile section styles */
-  .swipeable-container {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    touch-action: pan-y pinch-zoom;
-  }
-  
-  .swipeable-content {
-    display: flex;
-    width: 200%;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .swipeable-content.swiping {
-    transition: none;
-  }
-  
-  .profile-view {
-    width: 50%;
-    flex-shrink: 0;
-  }
-  
-  .profile-indicators {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 16px;
-    margin-bottom: 8px;
-  }
-  
-  .profile-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #d1d5db;
-    transition: all 0.2s ease-out;
-    cursor: pointer;
-  }
-  
-  .profile-indicator.active {
-    background-color: #3ec6c6;
-    transform: scale(1.2);
-  }
-  
-  .profile-indicator:hover {
-    background-color: #9ca3af;
-  }
-  
-  .profile-indicator.active:hover {
-    background-color: #2ea5a5;
-  }
-  
-  .swipe-nav-button {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease-out;
-    z-index: 10;
-    opacity: 0.7;
-  }
-  
-  .swipe-nav-button:hover {
-    opacity: 1;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  
-  .swipe-nav-button.left {
-    left: 12px;
-  }
-  
-  .swipe-nav-button.right {
-    right: 12px;
-  }
-  
-  /* Hide nav buttons on mobile to prioritize touch gestures */
-  @media (max-width: 768px) {
-    .swipe-nav-button {
-      display: none;
-    }
-  }
-  
-  .profile-view-label {
-    text-align: center;
-    font-size: 12px;
-    color: #6b7280;
-    margin-bottom: 8px;
-    font-weight: 500;
-  }
-
-  /* Collapsible text component styles */
-  .collapsible-text-container {
-    position: relative;
-  }
-  
-  .collapsible-text-measuring {
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
-    width: 100%;
-    visibility: hidden;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    line-height: 1.6;
-  }
-  
-  .collapsible-text {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    line-height: 1.6;
-    position: relative;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .collapsible-text.truncatable {
-    user-select: none;
-  }
-  
-  .collapsible-text.truncatable:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-    border-radius: 8px;
-    padding: 8px;
-    margin: -8px;
-  }
-  
-  .collapsible-text.collapsed.truncatable {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: var(--max-lines);
-    overflow: hidden;
-    max-height: calc(1.6em * var(--max-lines));
-  }
-  
-  .collapsible-text.expanded {
-    display: block;
-    max-height: none;
-    overflow: visible;
-  }
-  
-  .collapsible-text-indicator {
-    display: inline-flex;
-    align-items: center;
-    margin-top: 8px;
-    padding: 4px 8px;
-    border-radius: 20px;
-    background-color: rgba(62, 198, 198, 0.1);
-    color: #3ec6c6;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s ease-out;
-    cursor: pointer;
-    border: 1px solid rgba(62, 198, 198, 0.2);
-  }
-  
-  .collapsible-text-indicator:hover {
-    background-color: rgba(62, 198, 198, 0.15);
-    border-color: rgba(62, 198, 198, 0.3);
-    transform: translateY(-1px);
-  }
-  
-  .indicator-content {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  
-  .indicator-text {
-    font-size: 12px;
-    font-weight: 500;
-  }
-  
-  .indicator-icon {
-    width: 14px;
-    height: 14px;
-    transition: transform 0.2s ease-out;
-  }
-  
-  .collapsible-text.expanded .indicator-icon {
-    transform: rotate(180deg);
-  }
-
-  /* Base connect details text styling to preserve line breaks */
-  .connect-details-text {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    line-height: 1.6;
-  }
 `;
 
 /**
- * Default placeholder text for connectDetails when not available
- */
-const DEFAULT_CONNECT_DETAILS = "Hi there! I'm excited to connect with others who share my interests in technology and innovation. Let's collaborate and create something amazing together. Hi there! I'm excited to connect with others who share my interests in technology and innovation. Let's collaborate and create something amazing together. Hi there! I'm excited to connect with others who share my interests in technology and innovation. Let's collaborate and create something amazing together.";
-
-/**
- * Transform API UserProfile to component UserProfile interface
- * Now uses bio field as connectDetails from signup step 2
- */
-const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
-  return {
-    id: apiUser.id,
-    name: `${apiUser.first_name || ''} ${apiUser.last_name || ''}`.trim() || 'Unknown User',
-    title: apiUser.title || undefined,
-    company: undefined, // Not available in API yet
-    location: undefined, // Not available in API yet  
-    // Use bio field as connectDetails from signup step 2
-    connectDetails: apiUser.connectDetails && apiUser.connectDetails.trim() ? apiUser.connectDetails : DEFAULT_CONNECT_DETAILS,
-    avatar: apiUser.profile_picture || undefined,
-    website: undefined, // Not available in API yet
-    linkedinUrl: apiUser.linkedin_url || undefined,
-    instagramUrl: undefined, // Not available in API yet
-    tiktokUrl: undefined, // Not available in API yet
-    verified: false, // Default value - could be enhanced later
-    isConnected: false, // Default value - would need connection status API
-    mutualConnections: Math.floor(Math.random() * 20), // Mock value for now
-    joinedAt: apiUser.created_at,
-    profileVersion: "standard" as const, // Default profile version
-    virtues: ["Creative", "Innovative", "Collaborative", "Authentic", "Empathetic", "Visionary"], // Mock virtues for funky profile
-  };
-};
-
-/**
- * Utility function to safely render connectDetails with proper line breaks
- * @param connectDetails - The connectDetails text from the user profile
- * @returns The text to display, with fallback to default placeholder
- */
-const renderConnectDetails = (connectDetails?: string): string => {
-  // Handle undefined, null, or empty strings
-  if (!connectDetails || connectDetails.trim() === '') {
-    return DEFAULT_CONNECT_DETAILS;
-  }
-  
-  // Return the connectDetails as-is to preserve original formatting
-  return connectDetails.trim();
-};
-
-/**
- * Swipeable Profile Section Component
- */
-interface SwipeableProfileProps {
-  profileUser: UserProfile;
-  currentProfileView: ProfileViewType;
-  onProfileViewChange: (view: ProfileViewType) => void;
-  onConnect: () => void;
-  onMessage: () => void;
-}
-
-const SwipeableProfile: React.FC<SwipeableProfileProps> = ({ 
-  profileUser, 
-  currentProfileView, 
-  onProfileViewChange,
-  onConnect,
-  onMessage 
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [currentX, setCurrentX] = useState(0);
-  const [translateX, setTranslateX] = useState(0);
-
-  /**
-   * Handle touch start for swipe gestures
-   */
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setIsDragging(true);
-    setStartX(e.touches[0].clientX);
-    setCurrentX(e.touches[0].clientX);
-    
-    if (contentRef.current) {
-      contentRef.current.classList.add('swiping');
-    }
-  };
-
-  /**
-   * Handle touch move for swipe gestures
-   */
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    
-    setCurrentX(e.touches[0].clientX);
-    const deltaX = e.touches[0].clientX - startX;
-    const containerWidth = containerRef.current?.offsetWidth || 0;
-    const maxTranslate = containerWidth * 0.3; // Limit swipe distance
-    
-    // Calculate new translate position
-    let newTranslateX = deltaX;
-    if (currentProfileView === "funky") {
-      newTranslateX = -containerWidth + deltaX;
-    }
-    
-    // Apply resistance at boundaries
-    if (newTranslateX > maxTranslate) {
-      newTranslateX = maxTranslate;
-    } else if (newTranslateX < -containerWidth - maxTranslate) {
-      newTranslateX = -containerWidth - maxTranslate;
-    }
-    
-    setTranslateX(newTranslateX);
-  };
-
-  /**
-   * Handle touch end to complete or cancel swipe
-   */
-  const handleTouchEnd = () => {
-    if (!isDragging) return;
-    
-    setIsDragging(false);
-    
-    if (contentRef.current) {
-      contentRef.current.classList.remove('swiping');
-    }
-    
-    const deltaX = currentX - startX;
-    const threshold = 50; // Minimum swipe distance to trigger change
-    
-    if (Math.abs(deltaX) > threshold) {
-      if (deltaX > 0 && currentProfileView === "funky") {
-        // Swipe right - go to standard
-        onProfileViewChange("standard");
-      } else if (deltaX < 0 && currentProfileView === "standard") {
-        // Swipe left - go to funky
-        onProfileViewChange("funky");
-      }
-    }
-    
-    // Reset translate position
-    setTranslateX(0);
-  };
-
-  /**
-   * Handle mouse events for desktop swipe simulation
-   */
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setStartX(e.clientX);
-    setCurrentX(e.clientX);
-    
-    if (contentRef.current) {
-      contentRef.current.classList.add('swiping');
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    
-    setCurrentX(e.clientX);
-    const deltaX = e.clientX - startX;
-    const containerWidth = containerRef.current?.offsetWidth || 0;
-    const maxTranslate = containerWidth * 0.3;
-    
-    let newTranslateX = deltaX;
-    if (currentProfileView === "funky") {
-      newTranslateX = -containerWidth + deltaX;
-    }
-    
-    if (newTranslateX > maxTranslate) {
-      newTranslateX = maxTranslate;
-    } else if (newTranslateX < -containerWidth - maxTranslate) {
-      newTranslateX = -containerWidth - maxTranslate;
-    }
-    
-    setTranslateX(newTranslateX);
-  };
-
-  const handleMouseUp = () => {
-    if (!isDragging) return;
-    
-    setIsDragging(false);
-    
-    if (contentRef.current) {
-      contentRef.current.classList.remove('swiping');
-    }
-    
-    const deltaX = currentX - startX;
-    const threshold = 50;
-    
-    if (Math.abs(deltaX) > threshold) {
-      if (deltaX > 0 && currentProfileView === "funky") {
-        onProfileViewChange("standard");
-      } else if (deltaX < 0 && currentProfileView === "standard") {
-        onProfileViewChange("funky");
-      }
-    }
-    
-    setTranslateX(0);
-  };
-
-  /**
-   * Calculate transform position based on current view
-   */
-  const getTransformValue = () => {
-    const baseTransform = currentProfileView === "standard" ? 0 : -50;
-    const swipeOffset = isDragging ? (translateX / (containerRef.current?.offsetWidth || 1)) * 50 : 0;
-    return `translateX(${baseTransform + swipeOffset}%)`;
-  };
-
-  return (
-    <div className="px-4 pb-6">
-
-      <div 
-        ref={containerRef}
-        className="swipeable-container relative"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
-        {/* Navigation buttons for desktop */}
-        <button
-          className="swipe-nav-button left"
-          onClick={() => onProfileViewChange("standard")}
-          disabled={currentProfileView === "standard"}
-          style={{ opacity: currentProfileView === "standard" ? 0.3 : 0.7 }}
-        >
-          <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
-        </button>
-        
-        <button
-          className="swipe-nav-button right"
-          onClick={() => onProfileViewChange("funky")}
-          disabled={currentProfileView === "funky"}
-          style={{ opacity: currentProfileView === "funky" ? 0.3 : 0.7 }}
-        >
-          <ChevronRightIcon className="w-5 h-5 text-gray-600" />
-        </button>
-
-        <div 
-          ref={contentRef}
-          className="swipeable-content"
-          style={{ transform: getTransformValue() }}
-        >
-          {/* Standard Profile View */}
-          <div className="profile-view">
-            <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="relative">
-                    <Avatar className="w-20 h-20 ring-4 ring-gray-100">
-                      <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
-                      <AvatarFallback className="text-2xl bg-gradient-to-br from-gray-100 to-gray-200">
-                        {profileUser.name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white border-2 border-gray-200 hover:bg-gray-50"
-                    >
-                      <EditIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h1 className="text-2xl font-bold text-gray-900">{profileUser.name}</h1>
-                      {profileUser.verified && (
-                        <Badge className="bg-blue-100 text-blue-800 text-xs">
-                          Verified
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {profileUser.title && profileUser.company && (
-                      <p className="text-gray-600 mb-1">
-                        {profileUser.title} at {profileUser.company}
-                      </p>
-                    )}
-                    
-                    {profileUser.location && (
-                      <p className="text-gray-500 text-sm mb-3">{profileUser.location}</p>
-                    )}
-                    {/* TODO: add the virtues and tags here */}
-
-                  </div>
-                </div>
-                
-                {/* Action Buttons */}
-                <div className="flex gap-3 mb-6">
-                  <Button
-                    onClick={onMessage}
-                    className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-                  >
-                    <MessageCircleIcon className="w-4 h-4 mr-2" />
-                    Message
-                  </Button>
-                  
-                  <Button
-                    onClick={onConnect}
-                    variant="outline"
-                    className="flex-1"
-                    disabled={profileUser.isConnected}
-                  >
-                    <UserPlusIcon className="w-4 h-4 mr-2" />
-                    {profileUser.isConnected ? "Connected" : "Connect"}
-                  </Button>
-                  
-                  {profileUser.website && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(profileUser.website, '_blank')}
-                      className="social-icon"
-                    >
-                      <ExternalLinkIcon className="w-4 h-4" />
-                    </Button>
-                  )}
-                  
-                  {profileUser.linkedinUrl && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(profileUser.linkedinUrl, '_blank')}
-                      className="social-icon text-blue-600 hover:bg-blue-50"
-                    >
-                      <LinkedinIcon className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-                
-                {/* CollapsibleText Section - Updated to use CollapsibleText component */}
-                <CollapsibleText 
-                  text={renderConnectDetails(profileUser.connectDetails)}
-                  maxLines={4}
-                  className="connect-details-text text-gray-700 leading-relaxed"
-                  showIndicator={false}
-                />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Funky Profile View */}
-          <div className="profile-view">
-            <Card className="bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 rounded-2xl border-2 border-dashed border-purple-200 shadow-lg">
-              <CardContent className="p-6">
-                <div className="text-center mb-6">
-                  <div className="relative inline-block">
-                    <Avatar className="w-24 h-24 ring-4 ring-white shadow-lg">
-                      <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
-                      <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-400 to-pink-400 text-white">
-                        {profileUser.name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center animate-bounce">
-                      ✨
-                    </div>
-                  </div>
-                  
-                  <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{profileUser.name}</h1>
-                  <p className="text-purple-600 font-semibold mb-4">What lights you up outside of work?</p>
-                  
-                  {/* Social Media Links */}
-                  <div className="flex justify-center gap-3 mb-6">
-                    {profileUser.instagramUrl && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => window.open(profileUser.instagramUrl, '_blank')}
-                        className="social-icon text-pink-600 hover:bg-pink-50 border-pink-200"
-                      >
-                        <InstagramIcon className="w-5 h-5" />
-                      </Button>
-                    )}
-                    {profileUser.tiktokUrl && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => window.open(profileUser.tiktokUrl, '_blank')}
-                        className="social-icon text-black hover:bg-gray-50"
-                      >
-                        <span className="font-bold text-sm">TT</span>
-                      </Button>
-                    )}
-                  </div>
-                  
-                  {/* CollapsibleText for Funky Profile - Also updated to use CollapsibleText component */}
-                  <div className="mb-6">
-                    <CollapsibleText 
-                      text={renderConnectDetails(profileUser.connectDetails)}
-                      maxLines={4}
-                      className="connect-details-text text-gray-700 leading-relaxed"
-                      showIndicator={false}
-                    />
-                  </div>
-                  
-                  {/* Virtue Tags using StickyNote */}
-                  {profileUser.virtues && profileUser.virtues.length > 0 && (
-                    <div className="flex justify-center gap-4 flex-wrap mb-6">
-                      {profileUser.virtues.slice(0, 6).map((virtue, index) => (
-                        <div key={virtue} className={`virtue-tag`}>
-                          <StickyNote
-                            content={virtue}
-                            backgroundColor={
-                              index % 4 === 0 ? "#FFE066" :
-                              index % 4 === 1 ? "#FF6B6B" :
-                              index % 4 === 2 ? "#4ECDC4" : "#95E1D3"
-                            }
-                            width={80}
-                            height={60}
-                            rotation={index % 2 === 0 ? 5 : -5}
-                            className="text-xs font-semibold"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <Button
-                    onClick={onMessage}
-                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-                  >
-                    <MessageCircleIcon className="w-4 h-4 mr-2" />
-                    Message
-                  </Button>
-                  
-                  <Button
-                    onClick={onConnect}
-                    variant="outline"
-                    className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
-                    disabled={profileUser.isConnected}
-                  >
-                    <UserPlusIcon className="w-4 h-4 mr-2" />
-                    {profileUser.isConnected ? "Connected" : "Connect"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-
-      {/* Profile View Indicators */}
-      <div className="profile-indicators">
-        <div 
-          className={`profile-indicator ${currentProfileView === "standard" ? "active" : ""}`}
-          onClick={() => onProfileViewChange("standard")}
-          aria-label="Switch to professional profile view"
-        />
-        <div 
-          className={`profile-indicator ${currentProfileView === "funky" ? "active" : ""}`}
-          onClick={() => onProfileViewChange("funky")}
-          aria-label="Switch to personal profile view"
-        />
-      </div>
-    </div>
-  );
-};
-
-/**
- * ProfilePage component for viewing user profiles with dedicated API integration
+ * ProfilePage component for viewing user profiles
  */
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -907,86 +364,105 @@ export const ProfilePage: React.FC = () => {
   const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
   const [userQuestions, setUserQuestions] = useState<any[]>([]);
   const [privateNotes, setPrivateNotes] = useState<PrivateNote[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
   const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState("");
   const [editingNote, setEditingNote] = useState<PrivateNote | null>(null);
   
-  // New state for swipeable profile views
-  const [currentProfileView, setCurrentProfileView] = useState<ProfileViewType>("standard");
-  
   // Refs for scroll behavior
   const headerRef = useRef<HTMLDivElement>(null);
   const profileSectionRef = useRef<HTMLDivElement>(null);
 
-  // Fetch user profile from API using the new dedicated hook (React Query v5 compatible)
-  const { 
-    data: userProfileData, 
-    isLoading: profileLoading, 
-    error: profileError,
-    refetch: refetchProfile 
-  } = useUserProfile(id);
-
   /**
-   * Handle success and error cases using useEffect (React Query v5 pattern)
+   * Load user profile data
    */
   useEffect(() => {
-    if (userProfileData) {
-      console.log("✅ User profile loaded successfully:", userProfileData);
-    }
-  }, [userProfileData]);
-
-  useEffect(() => {
-    if (profileError) {
-      console.error("❌ Failed to load user profile:", profileError);
-    }
-  }, [profileError]);
-
-  /**
-   * Load and transform user profile data from API
-   */
-  useEffect(() => {
-    if (!id) {
-      console.error("❌ No user ID provided in URL params");
-      return;
-    }
-
-    if (profileLoading) {
-      console.log("🔄 Loading user profile from API...");
-      return;
-    }
-
-    if (profileError) {
-      console.error("❌ Error loading user profile:", profileError);
-      // Error is handled by the error state below
-      return;
-    }
-
-    if (userProfileData) {
-      console.log("📋 Transforming API user profile data:", userProfileData);
+    const loadProfileData = async () => {
+      setLoading(true);
       
-      // Transform API user data to our profile format
-      const transformedProfile = transformApiUserToProfile(userProfileData);
-      setProfileUser(transformedProfile);
-      
-      // Load user's questions
-      const userQuestionsList = questions.filter(q => q.authorId === id);
-      setUserQuestions(userQuestionsList);
-      
-      // Load private notes from localStorage
-      if (currentUser?.id) {
-        const notesKey = `profile-notes-${currentUser.id}-${id}`;
+      try {
+        // Simulate API call - in real app, fetch from backend
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Mock user profiles based on ID
+        const mockProfiles: Record<string, UserProfile> = {
+          "user-789": {
+            id: "user-789",
+            name: "Sara Timóteo",
+            title: "Content Creator & Social Media Strategist",
+            company: "Creative Studios",
+            location: "Lisbon, Portugal",
+            bio: "Passionate about creating engaging content that connects brands with their audience. Specializing in visual storytelling and community building.",
+            avatar: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
+            website: "https://saratimoteo.com",
+            linkedinUrl: "https://linkedin.com/in/saratimoteo",
+            verified: true,
+            isConnected: false,
+            mutualConnections: 12,
+            joinedAt: "2024-03-15T10:00:00Z",
+            profileVersion: "standard",
+            connectDetails: "I'm a passionate content creator with over 5 years of experience in social media strategy and visual storytelling. I specialize in helping brands connect with their audience through authentic, engaging content that drives real results.\n\nMy expertise spans across multiple platforms including Instagram, TikTok, LinkedIn, and YouTube. I've worked with both emerging startups and established brands to develop their digital presence and create content that resonates with their target audience.\n\nWhat sets me apart is my ability to blend creativity with data-driven insights. I don't just create beautiful content – I create content that performs. I'm always staying ahead of the latest trends and platform updates to ensure my clients' content strategy remains fresh and effective.\n\nI'm particularly passionate about empowering other creators and small businesses to tell their stories authentically. I believe that everyone has a unique voice worth sharing, and I love helping people find and amplify theirs.\n\nWhen I'm not creating content, you can find me exploring Lisbon's vibrant neighborhoods, experimenting with new photography techniques, or hosting creative workshops for aspiring content creators."
+          },
+          "user-101": {
+            id: "user-101",
+            name: "Adrian Silva",
+            company: "Funky Digital",
+            location: "Porto, Portugal",
+            bio: "🎨 Digital artist mixing reality with dreams ✨ Creating weird and wonderful experiences that make people smile 🌈",
+            avatar: "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
+            instagramUrl: "https://instagram.com/adriansilva",
+            tiktokUrl: "https://tiktok.com/@adriansilva",
+            verified: true,
+            isConnected: true,
+            mutualConnections: 8,
+            joinedAt: "2024-01-20T10:00:00Z",
+            profileVersion: "funky",
+            virtues: ["Creative", "Innovative", "Collaborative", "Authentic", "Creative", "Innovative", "Collaborative", "Authentic", "Creative", "Innovative", "Collaborative", "Authentic"],
+            connectDetails: "Hey there! I'm Adrian, and I live in the magical intersection between art and technology. By day, I'm a digital artist and creative director at Funky Digital, where I get to play with pixels, code, and imagination to create experiences that hopefully make people's days a little brighter.\n\nI'm totally obsessed with pushing the boundaries of what's possible in digital art. Whether it's experimenting with AI-generated visuals, creating interactive installations, or just making weird GIFs that somehow end up going viral, I'm always looking for new ways to surprise and delight people.\n\nWhat really gets me excited is collaborative projects. There's something magical about bringing together different perspectives and skills to create something none of us could have made alone. I've worked with musicians, writers, developers, and even scientists to create art that tells stories in unexpected ways."
+          },
+        };
+        
+        const profile = mockProfiles[id || ""] || {
+          id: id || "unknown",
+          name: "User Not Found",
+          bio: "This user profile could not be loaded.",
+          verified: false,
+          isConnected: false,
+          mutualConnections: 0,
+          joinedAt: new Date().toISOString(),
+          profileVersion: "standard" as const,
+        };
+        
+        setProfileUser(profile);
+        
+        // Load user's questions
+        const userQuestionsList = questions.filter(q => q.authorId === id);
+        setUserQuestions(userQuestionsList);
+        
+        // Load private notes from localStorage
+        const notesKey = `profile-notes-${currentUser?.id}-${id}`;
         const savedNotes = localStorage.getItem(notesKey);
         if (savedNotes) {
-          try {
-            setPrivateNotes(JSON.parse(savedNotes));
-          } catch (error) {
-            console.error("❌ Error parsing saved notes:", error);
-          }
+          setPrivateNotes(JSON.parse(savedNotes));
         }
+        
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+        toast({
+          title: "Failed to load profile",
+          description: "Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
+    };
+
+    if (id) {
+      loadProfileData();
     }
-  }, [id, userProfileData, profileLoading, profileError, questions, currentUser?.id]);
+  }, [id, questions, currentUser?.id, toast]);
 
   /**
    * Handle scroll for profile collapse effect
@@ -1140,92 +616,32 @@ export const ProfilePage: React.FC = () => {
     setIsAddNoteOpen(true);
   };
 
-  const handleRetry = () => {
-    console.log("🔄 Retrying profile fetch...");
-    refetchProfile();
+  const handleLinkedInClick = () => {
+    if (profileUser?.linkedinUrl) {
+      window.open(profileUser.linkedinUrl, '_blank');
+    }
   };
 
-  /**
-   * Handle profile view change
-   */
-  const handleProfileViewChange = (view: ProfileViewType) => {
-    setCurrentProfileView(view);
+  const handleWebsiteClick = () => {
+    if (profileUser?.website) {
+      window.open(profileUser.website, '_blank');
+    }
   };
 
   // Loading state
-  if (profileLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8 text-center">
-            <div className="w-12 h-12 border-4 border-[#3ec6c6] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Loading profile...
-            </h2>
-            <p className="text-gray-600">
-              Fetching user data from the server.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#3ec6c6] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
       </div>
     );
   }
 
   // Error state
-  if (profileError) {
-    const errorMessage = profileError.message || 'Unknown error occurred';
-    const isNotFound = errorMessage.includes('not found');
-    const isAccessDenied = errorMessage.includes('Access denied');
-    const isConnectionError = errorMessage.includes('internet') || errorMessage.includes('network');
-
-    return (
-      <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8 text-center">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-              isNotFound ? 'bg-gray-100' : 'bg-red-100'
-            }`}>
-              <UserPlusIcon className={`w-8 h-8 ${
-                isNotFound ? 'text-gray-400' : 'text-red-500'
-              }`} />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {isNotFound ? 'Profile not found' : 
-               isAccessDenied ? 'Access denied' :
-               isConnectionError ? 'Connection error' :
-               'Failed to load profile'}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              {isNotFound ? 'This user profile doesn\'t exist or has been removed.' :
-               isAccessDenied ? 'You don\'t have permission to view this profile.' :
-               isConnectionError ? 'Please check your internet connection and try again.' :
-               'There was an error loading the profile. Please try again.'}
-            </p>
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleBack}
-                variant="outline"
-                className="flex-1"
-              >
-                Go Back
-              </Button>
-              {!isNotFound && !isAccessDenied && (
-                <Button 
-                  onClick={handleRetry}
-                  className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-                >
-                  Try Again
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Profile not found state (shouldn't happen with new API, but keeping as fallback)
-  if (!profileUser) {
+  if (!profileUser || profileUser.name === "User Not Found") {
     return (
       <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
@@ -1239,21 +655,12 @@ export const ProfilePage: React.FC = () => {
             <p className="text-gray-600 mb-6">
               This user profile doesn't exist or has been removed.
             </p>
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleBack}
-                className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-              >
-                Go Back
-              </Button>
-              <Button 
-                onClick={handleRetry}
-                variant="outline"
-                className="flex-1"
-              >
-                Refresh
-              </Button>
-            </div>
+            <Button 
+              onClick={handleBack}
+              className="w-full bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+            >
+              Go Back
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -1318,15 +725,205 @@ export const ProfilePage: React.FC = () => {
           </div>
         </header>
 
-        {/* Swipeable Profile Section */}
-        <div ref={profileSectionRef} className="pt-20">
-          <SwipeableProfile
-            profileUser={profileUser}
-            currentProfileView={currentProfileView}
-            onProfileViewChange={handleProfileViewChange}
-            onConnect={handleConnect}
-            onMessage={handleMessage}
-          />
+        {/* Profile Section */}
+        <div ref={profileSectionRef} className="pt-20 px-4 pb-6">
+          {profileUser.profileVersion === "standard" ? (
+            // Standard Profile Layout
+            <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="relative">
+                    <Avatar className="w-20 h-20 ring-4 ring-gray-100">
+                      <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
+                      <AvatarFallback className="text-2xl bg-gradient-to-br from-gray-100 to-gray-200">
+                        {profileUser.name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white border-2 border-gray-200 hover:bg-gray-50"
+                    >
+                      <EditIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h1 className="text-2xl font-bold text-gray-900">{profileUser.name}</h1>
+                      {profileUser.verified && (
+                        <Badge className="bg-blue-100 text-blue-800 text-xs">
+                          Verified
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {profileUser.title && profileUser.company && (
+                      <p className="text-gray-600 mb-1">
+                        {profileUser.title} at {profileUser.company}
+                      </p>
+                    )}
+                    
+                    {profileUser.location && (
+                      <p className="text-gray-500 text-sm mb-3">{profileUser.location}</p>
+                    )}
+                    
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                      <span>{profileUser.mutualConnections} mutual connections</span>
+                      <span>• Joined {formatDistanceToNow(new Date(profileUser.joinedAt), { addSuffix: true })}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Minimalistic Action Buttons */}
+                <div className="flex items-center gap-4 mb-6">
+                  <IconButton
+                    icon={<MessageCircleIcon className="w-5 h-5" />}
+                    tooltip="Send Message"
+                    onClick={handleMessage}
+                    variant="primary"
+                    ariaLabel="Send message to user"
+                  />
+                  
+                  <IconButton
+                    icon={<HandIcon className="w-5 h-5" />}
+                    tooltip={profileUser.isConnected ? "Connected" : "Send Connection Request"}
+                    onClick={handleConnect}
+                    disabled={profileUser.isConnected}
+                    ariaLabel={profileUser.isConnected ? "Already connected" : "Send connection request"}
+                  />
+                  
+                  {profileUser.linkedinUrl && (
+                    <IconButton
+                      icon={<LinkedinIcon className="w-5 h-5" />}
+                      tooltip="View LinkedIn Profile"
+                      onClick={handleLinkedInClick}
+                      variant="linkedin"
+                      ariaLabel="Open LinkedIn profile"
+                    />
+                  )}
+                  
+                  {profileUser.website && (
+                    <IconButton
+                      icon={<ExternalLinkIcon className="w-5 h-5" />}
+                      tooltip="Visit Website"
+                      onClick={handleWebsiteClick}
+                      ariaLabel="Open personal website"
+                    />
+                  )}
+                </div>
+                
+                {/* Bio with Collapsible Text */}
+                {(profileUser.connectDetails || profileUser.bio) && (
+                  <CollapsibleText 
+                    text={profileUser.connectDetails || profileUser.bio || "Hi there! I'm excited to connect with others who share my interests in technology and innovation. Let's collaborate and create something amazing together."}
+                    className="text-gray-700 leading-relaxed"
+                    maxLines={4}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            // Funky Profile Layout
+            <Card className="bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 rounded-2xl border-2 border-dashed border-purple-200 shadow-lg">
+              <CardContent className="p-6">
+                <div className="text-center mb-6">
+                  <div className="relative inline-block">
+                    <Avatar className="w-24 h-24 ring-4 ring-white shadow-lg">
+                      <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
+                      <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-400 to-pink-400 text-white">
+                        {profileUser.name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center animate-bounce">
+                      ✨
+                    </div>
+                  </div>
+                  
+                  <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{profileUser.name}</h1>
+                  <p className="text-purple-600 font-semibold mb-4">What lights you up outside of work?</p>
+                  
+                  {/* Social Media Links */}
+                  <div className="flex justify-center gap-3 mb-6">
+                    {profileUser.instagramUrl && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => window.open(profileUser.instagramUrl, '_blank')}
+                        className="social-icon text-pink-600 hover:bg-pink-50 border-pink-200"
+                      >
+                        <InstagramIcon className="w-5 h-5" />
+                      </Button>
+                    )}
+                    {profileUser.tiktokUrl && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => window.open(profileUser.tiktokUrl, '_blank')}
+                        className="social-icon text-black hover:bg-gray-50"
+                      >
+                        <span className="font-bold text-sm">TT</span>
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Bio with Collapsible Text */}
+                  {(profileUser.connectDetails || profileUser.bio) && (
+                    <div className="mb-6">
+                      <CollapsibleText 
+                        text={profileUser.connectDetails || profileUser.bio || "Hi there! I'm excited to connect with others who share my interests in technology and innovation. Let's collaborate and create something amazing together."}
+                        className="text-gray-700 leading-relaxed"
+                        maxLines={4}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Virtue Tags using StickyNote */}
+                  {profileUser.virtues && profileUser.virtues.length > 0 && (
+                    <div className="flex justify-center gap-4 flex-wrap">
+                      {profileUser.virtues.map((virtue, index) => (
+                        <div key={virtue} className={`virtue-tag`}>
+                          <StickyNote
+                            content={virtue}
+                            backgroundColor={
+                              index % 4 === 0 ? "#FFE066" :
+                              index % 4 === 1 ? "#FF6B6B" :
+                              index % 4 === 2 ? "#4ECDC4" : "#95E1D3"
+                            }
+                            width={80}
+                            height={60}
+                            rotation={index % 2 === 0 ? 5 : -5}
+                            className="text-xs font-semibold"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleMessage}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  >
+                    <MessageCircleIcon className="w-4 h-4 mr-2" />
+                    Message
+                  </Button>
+                  
+                  <Button
+                    onClick={handleConnect}
+                    variant="outline"
+                    className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
+                    disabled={profileUser.isConnected}
+                  >
+                    <UserPlusIcon className="w-4 h-4 mr-2" />
+                    {profileUser.isConnected ? "Connected" : "Connect"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Tabbed Content */}
