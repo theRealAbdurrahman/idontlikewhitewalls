@@ -10,7 +10,7 @@ import { QuestionRead } from '../api-client/models/questionRead';
 import { getAuthCallbackUrl } from '../utils/auth';
 import { EnvDebug } from '../components/EnvDebug';
 import { useLogtoAuthBridge } from '../hooks/useLogtoAuthBridge';
-import { useQuestionUserData } from '../hooks/useQuestionUserData';
+import { useQuestionUserLookup } from '../hooks/useUserLookup';
 
 /**
  * Home screen component displaying the main question feed
@@ -47,8 +47,8 @@ export const Home: React.FC = () => {
     refetchIntervalInBackground: false, // Only poll when tab is active
   });
 
-  // Transform API data to component format
-  const questions = useMemo(() => {
+  // Get raw questions data from API
+  const rawQuestions = useMemo(() => {
     if (!questionsData?.data) return [];
     
     // Create a safe wrapper function to handle the type mismatch
@@ -65,39 +65,45 @@ export const Home: React.FC = () => {
       return [];
     }
     
-    const questionList = ensureQuestionArray(questionsData.data);
-
-    return questionList.map((question) => ({
-      id: question.id,
-      authorId: question.user_id,
-      // Note: authorName and authorAvatar will be set by useQuestionUserData hook
-      authorName: "", // Temporary - will be replaced
-      authorAvatar: undefined, // Temporary - will be replaced
-      eventId: question.event_id,
-      eventName: undefined, // Will need to be populated from events data
-      title: question.title,
-      description: question.content,
-      image: undefined,
-      tags: [], // Default empty for now
-      createdAt: question.created_at || new Date().toISOString(),
-      visibility: "anyone" as const,
-      isAnonymous: question.is_anonymous || false,
-      upvotes: 0, // Will be calculated from interactions
-      meTooCount: 0, // Will be calculated from interactions  
-      canHelpCount: 0, // Will be calculated from interactions
-      isUpvoted: false, // Will be determined from user's interactions
-      isMeToo: false, // Will be determined from user's interactions
-      isBookmarked: false, // Will be determined from user's interactions
-      replies: 0, // Default for now
-    }));
+    return ensureQuestionArray(questionsData.data);
   }, [questionsData?.data]);
 
-  // Enhance questions with real user data
-  const questionsWithUserData = useQuestionUserData(questions);
+  // Use user lookup hook to get user data for all questions
+  const { getQuestionUserData, isLoading: usersLoading } = useQuestionUserLookup(rawQuestions);
+
+  // Transform API data to component format with real user data
+  const questions = useMemo(() => {
+    return rawQuestions.map((question) => {
+      const userData = getQuestionUserData(question);
+      
+      return {
+        id: question.id,
+        authorId: question.user_id,
+        authorName: userData.displayName,
+        authorAvatar: userData.avatarUrl || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
+        eventId: question.event_id,
+        eventName: undefined, // Will need to be populated from events data
+        title: question.title,
+        description: question.content,
+        image: undefined,
+        tags: [], // Default empty for now
+        createdAt: question.created_at || new Date().toISOString(),
+        visibility: "anyone" as const,
+        isAnonymous: question.is_anonymous || false,
+        upvotes: 0, // Will be calculated from interactions
+        meTooCount: 0, // Will be calculated from interactions  
+        canHelpCount: 0, // Will be calculated from interactions
+        isUpvoted: false, // Will be determined from user's interactions
+        isMeToo: false, // Will be determined from user's interactions
+        isBookmarked: false, // Will be determined from user's interactions
+        replies: 0, // Default for now
+      };
+    });
+  }, [rawQuestions, getQuestionUserData]);
 
   // Filter questions based on active filters
   const filteredQuestions = useMemo(() => {
-    let filtered = [...questionsWithUserData];
+    let filtered = [...questions];
 
     // Apply event filters
     if (!activeFilters.includes("meetverse")) {
@@ -127,7 +133,7 @@ export const Home: React.FC = () => {
     }
 
     return filtered;
-  }, [questionsWithUserData, activeFilters, sortBy]);
+  }, [questions, activeFilters, sortBy]);
 
   const handleCreateQuestion = () => {
     navigate("/create-question");
@@ -144,11 +150,13 @@ export const Home: React.FC = () => {
   }
 
   // Handle loading and error states
-  if (questionsLoading) {
+  if (questionsLoading || usersLoading) {
     return (
       <div className="w-full max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center justify-center">
-          <p className="text-gray-500 text-base">Loading questions...</p>
+          <p className="text-gray-500 text-base">
+            {questionsLoading ? "Loading questions..." : "Loading user data..."}
+          </p>
         </div>
       </div>
     );
