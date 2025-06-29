@@ -133,6 +133,58 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile> => 
 };
 
 /**
+ * Interface for current user data from Logto
+ */
+export interface LogtoUserData {
+  sub: string;
+  jwt: string; // Optional JWT token
+}
+
+/**
+ * Get or create current user from Logto authentication data
+ * @param logtoData - User data from Logto authentication
+ * @returns Promise resolving to the backend user profile
+ */
+export const fetchCurrentUser = async (logtoData: LogtoUserData): Promise<UserProfile> => {
+  console.log({ logtoData });
+
+  if (!logtoData.sub) {
+    throw new Error('Logto sub (user ID) is required');
+  }
+
+
+  try {
+    // Prepare request body with user data
+    const requestBody = {
+      logto_sub: logtoData.sub,
+    };
+
+
+    const response = await customInstance<UserProfile>({
+      url: `/api/v1/users/me`,
+      method: 'POST',
+      data: requestBody,
+      headers: {
+        Authorization: `Bearer ${logtoData.jwt}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    // Enhanced error handling
+    if (error?.response?.status === 400) {
+      throw new Error('Invalid user data provided');
+    } else if (error?.response?.status === 500) {
+      throw new Error('Server error occurred while creating/fetching user');
+    } else if (!navigator.onLine) {
+      throw new Error('No internet connection');
+    } else {
+      throw new Error(error?.message || 'Failed to get current user');
+    }
+  }
+};
+
+/**
  * React Query hook for fetching user profile data
  * @param userId - The unique identifier for the user
  * @param options - Optional React Query configuration

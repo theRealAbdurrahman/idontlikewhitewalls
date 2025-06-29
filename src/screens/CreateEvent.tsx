@@ -42,6 +42,7 @@ import {
   FormLabel,
   FormMessage,
 } from "../components/ui/form";
+import { LocationInput, LocationData } from "../components/ui/location-input";
 import {
   Dialog,
   DialogContent,
@@ -55,6 +56,7 @@ import { Badge } from "../components/ui/badge";
 import { useAuthStore } from "../stores/authStore";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
+import { isValidUrl } from "../utils/urlValidation";
 
 /**
  * Form validation schema using Zod
@@ -65,7 +67,12 @@ const eventFormSchema = z.object({
   startDateTime: z.string().min(1, "Start date and time is required"),
   endDateTime: z.string().min(1, "End date and time is required"),
   description: z.string().min(10, "Description must be at least 10 characters").max(1000, "Description too long"),
-  location: z.string().min(3, "Location is required").max(200, "Location too long"),
+  location: z.object({
+    displayName: z.string().min(3, "Location is required").max(200, "Location too long"),
+    input: z.string(),
+    coordinates: z.tuple([z.number(), z.number()]).optional(),
+    googleMapsUrl: z.string().optional(),
+  }),
   eventUrl: z.string().optional().refine((val) => {
     return isValidUrl(val || '', {
       addProtocol: true,
@@ -73,13 +80,6 @@ const eventFormSchema = z.object({
       allowedProtocols: ['https:']
     });
   }, "Please enter a valid URL (e.g., meetball.fun, www.example.com)"),
-  googleMapsUrl: z.string().optional().refine((val) => {
-    return isValidUrl(val || '', {
-      addProtocol: true,
-      addWww: false, // Google Maps URLs don't typically need www
-      allowedProtocols: ['https:']
-    });
-  }, "Please enter a valid Google Maps URL"),
   eventType: z.string().min(1, "Event type is required"),
   community: z.string().min(1, "Community selection is required"),
   tags: z.array(z.string()).max(10, "Maximum 10 tags allowed").optional(),
@@ -158,9 +158,13 @@ export const CreateEvent: React.FC = () => {
       startDateTime: "",
       endDateTime: "",
       description: "",
-      location: "",
+      location: {
+        displayName: "",
+        input: "",
+        coordinates: undefined,
+        googleMapsUrl: undefined,
+      },
       eventUrl: "",
-      googleMapsUrl: "",
       eventType: "",
       community: "planet-earth",
       tags: [],
@@ -338,16 +342,14 @@ export const CreateEvent: React.FC = () => {
       // Normalize URLs before sending to API (https-only)
       const normalizedEventUrl = data.eventUrl ? 
         normalizeWebUrl(data.eventUrl) : null;
-      const normalizedGoogleMapsUrl = data.googleMapsUrl ? 
-        normalizeWebUrl(data.googleMapsUrl) : null;
       
       // Prepare event data for API
       const eventData = {
         name: data.name,
         description: data.description,
-        location: data.location,
+        location: data.location.displayName,
         event_url: normalizedEventUrl,
-        google_maps_url: normalizedGoogleMapsUrl,
+        google_maps_url: data.location.googleMapsUrl,
         start_date: data.startDateTime,
         end_date: data.endDateTime,
         parent_event_id: null,
@@ -358,8 +360,8 @@ export const CreateEvent: React.FC = () => {
       if (data.eventUrl && normalizedEventUrl !== data.eventUrl) {
         console.log(`Normalized Event URL: "${data.eventUrl}" → "${normalizedEventUrl}"`);
       }
-      if (data.googleMapsUrl && normalizedGoogleMapsUrl !== data.googleMapsUrl) {
-        console.log(`Normalized Google Maps URL: "${data.googleMapsUrl}" → "${normalizedGoogleMapsUrl}"`);
+      if (data.location.googleMapsUrl) {
+        console.log(`Auto-generated Google Maps URL: ${data.location.googleMapsUrl}`);
       }
 
       // Create event via API
@@ -606,7 +608,7 @@ export const CreateEvent: React.FC = () => {
                     )}
                   />
 
-                  {/* Location */}
+                  {/* Location with Autocomplete */}
                   <FormField
                     control={form.control}
                     name="location"
@@ -614,16 +616,16 @@ export const CreateEvent: React.FC = () => {
                       <FormItem>
                         <FormLabel>Location *</FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <MapPinIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                            <Input
-                              placeholder="e.g., Trinity College Dublin, Dublin 2"
-                              className="pl-10"
-                              {...field}
-                              disabled={isSubmitting}
-                            />
-                          </div>
+                          <LocationInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="e.g., Trinity College Dublin, Dublin 2"
+                            disabled={isSubmitting}
+                          />
                         </FormControl>
+                        <FormDescription>
+                          Start typing to search for locations. Google Maps URL is auto-generated when you select a location.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -649,32 +651,6 @@ export const CreateEvent: React.FC = () => {
                         </FormControl>
                         <FormDescription>
                           Optional: Link to your event website or registration page
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Google Maps URL */}
-                  <FormField
-                    control={form.control}
-                    name="googleMapsUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Google Maps URL</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <MapPinIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                            <Input
-                              placeholder="e.g., https://maps.app.goo.gl/eventlocation"
-                              className="pl-10"
-                              {...field}
-                              disabled={isSubmitting}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          Optional: Direct link to the event location on Google Maps
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -770,7 +746,7 @@ export const CreateEvent: React.FC = () => {
 
                   {/* Tags */}
                   <FormItem>
-                    <FormLabel>Tags (Max 10)</FormLabel>
+                    <FormLabel>Tags</FormLabel>
                     <div className="space-y-2">
                       <div className="flex gap-2">
                         <Input

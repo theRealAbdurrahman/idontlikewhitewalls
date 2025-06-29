@@ -294,7 +294,7 @@ export const QuestionDetails: React.FC = () => {
           user_id: user.id,
           target_type: InteractionTarget.question,
           target_id: question.id,
-          interaction_type: InteractionType.mee_too,
+          interaction_type: InteractionType.me_too,
         }
       });
     }

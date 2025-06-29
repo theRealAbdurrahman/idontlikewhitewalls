@@ -5,7 +5,6 @@ import {
   ArrowLeftIcon,
   UserPlusIcon,
   MessageCircleIcon,
-  ExternalLinkIcon,
   LinkedinIcon,
   InstagramIcon,
   EditIcon,
@@ -13,22 +12,16 @@ import {
   HashIcon,
   TrashIcon,
   EditIcon as Edit2Icon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  ShareIcon,
-  MoreVerticalIcon,
-  HandshakeIcon,
-  FileTextIcon,
-  LinkIcon,
-  GridIcon,
-  Link2
+  QrCode,
+  QrCodeIcon,
+  CheckCircleIcon,
+  HeartIcon
 } from "lucide-react";
 import {
   useUserProfile,
   UserProfile as ApiUserProfile
 } from "../api-client/api-client";
+import { QuestionCard } from "../components/QuestionCard";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -75,6 +68,7 @@ interface UserProfile {
   joinedAt: string;
   profileVersion: "standard" | "funky";
   virtues?: string[];
+  connectWith?: string[];
 }
 
 /**
@@ -170,23 +164,6 @@ const CollapsibleText: React.FC<CollapsibleTextProps> = ({
         } as React.CSSProperties}
       >
         {text}
-
-        {/* Expand/Collapse Indicator */}
-        {needsTruncation && showIndicator && (
-          <div className="collapsible-text-indicator">
-            {isExpanded ? (
-              <div className="indicator-content">
-                <span className="indicator-text">Show less</span>
-                <ChevronUpIcon className="indicator-icon" />
-              </div>
-            ) : (
-              <div className="indicator-content">
-                <span className="indicator-text">Show more</span>
-                <ChevronDownIcon className="indicator-icon" />
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -373,6 +350,7 @@ const customStyles = `
     border-radius: 8px;
     padding: 8px;
     margin: -8px;
+    margin-top: 16px;
   }
   
   .collapsible-text.collapsed.truncatable {
@@ -538,6 +516,7 @@ const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
     joinedAt: apiUser.created_at,
     profileVersion: "standard" as const, // Default profile version
     virtues: ["Creative", "Innovative", "Collaborative", "Authentic", "Empathetic", "Visionary"], // Mock virtues for funky profile
+    connectWith: ["Tech", "Business", "Innovation", "Startups"], // Connection tags from signup
   };
 };
 
@@ -566,6 +545,13 @@ interface SwipeableProfileProps {
   onConnect: () => void;
   onMessage: () => void;
   setIsAddNoteOpen: (isOpen: boolean) => void;
+  isOwnProfile: boolean;
+  onQRCode: () => void;
+  onEditTags: () => void;
+  onWeMet: () => void;
+  onRemember: () => void;
+  weMet: boolean;
+  remember: boolean;
 }
 
 const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
@@ -574,7 +560,14 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
   onProfileViewChange,
   onConnect,
   onMessage,
-  setIsAddNoteOpen
+  setIsAddNoteOpen,
+  isOwnProfile,
+  onQRCode,
+  onEditTags,
+  onWeMet,
+  onRemember,
+  weMet,
+  remember
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -747,7 +740,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
         onMouseLeave={handleMouseUp}
       >
         {/* Navigation buttons for desktop */}
-        <button
+        {/* <button
           className="swipe-nav-button left"
           onClick={() => onProfileViewChange("standard")}
           disabled={currentProfileView === "standard"}
@@ -763,7 +756,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
           style={{ opacity: currentProfileView === "funky" ? 0.3 : 0.7 }}
         >
           <ChevronRightIcon className="w-5 h-5 text-gray-600" />
-        </button>
+        </button> */}
 
         <div
           ref={contentRef}
@@ -794,6 +787,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h1 className="text-2xl font-bold text-gray-900">{profileUser.name}</h1>
+                      {/* inset tags from signup flow here step1.connectWith */}
                       {profileUser.verified && (
                         <Badge className="bg-blue-100 text-blue-800 text-xs">
                           Verified
@@ -810,96 +804,197 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                     {profileUser.location && (
                       <p className="text-gray-500 text-sm mb-3">{profileUser.location}</p>
                     )}
+
+                    {/* Connection Tags Section */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex-1">
+                        {profileUser.connectWith && profileUser.connectWith.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {profileUser.connectWith.map((tag, index) => (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="bg-[#3ec6c6] border-[#3ec6c6] text-white hover:bg-[#2ea5a5] transition-colors"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {/* Edit tags button for own profile */}
+                      {isOwnProfile && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={onEditTags}
+                          className="ml-2 text-gray-500 hover:text-gray-700"
+                        >
+                          <EditIcon className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                     {/* TODO: add the virtues and tags here */}
 
                   </div>
                 </div>
 
                 {/* Action Buttons - Enhanced with minimalistic design */}
-                <div className="flex justify-center gap-4 mt-6">
-                  <TooltipProvider>
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setIsAddNoteOpen(true)}
-                          className="label-button flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50 border-dashed"
-                          aria-label="Add custom connection preference"
-                        >
-                          <PlusIcon className="w-4 h-4" /> add note
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent className="action-button-tooltip">
-                        add note
-                      </TooltipContent>
-                    </Tooltip>
-                    {/* Message Button */}
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={onMessage}
-                          className="minimalist-action-button primary"
-                          aria-label="Send message"
-                        >
-                          <MessageCircleIcon className="w-5 h-5" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="action-button-tooltip">
-                        Message
-                      </TooltipContent>
-                    </Tooltip>
+                <div className="flex gap-3">
+                  {/* Conditional rendering based on profile ownership */}
+                  {isOwnProfile ? (
+                    // Own Profile Actions
+                    <>
+                      <Button
+                        onClick={onQRCode}
+                        variant="outline"
+                        className="flex-1 flex items-center justify-center gap-2 h-12 text-sm font-medium"
+                      >
+                        <QrCodeIcon className="w-4 h-4" />
+                        QR Code
+                      </Button>
+                      
+                      <Button
+                        onClick={handleLinkedInProfile}
+                        variant="outline"
+                        className="flex-1 flex items-center justify-center gap-2 h-12 text-sm font-medium"
+                        disabled={!profileUser.linkedinUrl}
+                      >
+                        <LinkedinIcon className="w-4 h-4" />
+                        LinkedIn
+                      </Button>
+                    </>
+                  ) : (
+                    // Other User's Profile Actions
+                    <TooltipProvider>
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsAddNoteOpen(true)}
+                            className="label-button flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50 border-dashed"
+                            aria-label="Add custom connection preference"
+                          >
+                            <PlusIcon className="w-4 h-4" /> add note
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="action-button-tooltip">
+                          add note
+                        </TooltipContent>
+                      </Tooltip>
+                      {/* Message Button */}
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={onMessage}
+                            className="minimalist-action-button primary"
+                            aria-label="Send message"
+                          >
+                            <MessageCircleIcon className="w-5 h-5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="action-button-tooltip">
+                          Message
+                        </TooltipContent>
+                      </Tooltip>
 
-                    {/* Connect Button */}
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={onConnect}
-                          className="minimalist-action-button"
-                          aria-label="Connect with user"
-                        >
-                          <UserPlusIcon className="w-5 h-5" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="action-button-tooltip">
-                        Connect
-                      </TooltipContent>
-                    </Tooltip>
+                      { }
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={onConnect}
+                            className="minimalist-action-button"
+                            aria-label="Connect with user"
+                          >
+                            <QrCode className="w-5 h-5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="action-button-tooltip">
+                          Scan QR code to connect
+                        </TooltipContent>
+                      </Tooltip>
 
-                    {/* LinkedIn Profile Button */}
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={handleLinkedInProfile}
-                          className="minimalist-action-button linkedin"
-                          aria-label="View LinkedIn profile"
-                          disabled={!profileUser.linkedinUrl}
-                        >
-                          <LinkedinIcon className="w-5 h-5" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="action-button-tooltip">
-                        LinkedIn Profile
-                      </TooltipContent>
-                    </Tooltip>
+                      {/* LinkedIn Profile Button */}
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={handleLinkedInProfile}
+                            className="minimalist-action-button linkedin"
+                            aria-label="View LinkedIn profile"
+                            disabled={!profileUser.linkedinUrl}
+                          >
+                            <LinkedinIcon className="w-5 h-5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="action-button-tooltip">
+                          LinkedIn Profile
+                        </TooltipContent>
+                      </Tooltip>
 
-                  </TooltipProvider>
+                    </TooltipProvider>
+                  )}
                 </div>
 
+                {/* Social Interaction Buttons - Only for other users */}
+                {!isOwnProfile && (
+                  <div className="flex gap-3 mt-3">
+                    <Button
+                      onClick={onWeMet}
+                      variant={weMet ? "default" : "outline"}
+                      className={`flex-1 flex items-center justify-center gap-2 h-10 text-sm font-medium ${
+                        weMet 
+                          ? "bg-green-600 hover:bg-green-700 text-white" 
+                          : "border-green-600 text-green-600 hover:bg-green-50"
+                      }`}
+                    >
+                      <CheckCircleIcon className="w-4 h-4" />
+                      {weMet ? "We met ✓" : "We met"}
+                    </Button>
+                    
+                    <Button
+                      onClick={onRemember}
+                      variant={remember ? "default" : "outline"}
+                      className={`flex-1 flex items-center justify-center gap-2 h-10 text-sm font-medium ${
+                        remember 
+                          ? "bg-red-600 hover:bg-red-700 text-white" 
+                          : "border-red-600 text-red-600 hover:bg-red-50"
+                      }`}
+                    >
+                      <HeartIcon className="w-4 h-4" />
+                      {remember ? "Remember ✓" : "Remember"}
+                    </Button>
+                  </div>
+                )}
+
                 {/* CollapsibleText Section - Updated to use CollapsibleText component */}
-                <CollapsibleText
-                  text={renderConnectDetails(profileUser.connectDetails)}
-                  maxLines={4}
-                  className="connect-details-text text-gray-700 leading-relaxed"
-                  showIndicator={false}
-                />
+                <div className="space-y-2 mt-6">
+                  <h3 className="text-sm font-semibold text-gray-900">Professional Background</h3>
+                  <CollapsibleText
+                    text="I'm a passionate product manager with over 8 years of experience in the tech industry. I've led cross-functional teams to deliver innovative solutions that have impacted millions of users. My expertise spans product strategy, user experience design, data analytics, and agile development methodologies. I'm particularly interested in emerging technologies like AI and machine learning, and how they can be leveraged to create more personalized and efficient user experiences. I believe in building products that not only solve real problems but also delight users and drive business growth."
+                    maxLines={3}
+                    className="text-gray-700 text-sm leading-relaxed"
+                    showIndicator={true}
+                  />
+                </div>
+
+                {/* Additional Information Section with Second CollapsibleText */}
+                <div className="space-y-2 mt-2">
+                  <h3 className="text-sm font-semibold text-gray-900">Can help other with</h3>
+                  <CollapsibleText
+                    text="I'm a passionate product manager with over 8 years of experience in the tech industry. I've led cross-functional teams to deliver innovative solutions that have impacted millions of users. My expertise spans product strategy, user experience design, data analytics, and agile development methodologies. I'm particularly interested in emerging technologies like AI and machine learning, and how they can be leveraged to create more personalized and efficient user experiences. I believe in building products that not only solve real problems but also delight users and drive business growth."
+                    maxLines={3}
+                    className="text-gray-700 text-sm leading-relaxed"
+                    showIndicator={true}
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Funky Profile View */}
           <div className="profile-view">
-            <Card className="bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 rounded-2xl border-2 border-dashed border-purple-200 shadow-lg">
+            <Card className="min-h-full bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 rounded-2xl border-2 border-dashed border-purple-200 shadow-lg">
               <CardContent className="p-6">
                 <div className="text-center mb-6">
                   <div className="relative inline-block">
@@ -915,7 +1010,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                   </div>
 
                   <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{profileUser.name}</h1>
-                  <p className="text-purple-600 font-semibold mb-4">What lights you up outside of work?</p>
+                  {/* <p className="text-purple-600 font-semibold mb-4">What lights you up outside of work?</p> */}
 
                   {/* Social Media Links */}
                   <div className="flex justify-center gap-3 mb-6">
@@ -943,12 +1038,12 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
 
                   {/* CollapsibleText for Funky Profile - Also updated to use CollapsibleText component */}
                   <div className="mb-6">
-                    <CollapsibleText
+                    {/* <CollapsibleText
                       text={renderConnectDetails(profileUser.connectDetails)}
                       maxLines={4}
                       className="connect-details-text text-gray-700 leading-relaxed"
                       showIndicator={false}
-                    />
+                    /> */}
                   </div>
 
                   {/* Virtue Tags using StickyNote */}
@@ -975,7 +1070,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3">
+                {/* <div className="flex gap-3">
                   <Button
                     onClick={onMessage}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
@@ -993,7 +1088,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                     <UserPlusIcon className="w-4 h-4 mr-2" />
                     {profileUser.isConnected ? "Connected" : "Connect"}
                   </Button>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
           </div>
@@ -1001,7 +1096,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
       </div>
 
       {/* Profile View Indicators */}
-      <div className="profile-indicators">
+      {/* <div className="profile-indicators">
         <div
           className={`profile-indicator ${currentProfileView === "standard" ? "active" : ""}`}
           onClick={() => onProfileViewChange("standard")}
@@ -1012,7 +1107,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
           onClick={() => onProfileViewChange("funky")}
           aria-label="Switch to personal profile view"
         />
-      </div>
+      </div> */}
     </div>
   );
 };
@@ -1037,6 +1132,12 @@ export const ProfilePage: React.FC = () => {
   const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState("");
   const [editingNote, setEditingNote] = useState<PrivateNote | null>(null);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [questionsError, setQuestionsError] = useState<string | null>(null);
+  const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [weMet, setWeMet] = useState(false);
+  const [remember, setRemember] = useState(false);
 
   // New state for swipeable profile views
   const [currentProfileView, setCurrentProfileView] = useState<ProfileViewType>("standard");
@@ -1052,6 +1153,33 @@ export const ProfilePage: React.FC = () => {
     error: profileError,
     refetch: refetchProfile
   } = useUserProfile(id);
+
+  // Check if user is viewing their own profile
+  const isOwnProfile = profileUser?.id === currentUser?.id;
+
+  // Authentication check
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Authentication Required
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Please log in to view profiles.
+            </p>
+            <Button 
+              onClick={() => navigate("/login")}
+              className="w-full bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+            >
+              Log In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   /**
    * Handle success and error cases using useEffect (React Query v5 pattern)
@@ -1113,6 +1241,23 @@ export const ProfilePage: React.FC = () => {
       }
     }
   }, [id, userProfileData, profileLoading, profileError, questions, currentUser?.id]);
+
+  // Filter questions by the current profile user
+  const filteredUserQuestions = React.useMemo(() => {
+    return questions.filter(question => question.authorId === id);
+  }, [questions, id]);
+
+  // Simulate loading state for questions (in real app, this would come from API)
+  React.useEffect(() => {
+    setIsLoadingQuestions(true);
+    // Simulate API call delay
+    const timer = setTimeout(() => {
+      setIsLoadingQuestions(false);
+      setQuestionsError(null);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [id]);
 
   /**
    * Handle scroll for profile collapse effect
@@ -1223,6 +1368,16 @@ export const ProfilePage: React.FC = () => {
   const handleConnect = () => {
     if (!profileUser) return;
 
+    // Only allow connecting with other users
+    if (isOwnProfile) {
+      toast({
+        title: "Invalid action",
+        description: "You cannot connect with yourself.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // TODO: Implement connection API call
     console.log("Connect with user:", profileUser.id);
 
@@ -1235,12 +1390,70 @@ export const ProfilePage: React.FC = () => {
   const handleMessage = () => {
     if (!profileUser) return;
 
+    // Only allow messaging other users
+    if (isOwnProfile) {
+      toast({
+        title: "Invalid action",
+        description: "You cannot message yourself.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // TODO: Navigate to chat with user
     console.log("Message user:", profileUser.id);
     navigate("/messages");
   };
 
+  /**
+   * Handle QR code sharing
+   */
+  const handleQRCode = () => {
+    setIsQRDialogOpen(true);
+  };
+
+  /**
+   * Handle editing connection tags
+   */
+  const handleEditTags = () => {
+    setIsEditingTags(true);
+    toast({
+      title: "Edit connection tags",
+      description: "Connection tag editing feature coming soon!",
+    });
+  };
+
+  /**
+   * Handle "We met" action
+   */
   const handleWeMet = () => {
+    if (!profileUser) return;
+    
+    setWeMet(!weMet);
+    toast({
+      title: weMet ? "Removed 'We met'" : "Marked 'We met'",
+      description: weMet 
+        ? `You've unmarked that you met ${profileUser.name}.`
+        : `You've marked that you met ${profileUser.name}.`,
+    });
+  };
+
+  /**
+   * Handle "Remember" action
+   */
+  const handleRemember = () => {
+    if (!profileUser) return;
+    
+    setRemember(!remember);
+    toast({
+      title: remember ? "Removed reminder" : "Added reminder",
+      description: remember 
+        ? `You've removed the reminder for ${profileUser.name}.`
+        : `You'll be reminded about ${profileUser.name}.`,
+    });
+  };
+
+  const handleWeMet2 = () => {
     if (!profileUser) return;
 
     // Add automatic note about meeting
@@ -1261,7 +1474,7 @@ export const ProfilePage: React.FC = () => {
     });
   };
 
-  const handleRemember = () => {
+  const handleRemember2 = () => {
     setActiveTab("notes");
     setIsAddNoteOpen(true);
   };
@@ -1413,7 +1626,7 @@ export const ProfilePage: React.FC = () => {
                   <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
                   <AvatarFallback>{profileUser.name[0]}</AvatarFallback>
                 </Avatar>
-                <span className="font-semibold text-gray-900 truncate">
+                <span className="font-semibold text-gray-900 truncate max-w-[90px]">
                   {profileUser.name}
                 </span>
               </div>
@@ -1422,7 +1635,7 @@ export const ProfilePage: React.FC = () => {
             {/* Action buttons in header */}
             <div className="flex items-center gap-2">
               <Button
-                onClick={handleWeMet}
+                onClick={handleWeMet2}
                 size="sm"
                 variant="outline"
                 className="px-3 py-1 h-8 text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
@@ -1430,7 +1643,7 @@ export const ProfilePage: React.FC = () => {
                 We Met
               </Button>
               <Button
-                onClick={handleRemember}
+                onClick={handleRemember2}
                 size="sm"
                 variant="outline"
                 className="px-3 py-1 h-8 text-xs bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100"
@@ -1450,6 +1663,13 @@ export const ProfilePage: React.FC = () => {
             onConnect={handleConnect}
             onMessage={handleMessage}
             setIsAddNoteOpen={setIsAddNoteOpen}
+            isOwnProfile={isOwnProfile}
+            onQRCode={handleQRCode}
+            onEditTags={handleEditTags}
+            onWeMet={handleWeMet}
+            onRemember={handleRemember}
+            weMet={weMet}
+            remember={remember}
           />
         </div>
 
@@ -1461,7 +1681,7 @@ export const ProfilePage: React.FC = () => {
                 value="questions"
                 className="data-[state=active]:bg-[#F9DF8E] data-[state=active]:text-gray-900 font-semibold"
               >
-                Questions ({userQuestions.length})
+                Questions ({filteredUserQuestions.length})
               </TabsTrigger>
               <TabsTrigger
                 value="notes"
@@ -1473,48 +1693,98 @@ export const ProfilePage: React.FC = () => {
 
             {/* Questions Tab */}
             <TabsContent value="questions" className="space-y-4">
-              {userQuestions.length > 0 ? (
-                userQuestions.map((question) => (
-                  <Card key={question.id} className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-4">
-                          {question.title}
-                        </h3>
-                        <div className="flex items-center gap-1">
-                          {question.isBookmarked && (
-                            <Badge variant="outline" className="text-xs bg-yellow-50 border-yellow-200 text-yellow-700">
-                              Bookmarked
-                            </Badge>
-                          )}
+              {/* Questions Loading State */}
+              {isLoadingQuestions && (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                      <CardContent className="p-6">
+                        <div className="animate-pulse space-y-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                            <div className="flex-1 space-y-3">
+                              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                              <div className="h-3 bg-gray-200 rounded w-full"></div>
+                              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                              <div className="flex gap-2">
+                                <div className="h-6 bg-gray-200 rounded w-16"></div>
+                                <div className="h-6 bg-gray-200 rounded w-20"></div>
+                                <div className="h-6 bg-gray-200 rounded w-14"></div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
 
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                        {question.description}
-                      </p>
-
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
-                        <div className="flex items-center gap-3">
-                          <span>{question.upvotes} uplifts</span>
-                          <span>{question.meTooCount} me too</span>
-                          <span>{question.canHelpCount} can help</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <Card className="bg-white rounded-xl border border-gray-100">
+              {/* Questions Error State */}
+              {questionsError && !isLoadingQuestions && (
+                <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm">
                   <CardContent className="p-12 text-center">
-                    <MessageCircleIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="font-semibold text-gray-900 mb-2">No questions yet</h3>
-                    <p className="text-gray-600">
-                      This user hasn't posted any questions yet.
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-red-600 text-2xl">⚠️</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Failed to load questions
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      {questionsError}
                     </p>
+                    <Button 
+                      onClick={() => {
+                        setQuestionsError(null);
+                        setIsLoadingQuestions(true);
+                        setTimeout(() => setIsLoadingQuestions(false), 500);
+                      }}
+                      className="bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                    >
+                      Try Again
+                    </Button>
                   </CardContent>
                 </Card>
+              )}
+
+              {/* Questions List */}
+              {!isLoadingQuestions && !questionsError && (
+                <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                  {filteredUserQuestions.length > 0 ? (
+                    <>
+                      {/* Question cards */}
+                      {filteredUserQuestions.map((question) => (
+                        <QuestionCard key={question.id} question={question} />
+                      ))}
+                    </>
+                  ) : (
+                    /* Empty state */
+                    <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                      <CardContent className="p-12 text-center">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <span className="text-gray-400 text-2xl">💬</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {isOwnProfile ? "You haven't posted any questions yet" : `${profileUser.name} hasn't posted any questions yet`}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                          {isOwnProfile 
+                            ? "Start engaging with the community by asking your first question." 
+                            : "Check back later to see their questions and insights."
+                          }
+                        </p>
+                        {isOwnProfile && (
+                          <Button 
+                            onClick={() => navigate("/create-question")}
+                            className="bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                          >
+                            Ask Your First Question
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               )}
             </TabsContent>
 
@@ -1651,6 +1921,53 @@ export const ProfilePage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* QR Code Dialog - Only for own profile */}
+      {isOwnProfile && (
+        <Dialog open={isQRDialogOpen} onOpenChange={setIsQRDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Share Your Profile</DialogTitle>
+              <DialogDescription>
+                Let others scan this QR code to quickly access your profile.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex flex-col items-center py-6">
+              {/* Mock QR Code - In real app, generate actual QR code */}
+              <div className="w-48 h-48 bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center mb-4">
+                <div className="text-center">
+                  <QrCodeIcon className="w-16 h-16 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">QR Code</p>
+                  <p className="text-xs text-gray-400 mt-1">Profile: {profileUser.name}</p>
+                </div>
+              </div>
+              
+              <p className="text-sm text-gray-600 text-center">
+                Share this QR code at events for quick profile connections
+              </p>
+            </div>
+            
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  // TODO: Implement QR code saving
+                  toast({
+                    title: "QR Code saved",
+                    description: "QR code has been saved to your device.",
+                  });
+                }}
+              >
+                Save QR Code
+              </Button>
+              <Button onClick={() => setIsQRDialogOpen(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };
