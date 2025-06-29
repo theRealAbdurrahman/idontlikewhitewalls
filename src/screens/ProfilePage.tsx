@@ -29,6 +29,7 @@ import {
   useUserProfile,
   UserProfile as ApiUserProfile
 } from "../api-client/api-client";
+import { QuestionCard } from "../components/QuestionCard";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -1055,6 +1056,8 @@ export const ProfilePage: React.FC = () => {
   const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState("");
   const [editingNote, setEditingNote] = useState<PrivateNote | null>(null);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [questionsError, setQuestionsError] = useState<string | null>(null);
 
   // New state for swipeable profile views
   const [currentProfileView, setCurrentProfileView] = useState<ProfileViewType>("standard");
@@ -1131,6 +1134,23 @@ export const ProfilePage: React.FC = () => {
       }
     }
   }, [id, userProfileData, profileLoading, profileError, questions, currentUser?.id]);
+
+  // Filter questions by the current profile user
+  const filteredUserQuestions = React.useMemo(() => {
+    return questions.filter(question => question.authorId === id);
+  }, [questions, id]);
+
+  // Simulate loading state for questions (in real app, this would come from API)
+  React.useEffect(() => {
+    setIsLoadingQuestions(true);
+    // Simulate API call delay
+    const timer = setTimeout(() => {
+      setIsLoadingQuestions(false);
+      setQuestionsError(null);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [id]);
 
   /**
    * Handle scroll for profile collapse effect
@@ -1295,6 +1315,9 @@ export const ProfilePage: React.FC = () => {
   const handleProfileViewChange = (view: ProfileViewType) => {
     setCurrentProfileView(view);
   };
+
+  // Determine if this is the current user's own profile
+  const isOwnProfile = profileUser?.id === currentUser?.id;
 
   // Loading state
   if (profileLoading) {
@@ -1479,7 +1502,7 @@ export const ProfilePage: React.FC = () => {
                 value="questions"
                 className="data-[state=active]:bg-[#F9DF8E] data-[state=active]:text-gray-900 font-semibold"
               >
-                Questions ({userQuestions.length})
+                Questions ({filteredUserQuestions.length})
               </TabsTrigger>
               <TabsTrigger
                 value="notes"
@@ -1491,48 +1514,105 @@ export const ProfilePage: React.FC = () => {
 
             {/* Questions Tab */}
             <TabsContent value="questions" className="space-y-4">
-              {userQuestions.length > 0 ? (
-                userQuestions.map((question) => (
-                  <Card key={question.id} className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-4">
-                          {question.title}
-                        </h3>
-                        <div className="flex items-center gap-1">
-                          {question.isBookmarked && (
-                            <Badge variant="outline" className="text-xs bg-yellow-50 border-yellow-200 text-yellow-700">
-                              Bookmarked
-                            </Badge>
-                          )}
+              {/* Questions Loading State */}
+              {isLoadingQuestions && (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                      <CardContent className="p-6">
+                        <div className="animate-pulse space-y-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                            <div className="flex-1 space-y-3">
+                              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                              <div className="h-3 bg-gray-200 rounded w-full"></div>
+                              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                              <div className="flex gap-2">
+                                <div className="h-6 bg-gray-200 rounded w-16"></div>
+                                <div className="h-6 bg-gray-200 rounded w-20"></div>
+                                <div className="h-6 bg-gray-200 rounded w-14"></div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
 
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                        {question.description}
-                      </p>
-
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
-                        <div className="flex items-center gap-3">
-                          <span>{question.upvotes} uplifts</span>
-                          <span>{question.meTooCount} me too</span>
-                          <span>{question.canHelpCount} can help</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <Card className="bg-white rounded-xl border border-gray-100">
+              {/* Questions Error State */}
+              {questionsError && !isLoadingQuestions && (
+                <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm">
                   <CardContent className="p-12 text-center">
-                    <MessageCircleIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="font-semibold text-gray-900 mb-2">No questions yet</h3>
-                    <p className="text-gray-600">
-                      This user hasn't posted any questions yet.
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-red-600 text-2xl">⚠️</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Failed to load questions
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      {questionsError}
                     </p>
+                    <Button 
+                      onClick={() => {
+                        setQuestionsError(null);
+                        setIsLoadingQuestions(true);
+                        setTimeout(() => setIsLoadingQuestions(false), 500);
+                      }}
+                      className="bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                    >
+                      Try Again
+                    </Button>
                   </CardContent>
                 </Card>
+              )}
+
+              {/* Questions List */}
+              {!isLoadingQuestions && !questionsError && (
+                <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                  {filteredUserQuestions.length > 0 ? (
+                    <>
+                      {/* Questions count */}
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-sm text-gray-600">
+                          {filteredUserQuestions.length} question{filteredUserQuestions.length !== 1 ? 's' : ''} posted
+                        </p>
+                      </div>
+                      
+                      {/* Question cards */}
+                      {filteredUserQuestions.map((question) => (
+                        <QuestionCard key={question.id} question={question} />
+                      ))}
+                    </>
+                  ) : (
+                    /* Empty state */
+                    <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                      <CardContent className="p-12 text-center">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <span className="text-gray-400 text-2xl">💬</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {isOwnProfile ? "You haven't posted any questions yet" : `${profileUser.name} hasn't posted any questions yet`}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                          {isOwnProfile 
+                            ? "Start engaging with the community by asking your first question." 
+                            : "Check back later to see their questions and insights."
+                          }
+                        </p>
+                        {isOwnProfile && (
+                          <Button 
+                            onClick={() => navigate("/create-question")}
+                            className="bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+                          >
+                            Ask Your First Question
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               )}
             </TabsContent>
 
