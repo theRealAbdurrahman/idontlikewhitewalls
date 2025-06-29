@@ -336,10 +336,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
 
   const handleCanHelp = () => {
     // Don't allow offering help on own questions
+    console.log({ user, question, isOwnQuestion });
+
     if (!user || !question || isOwnQuestion) return;
 
+
     // Generate thread ID for this help conversation
-    const threadId = `help-${question.id}-${user.id}`;
+    const threadId = `help-${question.id}-${user.id || question.authorId}`;
 
     // Check if there's already a thread with messages (not just preview)
     const existingThread = chatThreads.find(thread => thread.id === threadId);

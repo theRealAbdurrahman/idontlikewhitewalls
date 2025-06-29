@@ -8,7 +8,7 @@ import { fetchCurrentUser, LogtoUserData } from '../api-client/api-client';
  * This synchronizes Logto state with our Zustand store
  */
 export const useLogtoAuthBridge = () => {
-  const { isAuthenticated, isLoading, user, error, getIdTokenClaims } = useLogto();
+  const { isAuthenticated, isLoading, error, getIdTokenClaims, getIdToken } = useLogto();
   const { setCurrentUser, setAuthenticated, setLoading, setError } = useAuthStore();
 
   // Sync authentication state
@@ -34,21 +34,18 @@ export const useLogtoAuthBridge = () => {
   useEffect(() => {
     const syncUserData = async () => {
       if (isAuthenticated && !isLoading) {
+        const jwt = await getIdToken();
+
         try {
           // Get detailed user claims from ID token
           const claims = await getIdTokenClaims();
+          console.log('Logto user claims:', claims);
+
           
           // Combine user info with ID token claims for full profile
           const logtoUserData: LogtoUserData = {
-            sub: claims?.sub || user?.sub || `logto_${Date.now()}`,
-            email: claims?.email || user?.email,
-            name: claims?.name || user?.name,
-            given_name: claims?.given_name || user?.given_name,
-            family_name: claims?.family_name || user?.family_name,
-            picture: claims?.picture || user?.picture,
-            bio: claims?.bio,
-            job_title: claims?.job_title,
-            linkedin_url: claims?.linkedin_url,
+            sub: claims!.sub,
+            jwt: jwt || '', // Include JWT token if available
           };
           
           console.log('Fetching backend user for Logto data:', logtoUserData);
@@ -71,12 +68,11 @@ export const useLogtoAuthBridge = () => {
     };
 
     syncUserData();
-  }, [isAuthenticated, isLoading, user, getIdTokenClaims, setCurrentUser, setError]);
+  }, [isAuthenticated, isLoading, getIdTokenClaims, setCurrentUser, setError]);
 
   return {
     isAuthenticated,
     isLoading,
-    user,
     error,
   };
 };

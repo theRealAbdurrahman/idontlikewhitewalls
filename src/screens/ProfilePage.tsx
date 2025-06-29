@@ -1414,7 +1414,7 @@ export const ProfilePage: React.FC = () => {
                   <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
                   <AvatarFallback>{profileUser.name[0]}</AvatarFallback>
                 </Avatar>
-                <span className="font-semibold text-gray-900 truncate">
+                <span className="font-semibold text-gray-900 truncate max-w-[90px]">
                   {profileUser.name}
                 </span>
               </div>

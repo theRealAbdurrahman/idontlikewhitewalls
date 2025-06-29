@@ -16,7 +16,7 @@ import { SuggestFeature } from "./screens/SuggestFeature";
 import { Callback } from "./screens/Callback";
 import { AuthProvider } from "./contexts/AuthContext";
 
-import { LogtoProvider, LogtoConfig } from '@logto/react';
+import { LogtoProvider, LogtoConfig, UserScope } from '@logto/react';
 import { Login } from "./screens/Login";
 import { SignupFlow } from "./screens/SignupFlow";
 import { Logout } from "./screens/Logout";
@@ -24,6 +24,12 @@ import { Logout } from "./screens/Logout";
 const config: LogtoConfig = {
   endpoint: 'https://login.meetball.fun',
   appId: 'uhmy6e6frjsbed2pwni1u',
+  scopes: [
+    UserScope.Email,
+    UserScope.Phone,
+    UserScope.CustomData,
+  ],
+
 };
 
 export const App = (): JSX.Element => {

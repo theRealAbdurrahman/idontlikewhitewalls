@@ -137,14 +137,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile> => 
  */
 export interface LogtoUserData {
   sub: string;
-  email?: string;
-  name?: string;
-  given_name?: string;
-  family_name?: string;
-  picture?: string;
-  bio?: string;
-  job_title?: string;
-  linkedin_url?: string;
+  jwt: string; // Optional JWT token
 }
 
 /**
@@ -153,38 +146,27 @@ export interface LogtoUserData {
  * @returns Promise resolving to the backend user profile
  */
 export const fetchCurrentUser = async (logtoData: LogtoUserData): Promise<UserProfile> => {
+  console.log({ logtoData });
+
   if (!logtoData.sub) {
     throw new Error('Logto sub (user ID) is required');
   }
+
 
   try {
     // Prepare request body with user data
     const requestBody = {
       logto_sub: logtoData.sub,
-      email: logtoData.email,
-      given_name: logtoData.given_name,
-      family_name: logtoData.family_name,
-      picture: logtoData.picture,
-      bio: logtoData.bio,
-      job_title: logtoData.job_title,
-      linkedin_url: logtoData.linkedin_url,
     };
 
-    // If no name parts, try to parse from name field
-    if (!logtoData.given_name && !logtoData.family_name && logtoData.name) {
-      const nameParts = logtoData.name.split(' ');
-      if (nameParts.length > 0) {
-        requestBody.given_name = nameParts[0];
-        if (nameParts.length > 1) {
-          requestBody.family_name = nameParts.slice(1).join(' ');
-        }
-      }
-    }
 
     const response = await customInstance<UserProfile>({
       url: `/api/v1/users/me`,
       method: 'POST',
       data: requestBody,
+      headers: {
+        Authorization: `Bearer ${logtoData.jwt}`,
+      },
     });
 
     return response.data;
