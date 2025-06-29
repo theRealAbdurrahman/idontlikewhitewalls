@@ -19,7 +19,10 @@ import {
   ChevronUpIcon,
   ShareIcon,
   MoreVerticalIcon,
-  HandshakeIcon
+  HandshakeIcon,
+  FileTextIcon,
+  LinkIcon,
+  GridIcon
 } from "lucide-react";
 import { 
   useUserProfile,
@@ -828,7 +831,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                           className="minimalist-action-button primary"
                           aria-label="Send message"
                         >
-                          <MessageCircleIcon className="w-5 h-5" />
+                          <FileTextIcon className="w-5 h-5" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="action-button-tooltip">
@@ -844,7 +847,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                           className="minimalist-action-button"
                           aria-label="Connect with user"
                         >
-                          <HandshakeIcon className="w-5 h-5" />
+                          <LinkIcon className="w-5 h-5" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="action-button-tooltip">
@@ -861,7 +864,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                           aria-label="View LinkedIn profile"
                           disabled={!profileUser.linkedinUrl}
                         >
-                          <LinkedinIcon className="w-5 h-5" />
+                          <span className="text-sm font-bold">in</span>
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="action-button-tooltip">
@@ -877,7 +880,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                           className="minimalist-action-button"
                           aria-label="View other links"
                         >
-                          <ExternalLinkIcon className="w-5 h-5" />
+                          <GridIcon className="w-4 h-4" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="action-button-tooltip">
