@@ -19,9 +19,10 @@ import {
   ChevronUpIcon,
   ShareIcon,
   MoreVerticalIcon,
-  HandshakeIcon,
-  FileTextIcon,
-  LinkIcon,
+  PlusIcon, 
+  MessageCircleIcon,
+  UserPlusIcon,
+  LinkedinIcon,
   GridIcon,
   Link2
 } from "lucide-react";
@@ -1401,14 +1402,15 @@ export const ProfilePage: React.FC = () => {
               : 'bg-[#f0efeb] h-20'
             }`}
         >
-          <div className="flex items-center justify-between h-full px-4 pt-2">
+            {/* Add Note Button - with text */}
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleBack}
-              className="w-10 h-10 rounded-full hover:bg-gray-100/80"
+                <p>Send Message</p>
+              aria-label="Add Note about this person"
             >
-              <ArrowLeftIcon className="w-5 h-5" />
+              <PlusIcon className="w-4 h-4 text-[#FFE066] group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-sm font-medium text-gray-700">add note</span>
             </Button>
 
             {/* Collapsed header shows profile name and action buttons */}
@@ -1418,11 +1420,11 @@ export const ProfilePage: React.FC = () => {
                   <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
                   <AvatarFallback>{profileUser.name[0]}</AvatarFallback>
                 </Avatar>
-                <span className="font-semibold text-gray-900 truncate">
+                  <UserPlusIcon className="w-5 h-5 text-[#FFE066] group-hover:scale-110 transition-transform duration-200" />
                   {profileUser.name}
-                </span>
+                  <MessageCircleIcon className="w-5 h-5 text-[#FFE066] group-hover:scale-110 transition-transform duration-200" />
               </div>
-            )}
+                <p>{user?.isConnected ? "Connected" : "Send Connection Request"}</p>
 
             {/* Action buttons in header */}
             <div className="flex items-center gap-2">
@@ -1436,7 +1438,7 @@ export const ProfilePage: React.FC = () => {
               </Button>
               <Button
                 onClick={handleRemember}
-                size="sm"
+                  <LinkedinIcon className="w-5 h-5 text-[#FFE066] group-hover:scale-110 transition-transform duration-200" />
                 variant="outline"
                 className="px-3 py-1 h-8 text-xs bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100"
               >
