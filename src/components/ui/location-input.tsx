@@ -58,6 +58,11 @@ interface LocationInputProps {
  * - No API requests are made while input matches accepted value
  * - Requests resume only when user types something different
  * - Prevents unwanted requests after clicking suggestions or focusing
+ * 
+ * Google Maps Integration:
+ * - Always generates Google Maps search URLs for any location input
+ * - Works for both Nominatim suggestions and manually typed locations
+ * - Ensures all locations are clickable even if not in Nominatim database
  */
 export const LocationInput: React.FC<LocationInputProps> = ({
   value,
@@ -327,10 +332,15 @@ export const LocationInput: React.FC<LocationInputProps> = ({
       acceptedValueRef.current = "";
     }
 
+    // Always generate Google Maps URL, even for manually typed locations
+    // Google Maps has much broader coverage than Nominatim
+    const googleMapsUrl = newValue.trim() ? generateGoogleMapsUrl(newValue) : undefined;
+
     // Update parent immediately with raw input (for immediate UI feedback)
     onChange?.({
       displayName: newValue,
       input: newValue,
+      googleMapsUrl,
     });
   };
 
