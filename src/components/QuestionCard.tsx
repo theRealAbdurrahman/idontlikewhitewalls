@@ -2,11 +2,11 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { MoreVerticalIcon, BookmarkIcon, ArrowUpIcon } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateInteractionApiV1InteractionsPost,
   useDeleteInteractionApiV1InteractionsInteractionIdDelete
 } from "../api-client/api-client";
+import { useCacheManager } from "../hooks/useCacheManager";
 import { InteractionTarget, InteractionType } from "../api-client/models";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
@@ -76,7 +76,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const { chatThreads, messages } = useAppStore();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { afterInteraction } = useCacheManager();
 
   // Local state for report modal
   const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
@@ -89,12 +89,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
 
   // Check if this is the current user's own question
   const isOwnQuestion = question.authorId === user?.id;
-
-  // Helper function to invalidate relevant caches after interactions
-  const invalidateInteractionCaches = () => {
-    queryClient.invalidateQueries({ queryKey: ['questions'] });
-    queryClient.invalidateQueries({ queryKey: ['interactions'] });
-  };
 
   /**
    * Handle report submission
@@ -180,8 +174,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
       }, {
         onSuccess: () => {
           console.log("Upvote created successfully");
-          // Invalidate caches to refresh the question feed
-          invalidateInteractionCaches();
+          // Invalidate caches using centralized cache manager
+          afterInteraction(question.id);
           // Show success feedback
           toast({
             title: "Question uplifted!",
@@ -225,8 +219,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
       }, {
         onSuccess: () => {
           console.log("Me too created successfully");
-          // Invalidate caches to refresh the question feed
-          invalidateInteractionCaches();
+          // Invalidate caches using centralized cache manager
+          afterInteraction(question.id);
           // Show success feedback
           toast({
             title: "Me too recorded!",
@@ -270,8 +264,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
       }, {
         onSuccess: () => {
           console.log("Bookmark created successfully");
-          // Invalidate caches to refresh the question feed
-          invalidateInteractionCaches();
+          // Invalidate caches using centralized cache manager
+          afterInteraction(question.id);
           // Show success feedback
           toast({
             title: "Question bookmarked!",
