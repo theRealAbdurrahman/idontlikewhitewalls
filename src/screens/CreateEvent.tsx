@@ -619,7 +619,7 @@ export const CreateEvent: React.FC = () => {
                           <LocationInput
                             value={field.value}
                             onChange={field.onChange}
-                            placeholder="LX Factory, R. Rodrigues de Faria"
+                            placeholder="i.e. LX Factory, Lisbon"
                             disabled={isSubmitting}
                           />
                         </FormControl>
