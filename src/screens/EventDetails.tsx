@@ -3,12 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { 
   CalendarIcon, 
   MapPinIcon, 
-  UsersIcon, 
-  EuroIcon, 
   ExternalLinkIcon, 
   ShareIcon,
   ArrowLeftIcon,
-  ClockIcon,
   BuildingIcon,
   PhoneIcon,
   MailIcon,
