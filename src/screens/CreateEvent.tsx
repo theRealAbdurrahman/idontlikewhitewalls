@@ -55,6 +55,7 @@ import { Badge } from "../components/ui/badge";
 import { useAuthStore } from "../stores/authStore";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
+import { isValidUrl } from "../utils/urlValidation";
 
 /**
  * Form validation schema using Zod
