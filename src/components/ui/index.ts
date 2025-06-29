@@ -6,6 +6,8 @@ export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export { Checkbox } from "./checkbox";
 export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
 export { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "./dropdown-menu";
+export { LocationInput } from "./location-input";
+export type { LocationData } from "./location-input";
 export { ScrollArea } from "./scroll-area";
 export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 export { Separator } from "./separator";

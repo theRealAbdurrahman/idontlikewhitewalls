@@ -12,6 +12,7 @@ import { Badge } from "../components/ui/badge";
 import { useAuthStore } from "../stores/authStore";
 import { useToast } from "../hooks/use-toast";
 import { ParticipantRole, ParticipantStatus } from "../api-client/models";
+import { openLocationInGoogleMaps } from "../utils/googleMaps";
 
 /**
  * Event interface with banner image support
@@ -489,7 +490,16 @@ export const Events: React.FC = () => {
                             {/* Location */}
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <MapPinIcon className="w-3 h-3 flex-shrink-0" />
-                              <span className="line-clamp-2 leading-tight">{event.location}</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent event card navigation
+                                  openLocationInGoogleMaps(event.location);
+                                }}
+                                className="line-clamp-2 leading-tight hover:text-blue-600 transition-colors text-left cursor-pointer underline-offset-2 hover:underline"
+                                title="Click to open in Google Maps"
+                              >
+                                {event.location}
+                              </button>
                             </div>
                           </div>
                         </div>
