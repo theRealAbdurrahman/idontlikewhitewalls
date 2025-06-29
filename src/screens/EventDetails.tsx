@@ -32,6 +32,7 @@ import {
 import { useAppStore } from "../stores/appStore";
 import { useAuthStore } from "../stores/authStore";
 import { useToast } from "../hooks/use-toast";
+import { openLocationInGoogleMaps } from "../utils/googleMaps";
 
 /**
  * Custom styles for enhanced visual effects and animations
@@ -533,17 +534,21 @@ export const EventDetails: React.FC = () => {
                     <MapPinIcon className="w-5 h-5 text-purple-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{event.location}</p>
-                    {event.website && (
-                      <Button
-                        variant="link"
-                        className="p-0 h-auto text-sm text-blue-600 hover:text-blue-800 mt-1"
-                        onClick={() => window.open(event.website, "_blank")}
-                      >
-                        <ExternalLinkIcon className="w-3 h-3 mr-1" />
-                        View on Maps
-                      </Button>
-                    )}
+                    <button
+                      onClick={() => openLocationInGoogleMaps(event.location)}
+                      className="font-semibold text-gray-900 hover:text-blue-600 transition-colors text-left cursor-pointer underline-offset-2 hover:underline"
+                      title="Click to open in Google Maps"
+                    >
+                      {event.location}
+                    </button>
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto text-sm text-blue-600 hover:text-blue-800 mt-1"
+                      onClick={() => openLocationInGoogleMaps(event.location)}
+                    >
+                      <MapPinIcon className="w-3 h-3 mr-1" />
+                      View on Google Maps
+                    </Button>
                   </div>
                 </div>
               </div>
