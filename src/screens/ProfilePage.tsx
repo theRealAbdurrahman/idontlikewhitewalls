@@ -75,6 +75,7 @@ interface UserProfile {
   joinedAt: string;
   profileVersion: "standard" | "funky";
   virtues?: string[];
+  connectWith?: string[];
 }
 
 /**
@@ -522,6 +523,7 @@ const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
     joinedAt: apiUser.created_at,
     profileVersion: "standard" as const, // Default profile version
     virtues: ["Creative", "Innovative", "Collaborative", "Authentic", "Empathetic", "Visionary"], // Mock virtues for funky profile
+    connectWith: ["Tech", "Business", "Finance", "Innovation", "Startups"], // Connection tags from signup
   };
 };
 
@@ -794,6 +796,23 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
 
                     {profileUser.location && (
                       <p className="text-gray-500 text-sm mb-3">{profileUser.location}</p>
+                    )}
+
+                    {/* Connection Tags Section */}
+                    {profileUser.connectWith && profileUser.connectWith.length > 0 && (
+                      <div className="mb-4">
+                        <div className="flex flex-wrap gap-2">
+                          {profileUser.connectWith.map((tag, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="bg-[#FFE066] text-gray-800 border-none font-medium text-xs px-3 py-1 rounded-full hover:bg-[#FFD700] transition-colors cursor-default"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
                     )}
                     {/* TODO: add the virtues and tags here */}
 
