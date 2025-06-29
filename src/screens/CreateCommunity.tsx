@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { isValidUrl, normalizeWebUrl } from "../utils/urlValidation";
 import { 
   XIcon, 
   ImageIcon, 
@@ -59,14 +60,12 @@ const communityFormSchema = z.object({
   location: z.string().min(3, "Location is required").max(200, "Location too long"),
   description: z.string().min(10, "Description must be at least 10 characters").max(1000, "Description too long"),
   communityUrl: z.string().optional().refine((val) => {
-    if (!val || val.trim() === "") return true;
-    try {
-      new URL(val);
-      return true;
-    } catch {
-      return false;
-    }
-  }, "Please enter a valid URL"),
+    return isValidUrl(val || '', {
+      addProtocol: true,
+      addWww: true,
+      allowedProtocols: ['https:']
+    });
+  }, "Please enter a valid URL (e.g., meetball.fun, www.example.com)"),
   manager: z.string().min(1, "Manager is required"),
   coHost: z.string().optional(),
   isOpen: z.boolean().default(true),
@@ -244,6 +243,10 @@ export const CreateCommunity: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      // Normalize URL before processing
+      const normalizedCommunityUrl = data.communityUrl ? 
+        normalizeWebUrl(data.communityUrl) : null;
+
       // Simulate API call for community creation
       await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -253,8 +256,14 @@ export const CreateCommunity: React.FC = () => {
       // - Set up initial permissions and settings
       // - Send notifications to relevant users
 
+      // Log normalized URL for debugging
+      if (data.communityUrl && normalizedCommunityUrl !== data.communityUrl) {
+        console.log(`Normalized Community URL: "${data.communityUrl}" → "${normalizedCommunityUrl}"`);
+      }
+
       console.log("Community created:", {
         ...data,
+        communityUrl: normalizedCommunityUrl,
         createdBy: user.id,
         createdAt: new Date().toISOString(),
         memberCount: 1, // Creator is first member
