@@ -170,23 +170,6 @@ const CollapsibleText: React.FC<CollapsibleTextProps> = ({
         } as React.CSSProperties}
       >
         {text}
-
-        {/* Expand/Collapse Indicator */}
-        {needsTruncation && showIndicator && (
-          <div className="collapsible-text-indicator">
-            {isExpanded ? (
-              <div className="indicator-content">
-                <span className="indicator-text">Show less</span>
-                <ChevronUpIcon className="indicator-icon" />
-              </div>
-            ) : (
-              <div className="indicator-content">
-                <span className="indicator-text">Show more</span>
-                <ChevronDownIcon className="indicator-icon" />
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -795,6 +778,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h1 className="text-2xl font-bold text-gray-900">{profileUser.name}</h1>
+                      {/* inset tags from signup flow here step1.connectWith */}
                       {profileUser.verified && (
                         <Badge className="bg-blue-100 text-blue-800 text-xs">
                           Verified
@@ -888,16 +872,19 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                 </div>
 
                 {/* CollapsibleText Section - Updated to use CollapsibleText component */}
-                <CollapsibleText
-                  text={renderConnectDetails(profileUser.connectDetails)}
-                  maxLines={4}
-                  className="connect-details-text text-gray-700 leading-relaxed mt-4"
-                  showIndicator={false}
-                />
-
-                {/* Additional Information Section with Second CollapsibleText */}
                 <div className="space-y-2 mt-6">
                   <h3 className="text-sm font-semibold text-gray-900">Professional Background</h3>
+                  <CollapsibleText
+                    text="I'm a passionate product manager with over 8 years of experience in the tech industry. I've led cross-functional teams to deliver innovative solutions that have impacted millions of users. My expertise spans product strategy, user experience design, data analytics, and agile development methodologies. I'm particularly interested in emerging technologies like AI and machine learning, and how they can be leveraged to create more personalized and efficient user experiences. I believe in building products that not only solve real problems but also delight users and drive business growth."
+                    maxLines={3}
+                    className="text-gray-700 text-sm leading-relaxed"
+                    showIndicator={true}
+                  />
+                </div>
+
+                {/* Additional Information Section with Second CollapsibleText */}
+                <div className="space-y-2 mt-2">
+                  <h3 className="text-sm font-semibold text-gray-900">Can help other with</h3>
                   <CollapsibleText
                     text="I'm a passionate product manager with over 8 years of experience in the tech industry. I've led cross-functional teams to deliver innovative solutions that have impacted millions of users. My expertise spans product strategy, user experience design, data analytics, and agile development methodologies. I'm particularly interested in emerging technologies like AI and machine learning, and how they can be leveraged to create more personalized and efficient user experiences. I believe in building products that not only solve real problems but also delight users and drive business growth."
                     maxLines={3}
