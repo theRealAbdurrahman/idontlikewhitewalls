@@ -22,6 +22,7 @@ import {
 import { Checkbox } from "../components/ui/checkbox";
 import { useAuthStore } from "../stores/authStore";
 import { useToast } from "../hooks/use-toast";
+import { useLogtoAuthBridge } from "../hooks/useLogtoAuthBridge";
 
 /**
  * Interface for event selection
@@ -40,6 +41,9 @@ export const CreateQuestion: React.FC = () => {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const { afterQuestionCreate } = useCacheManager();
+  
+  // Bridge Logto authentication with our AuthStore
+  useLogtoAuthBridge();
   
   // Fetch events data from API
   const { data: eventsData, isLoading: eventsLoading } = useReadEventsApiV1EventsGet();

@@ -152,7 +152,7 @@ export const useUserProfile = (
     },
     enabled: !!userId && userId.trim() !== '', // Only run query if userId is provided and not empty
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
     retry: (failureCount, error: any) => {
       // Don't retry on 404 (user not found) or 403 (access denied)
       if (error?.message?.includes('not found') || error?.message?.includes('Access denied')) {
