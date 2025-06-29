@@ -25,5 +25,8 @@ export const useCacheManager = () => {
     
     afterEventUpdate: (eventId: string) => 
       cacheUtils.afterEventUpdate(queryClient, eventId),
+    
+    afterEventCreate: (eventId?: string) => 
+      cacheUtils.afterEventCreate(queryClient, eventId),
   };
 };

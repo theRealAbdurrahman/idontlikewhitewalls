@@ -565,6 +565,7 @@ interface SwipeableProfileProps {
   onProfileViewChange: (view: ProfileViewType) => void;
   onConnect: () => void;
   onMessage: () => void;
+  setIsAddNoteOpen: (isOpen: boolean) => void;
 }
 
 const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
@@ -572,7 +573,8 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
   currentProfileView,
   onProfileViewChange,
   onConnect,
-  onMessage
+  onMessage,
+  setIsAddNoteOpen
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -730,14 +732,6 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
     }
   };
 
-  const handleOtherLinks = () => {
-    // For now, just show a toast. In a real app, this would show a menu of links
-    toast({
-      title: "Other links",
-      description: "Additional profile links coming soon.",
-    });
-  };
-
   return (
     <div className="px-4 pb-6">
 
@@ -824,6 +818,22 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                 {/* Action Buttons - Enhanced with minimalistic design */}
                 <div className="flex justify-center gap-4 mt-6">
                   <TooltipProvider>
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsAddNoteOpen(true)}
+                          className="label-button flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50 border-dashed"
+                          aria-label="Add custom connection preference"
+                        >
+                          <PlusIcon className="w-4 h-4" /> add note
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="action-button-tooltip">
+                        add note
+                      </TooltipContent>
+                    </Tooltip>
                     {/* Message Button */}
                     <Tooltip delayDuration={200}>
                       <TooltipTrigger asChild>
@@ -873,21 +883,6 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                       </TooltipContent>
                     </Tooltip>
 
-                    {/* Other Links Button */}
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={handleOtherLinks}
-                          className="minimalist-action-button"
-                          aria-label="View other links"
-                        >
-                          <Link2 className="w-4 h-4" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="action-button-tooltip">
-                        Other Links
-                      </TooltipContent>
-                    </Tooltip>
                   </TooltipProvider>
                 </div>
 
@@ -1398,7 +1393,7 @@ export const ProfilePage: React.FC = () => {
           ref={headerRef}
           className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${isHeaderCollapsed
             ? 'profile-header-sticky h-16 shadow-sm'
-              : 'bg-[#f0efeb] h-20'
+            : 'bg-[#f0efeb] h-20'
             }`}
         >
           <div className="flex items-center justify-between h-full px-4 pt-2">
@@ -1454,6 +1449,7 @@ export const ProfilePage: React.FC = () => {
             onProfileViewChange={handleProfileViewChange}
             onConnect={handleConnect}
             onMessage={handleMessage}
+            setIsAddNoteOpen={setIsAddNoteOpen}
           />
         </div>
 
@@ -1525,37 +1521,10 @@ export const ProfilePage: React.FC = () => {
             {/* Notes Tab */}
             <TabsContent value="notes" className="space-y-4">
               <div className="flex justify-end">
-                <Dialog open={isAddNoteOpen} onOpenChange={setIsAddNoteOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white">
-                      <PlusIcon className="w-4 h-4 mr-2" />
-                      Add Note
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Private Note</DialogTitle>
-                      <DialogDescription>
-                        Add a personal note about {profileUser.name}. Use hashtags to organize your thoughts.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <textarea
-                      value={newNoteContent}
-                      onChange={(e) => setNewNoteContent(e.target.value)}
-                      placeholder="Remember something about this person... #hashtags"
-                      className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ec6c6] resize-none"
-                      maxLength={500}
-                    />
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddNoteOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleAddNote} disabled={!newNoteContent.trim()}>
-                        Add Note
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <Button onClick={() => setIsAddNoteOpen(true)} size="sm" className="bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white">
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Add Note
+                </Button>
               </div>
 
               {privateNotes.length > 0 ? (
@@ -1613,7 +1582,7 @@ export const ProfilePage: React.FC = () => {
                     <p className="text-gray-600 mb-4">
                       Add a personal note or tag to remember this person.
                     </p>
-                      <Button
+                    <Button
                       onClick={() => setIsAddNoteOpen(true)}
                       variant="outline"
                     >
@@ -1656,6 +1625,32 @@ export const ProfilePage: React.FC = () => {
         {/* Bottom padding */}
         <div className="h-8" />
       </div>
+
+      <Dialog open={isAddNoteOpen} onOpenChange={setIsAddNoteOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Private Note</DialogTitle>
+            <DialogDescription>
+              Add a personal note about {profileUser.name}. Use hashtags to organize your thoughts.
+            </DialogDescription>
+          </DialogHeader>
+          <textarea
+            value={newNoteContent}
+            onChange={(e) => setNewNoteContent(e.target.value)}
+            placeholder="Remember something about this person... #hashtags"
+            className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3ec6c6] resize-none"
+            maxLength={500}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddNoteOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddNote} disabled={!newNoteContent.trim()}>
+              Add Note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

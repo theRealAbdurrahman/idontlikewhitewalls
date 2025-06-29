@@ -7,6 +7,7 @@ import {
   useDeleteInteractionApiV1InteractionsInteractionIdDelete
 } from "../api-client/api-client";
 import { useCacheManager } from "../hooks/useCacheManager";
+import { useQuestionInteractions } from "../hooks/useUserInteractions";
 import { InteractionTarget, InteractionType } from "../api-client/models";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
@@ -86,6 +87,18 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
 
   // API mutations for interactions
   const createInteractionMutation = useCreateInteractionApiV1InteractionsPost();
+  const deleteInteractionMutation = useDeleteInteractionApiV1InteractionsInteractionIdDelete();
+
+  // Get user's interactions for this question
+  const {
+    isUpvoted: userHasUpvoted,
+    isMeToo: userHasMeToo,
+    isBookmarked: userHasBookmarked,
+    upvoteId,
+    meTooId,
+    bookmarkId,
+    isLoading: interactionsLoading
+  } = useQuestionInteractions(question.id);
 
   // Check if this is the current user's own question
   const isOwnQuestion = question.authorId === user?.id;
@@ -152,18 +165,33 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
 
   const handleUpvote = () => {
     // Don't allow interaction with own questions
-    if (!user || isOwnQuestion) return;
+    if (!user || isOwnQuestion || interactionsLoading) return;
 
-    // Use API to toggle upvote
-    if (question.isUpvoted) {
-      // TODO: Need to track interaction IDs to delete specific interactions
-      // For now, show user feedback that toggle functionality is coming
-      toast({
-        title: "Feature coming soon",
-        description: "Remove upvote functionality will be available soon.",
-        variant: "default",
+    // Toggle upvote: delete if exists, create if doesn't
+    if (userHasUpvoted && upvoteId) {
+      // Delete existing upvote
+      deleteInteractionMutation.mutate({
+        interactionId: upvoteId
+      }, {
+        onSuccess: () => {
+          console.log("Upvote removed successfully");
+          afterInteraction(question.id);
+          toast({
+            title: "Upvote removed",
+            description: "Your upvote has been removed.",
+          });
+        },
+        onError: (error) => {
+          console.error("Failed to remove upvote:", error);
+          toast({
+            title: "Failed to remove upvote",
+            description: "Please try again. Check your connection.",
+            variant: "destructive",
+          });
+        }
       });
     } else {
+      // Create new upvote
       createInteractionMutation.mutate({
         data: {
           user_id: user.id,
@@ -174,9 +202,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
       }, {
         onSuccess: () => {
           console.log("Upvote created successfully");
-          // Invalidate caches using centralized cache manager
           afterInteraction(question.id);
-          // Show success feedback
           toast({
             title: "Question uplifted!",
             description: "Your upvote has been recorded.",
@@ -184,7 +210,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
         },
         onError: (error) => {
           console.error("Failed to create upvote:", error);
-          // Show error feedback
           toast({
             title: "Failed to upvote",
             description: "Please try again. Check your connection.",
@@ -197,18 +222,33 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
 
   const handleMeToo = () => {
     // Don't allow interaction with own questions
-    if (!user || isOwnQuestion) return;
+    if (!user || isOwnQuestion || interactionsLoading) return;
 
-    // Use API to toggle me too
-    if (question.isMeToo) {
-      // TODO: Need to track interaction IDs to delete specific interactions
-      // For now, show user feedback that toggle functionality is coming
-      toast({
-        title: "Feature coming soon",
-        description: "Remove 'me too' functionality will be available soon.",
-        variant: "default",
+    // Toggle me too: delete if exists, create if doesn't
+    if (userHasMeToo && meTooId) {
+      // Delete existing me too
+      deleteInteractionMutation.mutate({
+        interactionId: meTooId
+      }, {
+        onSuccess: () => {
+          console.log("Me too removed successfully");
+          afterInteraction(question.id);
+          toast({
+            title: "Me too removed",
+            description: "Your 'me too' has been removed.",
+          });
+        },
+        onError: (error) => {
+          console.error("Failed to remove me too:", error);
+          toast({
+            title: "Failed to remove 'me too'",
+            description: "Please try again. Check your connection.",
+            variant: "destructive",
+          });
+        }
       });
     } else {
+      // Create new me too
       createInteractionMutation.mutate({
         data: {
           user_id: user.id,
@@ -219,9 +259,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
       }, {
         onSuccess: () => {
           console.log("Me too created successfully");
-          // Invalidate caches using centralized cache manager
           afterInteraction(question.id);
-          // Show success feedback
           toast({
             title: "Me too recorded!",
             description: "You've indicated you have the same question.",
@@ -229,7 +267,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
         },
         onError: (error) => {
           console.error("Failed to create me too:", error);
-          // Show error feedback
           toast({
             title: "Failed to record 'me too'",
             description: "Please try again. Check your connection.",
@@ -242,18 +279,33 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
 
   const handleBookmark = () => {
     // Allow bookmarking own questions
-    if (!user) return;
+    if (!user || interactionsLoading) return;
 
-    // Use API to toggle bookmark
-    if (question.isBookmarked) {
-      // TODO: Need to track interaction IDs to delete specific interactions
-      // For now, show user feedback that toggle functionality is coming
-      toast({
-        title: "Feature coming soon",
-        description: "Remove bookmark functionality will be available soon.",
-        variant: "default",
+    // Toggle bookmark: delete if exists, create if doesn't
+    if (userHasBookmarked && bookmarkId) {
+      // Delete existing bookmark
+      deleteInteractionMutation.mutate({
+        interactionId: bookmarkId
+      }, {
+        onSuccess: () => {
+          console.log("Bookmark removed successfully");
+          afterInteraction(question.id);
+          toast({
+            title: "Bookmark removed",
+            description: "Question removed from your bookmarks.",
+          });
+        },
+        onError: (error) => {
+          console.error("Failed to remove bookmark:", error);
+          toast({
+            title: "Failed to remove bookmark",
+            description: "Please try again. Check your connection.",
+            variant: "destructive",
+          });
+        }
       });
     } else {
+      // Create new bookmark
       createInteractionMutation.mutate({
         data: {
           user_id: user.id,
@@ -264,9 +316,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
       }, {
         onSuccess: () => {
           console.log("Bookmark created successfully");
-          // Invalidate caches using centralized cache manager
           afterInteraction(question.id);
-          // Show success feedback
           toast({
             title: "Question bookmarked!",
             description: "Question saved to your bookmarks.",
@@ -274,7 +324,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
         },
         onError: (error) => {
           console.error("Failed to create bookmark:", error);
-          // Show error feedback
           toast({
             title: "Failed to bookmark",
             description: "Please try again. Check your connection.",
@@ -378,10 +427,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                   e.stopPropagation(); // Prevent question click event
                   handleBookmark();
                 }}
-                className={`w-6 h-6 p-0 ${question.isBookmarked ? "text-yellow-500" : "text-gray-400"
+                className={`w-6 h-6 p-0 ${userHasBookmarked ? "text-yellow-500" : "text-gray-400"
                   }`}
               >
-                <BookmarkIcon className="w-5 h-5" fill={question.isBookmarked ? "currentColor" : "none"} />
+                <BookmarkIcon className="w-5 h-5" fill={userHasBookmarked ? "currentColor" : "none"} />
               </Button>
 
               <Button
@@ -445,11 +494,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 e.stopPropagation(); // Prevent question click event
                 handleUpvote();
               }}
-              disabled={createInteractionMutation.isPending || isOwnQuestion}
-              className={`h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${question.isUpvoted ? "bg-blue-50 border-blue-200 text-blue-600" : ""
+              disabled={createInteractionMutation.isPending || deleteInteractionMutation.isPending || isOwnQuestion || interactionsLoading}
+              className={`h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${userHasUpvoted ? "bg-blue-50 border-blue-200 text-blue-600" : ""
                 } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <ArrowUpIcon className={`w-4 h-4 mr-2 ${question.isUpvoted ? "text-blue-600" : ""}`} />
+              <ArrowUpIcon className={`w-4 h-4 mr-2 ${userHasUpvoted ? "text-blue-600" : ""}`} />
               <span className="font-medium text-sm">
                 {question.upvotes}
               </span>
@@ -462,14 +511,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 e.stopPropagation(); // Prevent question click event
                 handleMeToo();
               }}
-              disabled={createInteractionMutation.isPending || isOwnQuestion}
-              className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${question.isMeToo ? "bg-orange-50 text-orange-600" : ""
+              disabled={createInteractionMutation.isPending || deleteInteractionMutation.isPending || isOwnQuestion || interactionsLoading}
+              className={`h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${userHasMeToo ? "bg-orange-50 text-orange-600" : ""
                 } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <img
                 src="/Metoo (1).svg"
                 alt="Me too"
-                className={`w-6 h-6 mr-1 ${question.isMeToo ? "filter-orange" : ""}`}
+                className={`w-6 h-6 mr-1 ${userHasMeToo ? "filter-orange" : ""}`}
               />
               <span className="font-normal text-sm mr-1">Me too</span>
               <span className="font-medium text-sm">{question.meTooCount}</span>

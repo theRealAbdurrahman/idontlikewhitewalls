@@ -20,6 +20,7 @@ import {
   Edit2Icon
 } from "lucide-react";
 import { useCreateEventApiV1EventsPost } from "../api-client/api-client";
+import { useCacheManager } from "../hooks/useCacheManager";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -66,22 +67,18 @@ const eventFormSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters").max(1000, "Description too long"),
   location: z.string().min(3, "Location is required").max(200, "Location too long"),
   eventUrl: z.string().optional().refine((val) => {
-    if (!val || val.trim() === "") return true;
-    try {
-      new URL(val);
-      return true;
-    } catch {
-      return false;
-    }
-  }, "Please enter a valid URL"),
+    return isValidUrl(val || '', {
+      addProtocol: true,
+      addWww: true,
+      allowedProtocols: ['https:']
+    });
+  }, "Please enter a valid URL (e.g., meetball.fun, www.example.com)"),
   googleMapsUrl: z.string().optional().refine((val) => {
-    if (!val || val.trim() === "") return true;
-    try {
-      new URL(val);
-      return true;
-    } catch {
-      return false;
-    }
+    return isValidUrl(val || '', {
+      addProtocol: true,
+      addWww: false, // Google Maps URLs don't typically need www
+      allowedProtocols: ['https:']
+    });
   }, "Please enter a valid Google Maps URL"),
   eventType: z.string().min(1, "Event type is required"),
   community: z.string().min(1, "Community selection is required"),
@@ -133,6 +130,7 @@ export const CreateEvent: React.FC = () => {
   const { user } = useAuthStore();
   const { events } = useAppStore();
   const { toast } = useToast();
+  const { afterEventCreate } = useCacheManager();
   
   // Local state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -337,17 +335,32 @@ export const CreateEvent: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      // Normalize URLs before sending to API (https-only)
+      const normalizedEventUrl = data.eventUrl ? 
+        normalizeWebUrl(data.eventUrl) : null;
+      const normalizedGoogleMapsUrl = data.googleMapsUrl ? 
+        normalizeWebUrl(data.googleMapsUrl) : null;
+      
       // Prepare event data for API
       const eventData = {
         name: data.name,
         description: data.description,
         location: data.location,
-        google_maps_url: data.googleMapsUrl || null,
+        event_url: normalizedEventUrl,
+        google_maps_url: normalizedGoogleMapsUrl,
         start_date: data.startDateTime,
         end_date: data.endDateTime,
         parent_event_id: null,
         creator_id: user.id,
       };
+
+      // Log normalized URLs for debugging
+      if (data.eventUrl && normalizedEventUrl !== data.eventUrl) {
+        console.log(`Normalized Event URL: "${data.eventUrl}" → "${normalizedEventUrl}"`);
+      }
+      if (data.googleMapsUrl && normalizedGoogleMapsUrl !== data.googleMapsUrl) {
+        console.log(`Normalized Google Maps URL: "${data.googleMapsUrl}" → "${normalizedGoogleMapsUrl}"`);
+      }
 
       // Create event via API
       const response = await createEventMutation.mutateAsync({
@@ -355,6 +368,9 @@ export const CreateEvent: React.FC = () => {
       });
 
       console.log("Event created successfully:", response);
+
+      // Invalidate events cache using centralized cache manager
+      afterEventCreate(response.data?.id);
 
       // TODO: In a real app, you would also:
       // - Upload banner image to storage service
