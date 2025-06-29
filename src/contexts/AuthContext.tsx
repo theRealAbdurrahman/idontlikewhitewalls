@@ -123,7 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .map((interaction) => ({
           id: interaction.id,
           type: interaction.interaction_type === "uplift" ? "upvote" as const :
-                interaction.interaction_type === "mee_too" ? "me_too" as const :
+                interaction.interaction_type === "me_too" ? "me_too" as const :
                 interaction.interaction_type === "i_can_help" ? "can_help" as const :
                 "upvote" as const,
           title: `New ${interaction.interaction_type} interaction`,
