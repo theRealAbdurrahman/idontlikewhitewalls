@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { XIcon, ImageIcon, MicIcon, SparklesIcon, MessageCircleIcon, ChevronDownIcon } from "lucide-react";
 import { useCreateQuestionApiV1QuestionsPost, useReadEventsApiV1EventsGet } from "../api-client/api-client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCacheManager } from "../hooks/useCacheManager";
 import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import {
@@ -39,7 +39,7 @@ export const CreateQuestion: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { afterQuestionCreate } = useCacheManager();
   
   // Fetch events data from API
   const { data: eventsData, isLoading: eventsLoading } = useReadEventsApiV1EventsGet();
@@ -297,8 +297,10 @@ export const CreateQuestion: React.FC = () => {
       
       console.log("Questions created successfully:", createdQuestions);
 
-      // Invalidate questions cache to refresh the feed
-      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      // Invalidate caches using centralized cache manager
+      // Pass event ID if questions are event-specific
+      const eventId = validSelectedEvents.length === 1 ? validSelectedEvents[0] : undefined;
+      afterQuestionCreate(eventId);
 
       // Show success message
       toast({

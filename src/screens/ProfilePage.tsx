@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { 
+import {
   ArrowLeftIcon,
   UserPlusIcon,
   MessageCircleIcon,
@@ -16,9 +16,16 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronDownIcon,
-  ChevronUpIcon
+  ChevronUpIcon,
+  ShareIcon,
+  MoreVerticalIcon,
+  HandshakeIcon,
+  FileTextIcon,
+  LinkIcon,
+  GridIcon,
+  Link2
 } from "lucide-react";
-import { 
+import {
   useUserProfile,
   UserProfile as ApiUserProfile
 } from "../api-client/api-client";
@@ -37,6 +44,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../components/ui/tooltip";
 import { useAuthStore } from "../stores/authStore";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
@@ -93,10 +106,10 @@ interface CollapsibleTextProps {
 /**
  * CollapsibleText component that shows limited lines initially and expands on click
  */
-const CollapsibleText: React.FC<CollapsibleTextProps> = ({ 
-  text, 
-  maxLines = 4, 
-  className = "", 
+const CollapsibleText: React.FC<CollapsibleTextProps> = ({
+  text,
+  maxLines = 4,
+  className = "",
   showIndicator = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -120,7 +133,7 @@ const CollapsibleText: React.FC<CollapsibleTextProps> = ({
 
     // Check truncation after component mounts and text changes
     checkTruncation();
-    
+
     // Also check on window resize in case layout changes
     window.addEventListener('resize', checkTruncation);
     return () => window.removeEventListener('resize', checkTruncation);
@@ -138,7 +151,7 @@ const CollapsibleText: React.FC<CollapsibleTextProps> = ({
   return (
     <div className="collapsible-text-container">
       {/* Hidden measuring element to determine full height */}
-      <div 
+      <div
         ref={measuringRef}
         className={`collapsible-text-measuring ${className}`}
         aria-hidden="true"
@@ -147,7 +160,7 @@ const CollapsibleText: React.FC<CollapsibleTextProps> = ({
       </div>
 
       {/* Visible text element */}
-      <div 
+      <div
         ref={textRef}
         className={`collapsible-text ${className} ${needsTruncation ? 'truncatable' : ''} ${isExpanded ? 'expanded' : 'collapsed'}`}
         onClick={handleToggle}
@@ -157,7 +170,7 @@ const CollapsibleText: React.FC<CollapsibleTextProps> = ({
         } as React.CSSProperties}
       >
         {text}
-        
+
         {/* Expand/Collapse Indicator */}
         {needsTruncation && showIndicator && (
           <div className="collapsible-text-indicator">
@@ -424,6 +437,76 @@ const customStyles = `
     word-wrap: break-word;
     line-height: 1.6;
   }
+  
+  .profile-content-shadow {
+    box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+  }
+  
+  .action-button-tooltip {
+    background: #333333;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 4px;
+    position: relative;
+  }
+  
+  .action-button-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -4px;
+    border-width: 4px;
+    border-style: solid;
+    border-color: #333333 transparent transparent transparent;
+  }
+  
+  .minimalist-action-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid #E0E0E0;
+    color: #424242;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+  }
+  
+  .minimalist-action-button:hover {
+    background: #F5F5F5;
+    transform: translateY(-0.5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .minimalist-action-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #FFE066;
+  }
+  
+  .minimalist-action-button.primary {
+    background: #FFE066;
+    border-color: #FFE066;
+    color: #424242;
+  }
+  
+  .minimalist-action-button.primary:hover {
+    background: #FFD93D;
+    border-color: #FFD93D;
+  }
+  
+  .minimalist-action-button.linkedin {
+    color: #0077b5;
+  }
+  
+  .minimalist-action-button.linkedin:hover {
+    background: #E7F3FF;
+    border-color: #0077b5;
+  }
 `;
 
 /**
@@ -468,7 +551,7 @@ const renderConnectDetails = (connectDetails?: string): string => {
   if (!connectDetails || connectDetails.trim() === '') {
     return DEFAULT_CONNECT_DETAILS;
   }
-  
+
   // Return the connectDetails as-is to preserve original formatting
   return connectDetails.trim();
 };
@@ -484,12 +567,12 @@ interface SwipeableProfileProps {
   onMessage: () => void;
 }
 
-const SwipeableProfile: React.FC<SwipeableProfileProps> = ({ 
-  profileUser, 
-  currentProfileView, 
+const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
+  profileUser,
+  currentProfileView,
   onProfileViewChange,
   onConnect,
-  onMessage 
+  onMessage
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -497,6 +580,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
   const [startX, setStartX] = useState(0);
   const [currentX, setCurrentX] = useState(0);
   const [translateX, setTranslateX] = useState(0);
+  const { toast } = useToast();
 
   /**
    * Handle touch start for swipe gestures
@@ -505,7 +589,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
     setIsDragging(true);
     setStartX(e.touches[0].clientX);
     setCurrentX(e.touches[0].clientX);
-    
+
     if (contentRef.current) {
       contentRef.current.classList.add('swiping');
     }
@@ -516,25 +600,25 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
    */
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
-    
+
     setCurrentX(e.touches[0].clientX);
     const deltaX = e.touches[0].clientX - startX;
     const containerWidth = containerRef.current?.offsetWidth || 0;
     const maxTranslate = containerWidth * 0.3; // Limit swipe distance
-    
+
     // Calculate new translate position
     let newTranslateX = deltaX;
     if (currentProfileView === "funky") {
       newTranslateX = -containerWidth + deltaX;
     }
-    
+
     // Apply resistance at boundaries
     if (newTranslateX > maxTranslate) {
       newTranslateX = maxTranslate;
     } else if (newTranslateX < -containerWidth - maxTranslate) {
       newTranslateX = -containerWidth - maxTranslate;
     }
-    
+
     setTranslateX(newTranslateX);
   };
 
@@ -543,16 +627,16 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
    */
   const handleTouchEnd = () => {
     if (!isDragging) return;
-    
+
     setIsDragging(false);
-    
+
     if (contentRef.current) {
       contentRef.current.classList.remove('swiping');
     }
-    
+
     const deltaX = currentX - startX;
     const threshold = 50; // Minimum swipe distance to trigger change
-    
+
     if (Math.abs(deltaX) > threshold) {
       if (deltaX > 0 && currentProfileView === "funky") {
         // Swipe right - go to standard
@@ -562,7 +646,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
         onProfileViewChange("funky");
       }
     }
-    
+
     // Reset translate position
     setTranslateX(0);
   };
@@ -574,7 +658,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
     setIsDragging(true);
     setStartX(e.clientX);
     setCurrentX(e.clientX);
-    
+
     if (contentRef.current) {
       contentRef.current.classList.add('swiping');
     }
@@ -582,38 +666,38 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
-    
+
     setCurrentX(e.clientX);
     const deltaX = e.clientX - startX;
     const containerWidth = containerRef.current?.offsetWidth || 0;
     const maxTranslate = containerWidth * 0.3;
-    
+
     let newTranslateX = deltaX;
     if (currentProfileView === "funky") {
       newTranslateX = -containerWidth + deltaX;
     }
-    
+
     if (newTranslateX > maxTranslate) {
       newTranslateX = maxTranslate;
     } else if (newTranslateX < -containerWidth - maxTranslate) {
       newTranslateX = -containerWidth - maxTranslate;
     }
-    
+
     setTranslateX(newTranslateX);
   };
 
   const handleMouseUp = () => {
     if (!isDragging) return;
-    
+
     setIsDragging(false);
-    
+
     if (contentRef.current) {
       contentRef.current.classList.remove('swiping');
     }
-    
+
     const deltaX = currentX - startX;
     const threshold = 50;
-    
+
     if (Math.abs(deltaX) > threshold) {
       if (deltaX > 0 && currentProfileView === "funky") {
         onProfileViewChange("standard");
@@ -621,7 +705,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
         onProfileViewChange("funky");
       }
     }
-    
+
     setTranslateX(0);
   };
 
@@ -634,10 +718,30 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
     return `translateX(${baseTransform + swipeOffset}%)`;
   };
 
+  const handleLinkedInProfile = () => {
+    if (profileUser.linkedinUrl) {
+      window.open(profileUser.linkedinUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      toast({
+        title: "LinkedIn profile not available",
+        description: "This user hasn't linked their LinkedIn profile.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleOtherLinks = () => {
+    // For now, just show a toast. In a real app, this would show a menu of links
+    toast({
+      title: "Other links",
+      description: "Additional profile links coming soon.",
+    });
+  };
+
   return (
     <div className="px-4 pb-6">
 
-      <div 
+      <div
         ref={containerRef}
         className="swipeable-container relative"
         onTouchStart={handleTouchStart}
@@ -657,7 +761,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
         >
           <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
         </button>
-        
+
         <button
           className="swipe-nav-button right"
           onClick={() => onProfileViewChange("funky")}
@@ -667,7 +771,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
           <ChevronRightIcon className="w-5 h-5 text-gray-600" />
         </button>
 
-        <div 
+        <div
           ref={contentRef}
           className="swipeable-content"
           style={{ transform: getTransformValue() }}
@@ -692,7 +796,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                       <EditIcon className="w-4 h-4" />
                     </Button>
                   </div>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h1 className="text-2xl font-bold text-gray-900">{profileUser.name}</h1>
@@ -702,13 +806,13 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                         </Badge>
                       )}
                     </div>
-                    
+
                     {profileUser.title && profileUser.company && (
                       <p className="text-gray-600 mb-1">
                         {profileUser.title} at {profileUser.company}
                       </p>
                     )}
-                    
+
                     {profileUser.location && (
                       <p className="text-gray-500 text-sm mb-3">{profileUser.location}</p>
                     )}
@@ -716,52 +820,79 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
 
                   </div>
                 </div>
-                
-                {/* Action Buttons */}
-                <div className="flex gap-3 mb-6">
-                  <Button
-                    onClick={onMessage}
-                    className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-                  >
-                    <MessageCircleIcon className="w-4 h-4 mr-2" />
-                    Message
-                  </Button>
-                  
-                  <Button
-                    onClick={onConnect}
-                    variant="outline"
-                    className="flex-1"
-                    disabled={profileUser.isConnected}
-                  >
-                    <UserPlusIcon className="w-4 h-4 mr-2" />
-                    {profileUser.isConnected ? "Connected" : "Connect"}
-                  </Button>
-                  
-                  {profileUser.website && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(profileUser.website, '_blank')}
-                      className="social-icon"
-                    >
-                      <ExternalLinkIcon className="w-4 h-4" />
-                    </Button>
-                  )}
-                  
-                  {profileUser.linkedinUrl && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(profileUser.linkedinUrl, '_blank')}
-                      className="social-icon text-blue-600 hover:bg-blue-50"
-                    >
-                      <LinkedinIcon className="w-4 h-4" />
-                    </Button>
-                  )}
+
+                {/* Action Buttons - Enhanced with minimalistic design */}
+                <div className="flex justify-center gap-4 mt-6">
+                  <TooltipProvider>
+                    {/* Message Button */}
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={onMessage}
+                          className="minimalist-action-button primary"
+                          aria-label="Send message"
+                        >
+                          <MessageCircleIcon className="w-5 h-5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="action-button-tooltip">
+                        Message
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Connect Button */}
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={onConnect}
+                          className="minimalist-action-button"
+                          aria-label="Connect with user"
+                        >
+                          <UserPlusIcon className="w-5 h-5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="action-button-tooltip">
+                        Connect
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* LinkedIn Profile Button */}
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleLinkedInProfile}
+                          className="minimalist-action-button linkedin"
+                          aria-label="View LinkedIn profile"
+                          disabled={!profileUser.linkedinUrl}
+                        >
+                          <LinkedinIcon className="w-5 h-5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="action-button-tooltip">
+                        LinkedIn Profile
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Other Links Button */}
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleOtherLinks}
+                          className="minimalist-action-button"
+                          aria-label="View other links"
+                        >
+                          <Link2 className="w-4 h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="action-button-tooltip">
+                        Other Links
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
-                
+
                 {/* CollapsibleText Section - Updated to use CollapsibleText component */}
-                <CollapsibleText 
+                <CollapsibleText
                   text={renderConnectDetails(profileUser.connectDetails)}
                   maxLines={4}
                   className="connect-details-text text-gray-700 leading-relaxed"
@@ -787,10 +918,10 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                       ✨
                     </div>
                   </div>
-                  
+
                   <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{profileUser.name}</h1>
                   <p className="text-purple-600 font-semibold mb-4">What lights you up outside of work?</p>
-                  
+
                   {/* Social Media Links */}
                   <div className="flex justify-center gap-3 mb-6">
                     {profileUser.instagramUrl && (
@@ -814,17 +945,17 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                       </Button>
                     )}
                   </div>
-                  
+
                   {/* CollapsibleText for Funky Profile - Also updated to use CollapsibleText component */}
                   <div className="mb-6">
-                    <CollapsibleText 
+                    <CollapsibleText
                       text={renderConnectDetails(profileUser.connectDetails)}
                       maxLines={4}
                       className="connect-details-text text-gray-700 leading-relaxed"
                       showIndicator={false}
                     />
                   </div>
-                  
+
                   {/* Virtue Tags using StickyNote */}
                   {profileUser.virtues && profileUser.virtues.length > 0 && (
                     <div className="flex justify-center gap-4 flex-wrap mb-6">
@@ -834,8 +965,8 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                             content={virtue}
                             backgroundColor={
                               index % 4 === 0 ? "#FFE066" :
-                              index % 4 === 1 ? "#FF6B6B" :
-                              index % 4 === 2 ? "#4ECDC4" : "#95E1D3"
+                                index % 4 === 1 ? "#FF6B6B" :
+                                  index % 4 === 2 ? "#4ECDC4" : "#95E1D3"
                             }
                             width={80}
                             height={60}
@@ -847,7 +978,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                     </div>
                   )}
                 </div>
-                
+
                 {/* Action Buttons */}
                 <div className="flex gap-3">
                   <Button
@@ -857,7 +988,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                     <MessageCircleIcon className="w-4 h-4 mr-2" />
                     Message
                   </Button>
-                  
+
                   <Button
                     onClick={onConnect}
                     variant="outline"
@@ -876,12 +1007,12 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
 
       {/* Profile View Indicators */}
       <div className="profile-indicators">
-        <div 
+        <div
           className={`profile-indicator ${currentProfileView === "standard" ? "active" : ""}`}
           onClick={() => onProfileViewChange("standard")}
           aria-label="Switch to professional profile view"
         />
-        <div 
+        <div
           className={`profile-indicator ${currentProfileView === "funky" ? "active" : ""}`}
           onClick={() => onProfileViewChange("funky")}
           aria-label="Switch to personal profile view"
@@ -900,7 +1031,7 @@ export const ProfilePage: React.FC = () => {
   const { user: currentUser } = useAuthStore();
   const { questions } = useAppStore();
   const { toast } = useToast();
-  
+
   // Local state
   const [activeTab, setActiveTab] = useState<"questions" | "notes">("questions");
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
@@ -911,20 +1042,20 @@ export const ProfilePage: React.FC = () => {
   const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState("");
   const [editingNote, setEditingNote] = useState<PrivateNote | null>(null);
-  
+
   // New state for swipeable profile views
   const [currentProfileView, setCurrentProfileView] = useState<ProfileViewType>("standard");
-  
+
   // Refs for scroll behavior
   const headerRef = useRef<HTMLDivElement>(null);
   const profileSectionRef = useRef<HTMLDivElement>(null);
 
   // Fetch user profile from API using the new dedicated hook (React Query v5 compatible)
-  const { 
-    data: userProfileData, 
-    isLoading: profileLoading, 
+  const {
+    data: userProfileData,
+    isLoading: profileLoading,
     error: profileError,
-    refetch: refetchProfile 
+    refetch: refetchProfile
   } = useUserProfile(id);
 
   /**
@@ -964,15 +1095,15 @@ export const ProfilePage: React.FC = () => {
 
     if (userProfileData) {
       console.log("📋 Transforming API user profile data:", userProfileData);
-      
+
       // Transform API user data to our profile format
       const transformedProfile = transformApiUserToProfile(userProfileData);
       setProfileUser(transformedProfile);
-      
+
       // Load user's questions
       const userQuestionsList = questions.filter(q => q.authorId === id);
       setUserQuestions(userQuestionsList);
-      
+
       // Load private notes from localStorage
       if (currentUser?.id) {
         const notesKey = `profile-notes-${currentUser.id}-${id}`;
@@ -996,7 +1127,7 @@ export const ProfilePage: React.FC = () => {
       if (profileSectionRef.current) {
         const profileTop = profileSectionRef.current.getBoundingClientRect().top;
         const shouldCollapse = profileTop <= 100;
-        
+
         if (shouldCollapse !== isHeaderCollapsed) {
           setIsHeaderCollapsed(shouldCollapse);
         }
@@ -1022,7 +1153,7 @@ export const ProfilePage: React.FC = () => {
    */
   const handleAddNote = () => {
     if (!newNoteContent.trim()) return;
-    
+
     const hashtags = newNoteContent.match(/#[\w]+/g) || [];
     const newNote: PrivateNote = {
       id: `note-${Date.now()}`,
@@ -1031,13 +1162,13 @@ export const ProfilePage: React.FC = () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    
+
     const updatedNotes = [newNote, ...privateNotes];
     saveNotesToStorage(updatedNotes);
-    
+
     setNewNoteContent("");
     setIsAddNoteOpen(false);
-    
+
     toast({
       title: "Note added",
       description: "Your private note has been saved.",
@@ -1049,25 +1180,25 @@ export const ProfilePage: React.FC = () => {
    */
   const handleEditNote = () => {
     if (!editingNote || !newNoteContent.trim()) return;
-    
+
     const hashtags = newNoteContent.match(/#[\w]+/g) || [];
     const updatedNotes = privateNotes.map(note =>
       note.id === editingNote.id
         ? {
-            ...note,
-            content: newNoteContent.trim(),
-            hashtags,
-            updatedAt: new Date().toISOString(),
-          }
+          ...note,
+          content: newNoteContent.trim(),
+          hashtags,
+          updatedAt: new Date().toISOString(),
+        }
         : note
     );
-    
+
     saveNotesToStorage(updatedNotes);
-    
+
     setNewNoteContent("");
     setEditingNote(null);
     setIsEditNoteOpen(false);
-    
+
     toast({
       title: "Note updated",
       description: "Your private note has been updated.",
@@ -1080,7 +1211,7 @@ export const ProfilePage: React.FC = () => {
   const handleDeleteNote = (noteId: string) => {
     const updatedNotes = privateNotes.filter(note => note.id !== noteId);
     saveNotesToStorage(updatedNotes);
-    
+
     toast({
       title: "Note deleted",
       description: "Your private note has been removed.",
@@ -1096,10 +1227,10 @@ export const ProfilePage: React.FC = () => {
 
   const handleConnect = () => {
     if (!profileUser) return;
-    
+
     // TODO: Implement connection API call
     console.log("Connect with user:", profileUser.id);
-    
+
     toast({
       title: "Connection request sent",
       description: `Your request to connect with ${profileUser.name} has been sent.`,
@@ -1108,7 +1239,7 @@ export const ProfilePage: React.FC = () => {
 
   const handleMessage = () => {
     if (!profileUser) return;
-    
+
     // TODO: Navigate to chat with user
     console.log("Message user:", profileUser.id);
     navigate("/messages");
@@ -1116,7 +1247,7 @@ export const ProfilePage: React.FC = () => {
 
   const handleWeMet = () => {
     if (!profileUser) return;
-    
+
     // Add automatic note about meeting
     const metNote: PrivateNote = {
       id: `note-${Date.now()}`,
@@ -1125,10 +1256,10 @@ export const ProfilePage: React.FC = () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    
+
     const updatedNotes = [metNote, ...privateNotes];
     saveNotesToStorage(updatedNotes);
-    
+
     toast({
       title: "Added to notes",
       description: "Marked that you met this person.",
@@ -1182,27 +1313,25 @@ export const ProfilePage: React.FC = () => {
       <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-              isNotFound ? 'bg-gray-100' : 'bg-red-100'
-            }`}>
-              <UserPlusIcon className={`w-8 h-8 ${
-                isNotFound ? 'text-gray-400' : 'text-red-500'
-              }`} />
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isNotFound ? 'bg-gray-100' : 'bg-red-100'
+              }`}>
+              <UserPlusIcon className={`w-8 h-8 ${isNotFound ? 'text-gray-400' : 'text-red-500'
+                }`} />
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {isNotFound ? 'Profile not found' : 
-               isAccessDenied ? 'Access denied' :
-               isConnectionError ? 'Connection error' :
-               'Failed to load profile'}
+              {isNotFound ? 'Profile not found' :
+                isAccessDenied ? 'Access denied' :
+                  isConnectionError ? 'Connection error' :
+                    'Failed to load profile'}
             </h2>
             <p className="text-gray-600 mb-6">
               {isNotFound ? 'This user profile doesn\'t exist or has been removed.' :
-               isAccessDenied ? 'You don\'t have permission to view this profile.' :
-               isConnectionError ? 'Please check your internet connection and try again.' :
-               'There was an error loading the profile. Please try again.'}
+                isAccessDenied ? 'You don\'t have permission to view this profile.' :
+                  isConnectionError ? 'Please check your internet connection and try again.' :
+                    'There was an error loading the profile. Please try again.'}
             </p>
             <div className="flex gap-3">
-              <Button 
+              <Button
                 onClick={handleBack}
                 variant="outline"
                 className="flex-1"
@@ -1210,7 +1339,7 @@ export const ProfilePage: React.FC = () => {
                 Go Back
               </Button>
               {!isNotFound && !isAccessDenied && (
-                <Button 
+                <Button
                   onClick={handleRetry}
                   className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
                 >
@@ -1240,13 +1369,13 @@ export const ProfilePage: React.FC = () => {
               This user profile doesn't exist or has been removed.
             </p>
             <div className="flex gap-3">
-              <Button 
+              <Button
                 onClick={handleBack}
                 className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
               >
                 Go Back
               </Button>
-              <Button 
+              <Button
                 onClick={handleRetry}
                 variant="outline"
                 className="flex-1"
@@ -1265,13 +1394,12 @@ export const ProfilePage: React.FC = () => {
       <style>{customStyles}</style>
       <div className="bg-[#f0efeb] min-h-screen">
         {/* Header with profile collapse behavior */}
-        <header 
+        <header
           ref={headerRef}
-          className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-            isHeaderCollapsed 
-              ? 'profile-header-sticky h-16 shadow-sm' 
+          className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${isHeaderCollapsed
+            ? 'profile-header-sticky h-16 shadow-sm'
               : 'bg-[#f0efeb] h-20'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between h-full px-4 pt-2">
             <Button
@@ -1282,7 +1410,7 @@ export const ProfilePage: React.FC = () => {
             >
               <ArrowLeftIcon className="w-5 h-5" />
             </Button>
-            
+
             {/* Collapsed header shows profile name and action buttons */}
             {isHeaderCollapsed && (
               <div className="flex items-center gap-3 flex-1 mx-4">
@@ -1295,7 +1423,7 @@ export const ProfilePage: React.FC = () => {
                 </span>
               </div>
             )}
-            
+
             {/* Action buttons in header */}
             <div className="flex items-center gap-2">
               <Button
@@ -1333,13 +1461,13 @@ export const ProfilePage: React.FC = () => {
         <div className="px-4">
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "questions" | "notes")}>
             <TabsList className="grid w-full grid-cols-2 bg-white rounded-xl shadow-sm border border-gray-100 mb-4">
-              <TabsTrigger 
+              <TabsTrigger
                 value="questions"
                 className="data-[state=active]:bg-[#F9DF8E] data-[state=active]:text-gray-900 font-semibold"
               >
                 Questions ({userQuestions.length})
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="notes"
                 className="data-[state=active]:bg-[#F9DF8E] data-[state=active]:text-gray-900 font-semibold"
               >
@@ -1365,11 +1493,11 @@ export const ProfilePage: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      
+
                       <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                         {question.description}
                       </p>
-                      
+
                       <div className="flex items-center justify-between text-xs text-gray-500">
                         <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
                         <div className="flex items-center gap-3">
@@ -1461,7 +1589,7 @@ export const ProfilePage: React.FC = () => {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="flex flex-wrap gap-1">
                           {note.hashtags.map((hashtag, index) => (
@@ -1485,7 +1613,7 @@ export const ProfilePage: React.FC = () => {
                     <p className="text-gray-600 mb-4">
                       Add a personal note or tag to remember this person.
                     </p>
-                    <Button 
+                      <Button
                       onClick={() => setIsAddNoteOpen(true)}
                       variant="outline"
                     >
