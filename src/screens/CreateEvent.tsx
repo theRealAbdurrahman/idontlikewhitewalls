@@ -771,7 +771,7 @@ export const CreateEvent: React.FC = () => {
 
                   {/* Tags */}
                   <FormItem>
-                    <FormLabel>Tags (Max 10)</FormLabel>
+                    <FormLabel>Tags</FormLabel>
                     <div className="space-y-2">
                       <div className="flex gap-2">
                         <Input
