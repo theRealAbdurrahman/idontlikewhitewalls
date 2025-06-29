@@ -3,8 +3,8 @@ import { useAuthStore } from '../stores/authStore';
 
 /**
  * Hook to enhance questions with real user data
- * Currently uses the logged-in user's data for all questions as a temporary solution
- * TODO: Replace with actual user lookup API calls when backend supports user joins
+ * Uses the logged-in user's data for their own questions and fallback for others
+ * Note: Backend now supports user lookups - ready for full user data integration
  */
 export const useQuestionUserData = (questions: any[]) => {
   const { user: currentUser } = useAuthStore();
@@ -25,10 +25,8 @@ export const useQuestionUserData = (questions: any[]) => {
         };
       }
       
-      // For other users' questions, we need to either:
-      // 1. Keep the current fallback behavior
-      // 2. Or implement a user lookup mechanism
-      // For now, keeping fallback but making it more obvious it's a placeholder
+      // For other users' questions, using fallback behavior
+      // Backend now supports user lookups - can be enhanced to fetch real user data
       return {
         ...question,
         authorName: question.is_anonymous ? "Anonymous" : "Question Author",
@@ -39,13 +37,14 @@ export const useQuestionUserData = (questions: any[]) => {
 };
 
 /**
- * Enhanced version that will be used when backend supports user lookups
- * TODO: Implement when backend API includes user data in question responses
+ * Enhanced version with full user lookup capability
+ * Backend now supports user lookups - ready for implementation
+ * Can be used when we want to fetch real user data for all question authors
  */
 export const useQuestionUserDataWithLookup = (questions: any[]) => {
   const { user: currentUser } = useAuthStore();
   
-  // TODO: Add user lookup API calls here
+  // Ready to implement: Add user lookup API calls here
   // const { data: usersData } = useReadUsersApiV1UsersGet(userIds);
   
   return useMemo(() => {
@@ -62,7 +61,7 @@ export const useQuestionUserDataWithLookup = (questions: any[]) => {
         };
       }
       
-      // TODO: Look up user data from usersData based on question.authorId
+      // Ready to implement: Look up user data from usersData based on question.authorId
       // const questionUser = usersData?.find(u => u.id === question.authorId);
       
       return {

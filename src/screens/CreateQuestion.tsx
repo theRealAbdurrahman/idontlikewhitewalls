@@ -42,6 +42,9 @@ export const CreateQuestion: React.FC = () => {
   const { toast } = useToast();
   const { afterQuestionCreate } = useCacheManager();
   
+  // Bridge Logto authentication with our AuthStore
+  useLogtoAuthBridge();
+  
   // Fetch events data from API
   const { data: eventsData, isLoading: eventsLoading } = useReadEventsApiV1EventsGet();
   
