@@ -3,17 +3,34 @@ import { persist } from "zustand/middleware";
 
 /**
  * User interface representing a user in the system
+ * Updated to match both Logto user claims and backend User model
  */
 interface User {
+  // Core identity (from Logto)
   id: string;
+  sub?: string; // Logto subject ID
   name: string;
   email: string;
   avatar?: string;
+  picture?: string; // Logto profile picture
+  
+  // Social profiles
   linkedinId?: string;
+  linkedin_url?: string;
+  
+  // Profile data
   bio?: string;
   title?: string;
   company?: string;
   location?: string;
+  
+  // Backend-specific data
+  first_name?: string;
+  last_name?: string;
+  profile_picture?: string;
+  auth_id?: string; // Maps to Logto sub
+  
+  // Stats (will be calculated from backend)
   connections: number;
   meTooCount: number;
   canHelpCount: number;
@@ -36,12 +53,20 @@ interface AuthState {
  * Authentication actions interface
  */
 interface AuthActions {
-  login: (email: string, password: string) => Promise<void>;
-  loginWithLinkedIn: () => Promise<void>;
-  logout: () => void;
+  // Logto integration
+  setUser: (user: User | null) => void;
+  setAuthenticated: (authenticated: boolean) => void;
+  updateUserFromLogto: (logtoUser: any) => void;
+  
+  // Profile management
   updateProfile: (updates: Partial<User>) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  
+  // Legacy methods (deprecated but kept for compatibility)
+  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  loginWithLinkedIn: () => Promise<void>;
   initializeMockUser: () => void;
 }
 
@@ -51,174 +76,68 @@ interface AuthActions {
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
     (set, get) => ({
-      // Initial state
-      isAuthenticated: true, // Skip authentication for now
-      user: {
-        // Default mock user for API calls
-        id: "09517f15-7dd3-4bed-96ea-e62138dcde16",
-        name: "Stuart Wilson",
-        email: "stuart@example.com",
-        avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-        bio: "Tech enthusiast and startup founder",
-        title: "Senior Product Manager",
-        company: "TechCorp",
-        location: "Dublin, Ireland",
-        connections: 342,
-        meTooCount: 28,
-        canHelpCount: 45,
-        questionsCount: 12,
-        verified: true,
-        joinedAt: new Date().toISOString(),
-      },
+      // Initial state - no longer hardcoded
+      isAuthenticated: false,
+      user: null,
       loading: false,
       error: null,
 
-      // Actions
-      initializeMockUser: () => {
-        const mockUser: User = {
-          id: "09517f15-7dd3-4bed-96ea-e62138dcde16",
-          name: "Stuart Wilson",
-          email: "stuart@example.com",
-          avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-          bio: "Tech enthusiast and startup founder",
-          title: "Senior Product Manager",
-          company: "TechCorp",
-          location: "Dublin, Ireland",
-          connections: 342,
-          meTooCount: 28,
-          canHelpCount: 45,
-          questionsCount: 12,
-          verified: true,
-          joinedAt: new Date().toISOString(),
-        };
-        set({ isAuthenticated: true, user: mockUser, loading: false });
+      // Core Logto integration methods
+      setUser: (user: User | null) => {
+        set({ user });
       },
 
-      login: async (email: string, password: string) => {
-        // COMMENTED OUT: Original login implementation for future reference
-        /*
-        set({ loading: true, error: null });
-        
-        try {
-          // Simulate API call - replace with actual authentication
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Mock successful login
-          const mockUser: User = {
-            id: "user-123",
-            name: "Stuart Wilson",
-            email,
-            avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-            bio: "Tech enthusiast and startup founder",
-            title: "Senior Product Manager",
-            company: "TechCorp",
-            location: "Dublin, Ireland",
-            connections: 342,
-            meTooCount: 28,
-            canHelpCount: 45,
-            questionsCount: 12,
-            verified: true,
-            joinedAt: new Date().toISOString(),
-          };
+      setAuthenticated: (authenticated: boolean) => {
+        set({ isAuthenticated: authenticated });
+      },
 
-          set({ 
-            isAuthenticated: true, 
-            user: mockUser, 
-            loading: false 
-          });
-        } catch (error) {
-          set({ 
-            error: "Login failed. Please try again.", 
-            loading: false 
-          });
+      updateUserFromLogto: (logtoUser: any) => {
+        if (!logtoUser) {
+          set({ user: null, isAuthenticated: false });
+          return;
         }
-        */
-        
-        // Simplified login - just set mock user
-        const mockUser: User = {
-          id: "09517f15-7dd3-4bed-96ea-e62138dcde16",
-          name: "Stuart Wilson",
-          email: email,
-          avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-          bio: "Tech enthusiast and startup founder",
-          title: "Senior Product Manager",
-          company: "TechCorp",
-          location: "Dublin, Ireland",
-          connections: 342,
-          meTooCount: 28,
-          canHelpCount: 45,
-          questionsCount: 12,
-          verified: true,
-          joinedAt: new Date().toISOString(),
-        };
-        set({ isAuthenticated: true, user: mockUser, loading: false, error: null });
-      },
 
-      loginWithLinkedIn: async () => {
-        // COMMENTED OUT: Original LinkedIn login implementation for future reference
-        /*
-        set({ loading: true, error: null });
-        
-        try {
-          // Simulate LinkedIn OAuth flow
-          await new Promise(resolve => setTimeout(resolve, 1500));
+        // Transform Logto user claims to our User interface
+        const transformedUser: User = {
+          // Core identity from Logto
+          id: logtoUser.sub || logtoUser.id || `logto_${Date.now()}`,
+          sub: logtoUser.sub,
+          auth_id: logtoUser.sub,
+          name: logtoUser.name || logtoUser.username || `${logtoUser.given_name || ''} ${logtoUser.family_name || ''}`.trim() || 'User',
+          email: logtoUser.email || '',
           
-          const mockUser: User = {
-            id: "user-linkedin-123",
-            name: "Stuart Wilson",
-            email: "stuart@example.com",
-            avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-            linkedinId: "stuart-wilson-123",
-            bio: "Tech enthusiast and startup founder passionate about connecting people through technology",
-            title: "Senior Product Manager",
-            company: "TechCorp",
-            location: "Dublin, Ireland",
-            connections: 342,
-            meTooCount: 28,
-            canHelpCount: 45,
-            questionsCount: 12,
-            verified: true,
-            joinedAt: new Date().toISOString(),
-          };
-
-          set({ 
-            isAuthenticated: true, 
-            user: mockUser, 
-            loading: false 
-          });
-        } catch (error) {
-          set({ 
-            error: "LinkedIn login failed. Please try again.", 
-            loading: false 
-          });
-        }
-        */
-        
-        // Simplified LinkedIn login - just set mock user
-        const mockUser: User = {
-          id: "09517f15-7dd3-4bed-96ea-e62138dcde16",
-          name: "Stuart Wilson",
-          email: "stuart@example.com",
-          avatar: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-          linkedinId: "stuart-wilson-123",
-          bio: "Tech enthusiast and startup founder passionate about connecting people through technology",
-          title: "Senior Product Manager",
-          company: "TechCorp",
-          location: "Dublin, Ireland",
-          connections: 342,
-          meTooCount: 28,
-          canHelpCount: 45,
-          questionsCount: 12,
-          verified: true,
+          // Profile pictures (try multiple sources)
+          avatar: logtoUser.picture || logtoUser.avatar,
+          picture: logtoUser.picture,
+          profile_picture: logtoUser.picture,
+          
+          // Name breakdown
+          first_name: logtoUser.given_name || logtoUser.name?.split(' ')[0] || '',
+          last_name: logtoUser.family_name || logtoUser.name?.split(' ').slice(1).join(' ') || '',
+          
+          // Social profiles
+          linkedinId: logtoUser.linkedin_id,
+          linkedin_url: logtoUser.linkedin_url,
+          
+          // Profile data (may come from OIDC claims)
+          bio: logtoUser.bio,
+          title: logtoUser.job_title || logtoUser.title,
+          company: logtoUser.company || logtoUser.organization,
+          location: logtoUser.location || logtoUser.address?.locality,
+          
+          // Default stats (will be updated from backend later)
+          connections: 0,
+          meTooCount: 0,
+          canHelpCount: 0,
+          questionsCount: 0,
+          verified: logtoUser.email_verified || false,
           joinedAt: new Date().toISOString(),
         };
-        set({ isAuthenticated: true, user: mockUser, loading: false, error: null });
-      },
 
-      logout: () => {
         set({ 
-          isAuthenticated: false, 
-          user: null, 
+          user: transformedUser, 
+          isAuthenticated: true,
+          loading: false,
           error: null 
         });
       },
@@ -235,6 +154,30 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       setLoading: (loading: boolean) => set({ loading }),
       
       setError: (error: string | null) => set({ error }),
+
+      // Legacy methods - kept for compatibility but now deprecated
+      logout: () => {
+        set({ 
+          isAuthenticated: false, 
+          user: null, 
+          error: null 
+        });
+      },
+
+      login: async () => {
+        // Deprecated - now handled by Logto
+        console.warn("useAuthStore.login() is deprecated. Use Logto signIn() instead.");
+      },
+
+      loginWithLinkedIn: async () => {
+        // Deprecated - now handled by Logto with LinkedIn connector
+        console.warn("useAuthStore.loginWithLinkedIn() is deprecated. Use Logto with LinkedIn connector instead.");
+      },
+
+      initializeMockUser: () => {
+        // Deprecated - now using real Logto users
+        console.warn("useAuthStore.initializeMockUser() is deprecated. Use updateUserFromLogto() instead.");
+      },
     }),
     {
       name: "auth-storage",

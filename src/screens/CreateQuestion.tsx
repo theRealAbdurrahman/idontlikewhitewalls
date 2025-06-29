@@ -22,6 +22,7 @@ import {
 import { Checkbox } from "../components/ui/checkbox";
 import { useAuthStore } from "../stores/authStore";
 import { useToast } from "../hooks/use-toast";
+import { useLogtoAuthBridge } from "../hooks/useLogtoAuthBridge";
 
 /**
  * Interface for event selection

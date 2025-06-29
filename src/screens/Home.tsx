@@ -9,6 +9,8 @@ import { useLogto } from '@logto/react';
 import { QuestionRead } from '../api-client/models/questionRead';
 import { getAuthCallbackUrl } from '../utils/auth';
 import { EnvDebug } from '../components/EnvDebug';
+import { useLogtoAuthBridge } from '../hooks/useLogtoAuthBridge';
+import { useQuestionUserData } from '../hooks/useQuestionUserData';
 
 /**
  * Home screen component displaying the main question feed
@@ -17,6 +19,9 @@ export const Home: React.FC = () => {
   
   const { isAuthenticated, isLoading, signIn } = useLogto();
   const navigate = useNavigate();
+  
+  // Bridge Logto authentication with our AuthStore
+  useLogtoAuthBridge();
 
   useEffect(() => {
     // Only attempt authentication if not already in process
@@ -65,8 +70,9 @@ export const Home: React.FC = () => {
     return questionList.map((question) => ({
       id: question.id,
       authorId: question.user_id,
-      authorName: question.is_anonymous ? "Anonymous" : "Question Author",
-      authorAvatar: question.is_anonymous ? undefined : "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
+      // Note: authorName and authorAvatar will be set by useQuestionUserData hook
+      authorName: "", // Temporary - will be replaced
+      authorAvatar: undefined, // Temporary - will be replaced
       eventId: question.event_id,
       eventName: undefined, // Will need to be populated from events data
       title: question.title,
@@ -86,9 +92,12 @@ export const Home: React.FC = () => {
     }));
   }, [questionsData?.data]);
 
+  // Enhance questions with real user data
+  const questionsWithUserData = useQuestionUserData(questions);
+
   // Filter questions based on active filters
   const filteredQuestions = useMemo(() => {
-    let filtered = [...questions];
+    let filtered = [...questionsWithUserData];
 
     // Apply event filters
     if (!activeFilters.includes("meetverse")) {
@@ -118,7 +127,7 @@ export const Home: React.FC = () => {
     }
 
     return filtered;
-  }, [questions, activeFilters, sortBy]);
+  }, [questionsWithUserData, activeFilters, sortBy]);
 
   const handleCreateQuestion = () => {
     navigate("/create-question");
