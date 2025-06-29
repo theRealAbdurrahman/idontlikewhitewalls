@@ -56,7 +56,7 @@ interface AuthActions {
   // Logto integration
   setUser: (user: User | null) => void;
   setAuthenticated: (authenticated: boolean) => void;
-  updateUserFromLogto: (logtoUser: any) => void;
+  setCurrentUser: (backendUser: any) => void;
   
   // Profile management
   updateProfile: (updates: Partial<User>) => void;
@@ -91,13 +91,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         set({ isAuthenticated: authenticated });
       },
 
-      updateUserFromLogto: (backendUser: any) => {
+      setCurrentUser: (backendUser: any) => {
         if (!backendUser) {
           set({ user: null, isAuthenticated: false });
           return;
         }
 
-        // Transform backend UserProfile to our User interface
+        // Transform backend User data to our User interface
         const transformedUser: User = {
           // Use backend UUID as the primary ID
           id: backendUser.id,
@@ -179,7 +179,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       initializeMockUser: () => {
         // Deprecated - now using real Logto users
-        console.warn("useAuthStore.initializeMockUser() is deprecated. Use updateUserFromLogto() instead.");
+        console.warn("useAuthStore.initializeMockUser() is deprecated. Use setCurrentUser() instead.");
       },
     }),
     {
