@@ -187,6 +187,15 @@ export const cacheUtils = {
     cache.invalidateEvents({ eventId });
     cache.invalidateQuestions(); // Event data might show in questions
   },
+
+  /**
+   * Quick invalidation after event creation
+   */
+  afterEventCreate: (queryClient: QueryClient, eventId?: string) => {
+    const cache = createCacheManager(queryClient);
+    cache.invalidateEvents({ eventId });
+    // Event creation affects event lists and dropdowns everywhere
+  },
 };
 
 /**
