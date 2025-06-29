@@ -52,6 +52,12 @@ interface LocationInputProps {
  * - Rate limiting: Built-in 1200ms gaps between requests
  * - Request cancellation: Prevents race conditions and stale results
  * - Immediate UI feedback: Input updates instantly while API calls are throttled
+ * 
+ * Accepted Value Pattern:
+ * - When user selects a suggestion, it's marked as "accepted"
+ * - No API requests are made while input matches accepted value
+ * - Requests resume only when user types something different
+ * - Prevents unwanted requests after clicking suggestions or focusing
  */
 export const LocationInput: React.FC<LocationInputProps> = ({
   value,
@@ -75,12 +81,37 @@ export const LocationInput: React.FC<LocationInputProps> = ({
   const recurringTimerRef = useRef<NodeJS.Timeout>(); // Timer for recurring 1200ms checks
   const abortControllerRef = useRef<AbortController>(); // For cancelling in-flight requests
   const isFirstRequestModeRef = useRef<boolean>(true); // Track if we're in initial vs recurring mode
+  const acceptedValueRef = useRef<string>(""); // Track accepted suggestion to prevent unwanted requests
 
   /**
    * Format a location suggestion for display
    */
   const formatSuggestion = (suggestion: LocationSuggestion): string => {
     return suggestion.display_name;
+  };
+
+  /**
+   * Format suggestion metadata for display (replaces unhelpful "yes" values)
+   */
+  const formatSuggestionMeta = (suggestion: LocationSuggestion): string => {
+    const type = suggestion.type;
+    const category = suggestion.class;
+    
+    // Handle common unhelpful values
+    if (type === "yes" || !type) {
+      return category || "Location";
+    }
+    
+    if (category === "yes" || !category) {
+      return type || "Location";
+    }
+    
+    // Show both if they're different and meaningful
+    if (type !== category) {
+      return `${type} · ${category}`;
+    }
+    
+    return type;
   };
 
   /**
@@ -234,8 +265,22 @@ export const LocationInput: React.FC<LocationInputProps> = ({
       setIsLoading(false);
       isFirstRequestModeRef.current = true;
       lastRequestedValueRef.current = "";
+      acceptedValueRef.current = "";
       cancelPreviousRequest();
       return;
+    }
+
+    // Check if current input matches an accepted suggestion
+    // If so, don't make any requests until user types something different
+    if (inputValue === acceptedValueRef.current) {
+      // Input matches accepted suggestion, don't make requests
+      return;
+    }
+
+    // User has typed something different from accepted suggestion
+    // Clear accepted value and allow requests
+    if (acceptedValueRef.current && inputValue !== acceptedValueRef.current) {
+      acceptedValueRef.current = "";
     }
 
     // Show suggestions dropdown when user starts typing
@@ -277,6 +322,11 @@ export const LocationInput: React.FC<LocationInputProps> = ({
     setSelectedIndex(-1);
     setShowSuggestions(true);
 
+    // Clear accepted value when user manually types something different
+    if (newValue !== acceptedValueRef.current) {
+      acceptedValueRef.current = "";
+    }
+
     // Update parent immediately with raw input (for immediate UI feedback)
     onChange?.({
       displayName: newValue,
@@ -285,7 +335,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({
   };
 
   /**
-   * Handle suggestion selection - resets the throttled burst pattern
+   * Handle suggestion selection - marks value as accepted to prevent unwanted requests
    */
   const selectSuggestion = (suggestion: LocationSuggestion) => {
     const displayName = formatSuggestion(suggestion);
@@ -297,6 +347,9 @@ export const LocationInput: React.FC<LocationInputProps> = ({
     setSuggestions([]);
     setSelectedIndex(-1);
 
+    // Mark this value as accepted to prevent unwanted API requests
+    acceptedValueRef.current = displayName;
+    
     // Reset throttled burst pattern state since user made a selection
     clearAllTimers();
     isFirstRequestModeRef.current = true;
@@ -341,7 +394,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({
   };
 
   /**
-   * Handle clicks outside to close suggestions - also resets throttled burst pattern
+   * Handle clicks outside to close suggestions
    */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -353,16 +406,18 @@ export const LocationInput: React.FC<LocationInputProps> = ({
         setShowSuggestions(false);
         setSelectedIndex(-1);
         
-        // Reset throttled burst pattern when suggestions close
-        clearAllTimers();
-        isFirstRequestModeRef.current = true;
-        cancelPreviousRequest();
+        // Only reset throttled burst pattern if input is not an accepted value
+        if (inputValue !== acceptedValueRef.current) {
+          clearAllTimers();
+          isFirstRequestModeRef.current = true;
+          cancelPreviousRequest();
+        }
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [clearAllTimers, cancelPreviousRequest]);
+  }, [inputValue]);
 
   return (
     <div className={cn("relative", className)}>
@@ -423,7 +478,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{displayText}</p>
                   <p className="text-xs text-gray-500 truncate">
-                    {suggestion.type} · {suggestion.class}
+                    {formatSuggestionMeta(suggestion)}
                   </p>
                 </div>
               </div>
