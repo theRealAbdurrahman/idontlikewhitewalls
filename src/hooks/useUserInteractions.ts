@@ -95,13 +95,13 @@ export const useQuestionInteractions = (questionId: string) => {
   return {
     // Interaction state checks
     isUpvoted: hasInteraction(questionId, InteractionType.uplift),
-    isMeToo: hasInteraction(questionId, InteractionType.mee_too),
+    isMeToo: hasInteraction(questionId, InteractionType.me_too),
     isBookmarked: hasInteraction(questionId, InteractionType.bookmark),
     canHelp: hasInteraction(questionId, InteractionType.i_can_help),
     
     // Interaction ID getters for deletion
     upvoteId: getInteractionId(questionId, InteractionType.uplift),
-    meTooId: getInteractionId(questionId, InteractionType.mee_too),
+    meTooId: getInteractionId(questionId, InteractionType.me_too),
     bookmarkId: getInteractionId(questionId, InteractionType.bookmark),
     canHelpId: getInteractionId(questionId, InteractionType.i_can_help),
     

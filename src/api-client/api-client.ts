@@ -133,6 +133,77 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile> => 
 };
 
 /**
+ * Interface for current user data from Logto
+ */
+export interface LogtoUserData {
+  sub: string;
+  email?: string;
+  name?: string;
+  given_name?: string;
+  family_name?: string;
+  picture?: string;
+  bio?: string;
+  job_title?: string;
+  linkedin_url?: string;
+}
+
+/**
+ * Get or create current user from Logto authentication data
+ * @param logtoData - User data from Logto authentication
+ * @returns Promise resolving to the backend user profile
+ */
+export const fetchCurrentUser = async (logtoData: LogtoUserData): Promise<UserProfile> => {
+  if (!logtoData.sub) {
+    throw new Error('Logto sub (user ID) is required');
+  }
+
+  try {
+    // Prepare query parameters for user creation
+    const params = new URLSearchParams({
+      logto_sub: logtoData.sub,
+    });
+
+    // Add optional user data if available
+    if (logtoData.email) params.append('email', logtoData.email);
+    if (logtoData.given_name) params.append('first_name', logtoData.given_name);
+    if (logtoData.family_name) params.append('last_name', logtoData.family_name);
+    if (logtoData.picture) params.append('profile_picture', logtoData.picture);
+    if (logtoData.bio) params.append('bio', logtoData.bio);
+    if (logtoData.job_title) params.append('title', logtoData.job_title);
+    if (logtoData.linkedin_url) params.append('linkedin_url', logtoData.linkedin_url);
+
+    // If no name parts, try to parse from name field
+    if (!logtoData.given_name && !logtoData.family_name && logtoData.name) {
+      const nameParts = logtoData.name.split(' ');
+      if (nameParts.length > 0) {
+        params.append('first_name', nameParts[0]);
+        if (nameParts.length > 1) {
+          params.append('last_name', nameParts.slice(1).join(' '));
+        }
+      }
+    }
+
+    const response = await customInstance<UserProfile>({
+      url: `/api/v1/users/me?${params.toString()}`,
+      method: 'GET',
+    });
+
+    return response.data;
+  } catch (error: any) {
+    // Enhanced error handling
+    if (error?.response?.status === 400) {
+      throw new Error('Invalid user data provided');
+    } else if (error?.response?.status === 500) {
+      throw new Error('Server error occurred while creating/fetching user');
+    } else if (!navigator.onLine) {
+      throw new Error('No internet connection');
+    } else {
+      throw new Error(error?.message || 'Failed to get current user');
+    }
+  }
+};
+
+/**
  * React Query hook for fetching user profile data
  * @param userId - The unique identifier for the user
  * @param options - Optional React Query configuration

@@ -12,7 +12,7 @@ export type InteractionType = typeof InteractionType[keyof typeof InteractionTyp
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InteractionType = {
   uplift: 'uplift',
-  mee_too: 'mee_too',
+  me_too: 'me_too',
   i_can_help: 'i_can_help',
   bookmark: 'bookmark',
   view: 'view',
