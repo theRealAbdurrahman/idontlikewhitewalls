@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { XIcon, PlusIcon } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -8,6 +8,8 @@ import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 import { StickyNote } from "../components/ui/sticky-note";
 import { useToast } from "../hooks/use-toast";
+import { IdTokenClaims, useLogto } from "@logto/react";
+import { fetchCurrentUser } from "../api-client/api-client";
 
 /**
  * Interface for Step 1 data structure
@@ -242,6 +244,8 @@ interface Step1Props {
 const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => {
   const [customLabel, setCustomLabel] = useState("");
   const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [user, setUser] = useState<IdTokenClaims>();
+
 
   /**
    * Handle toggling connection preference labels
@@ -959,6 +963,8 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ currentStep, tota
 export const SignupFlow: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { getIdToken, getIdTokenClaims, isAuthenticated } = useLogto();
+  const [user, setUser] = useState<IdTokenClaims>();
 
   // Ref for scrolling to top of form
   const formContainerRef = useRef<HTMLDivElement>(null);
@@ -1126,9 +1132,95 @@ export const SignupFlow: React.FC = () => {
   /**
    * Handle completing the signup flow
    */
-  const handleComplete = () => {
+  const handleComplete = async () => {
     // TODO: Submit data to backend
-    console.log("Signup flow completed:", signupData);
+    // call fetchCurrentUser with the signup form and the logto data
+    //  const jwt = await getIdToken();
+
+    //       try {
+    //         // Get detailed user claims from ID token
+    //         const claims = await getIdTokenClaims();
+    //         console.log('Logto user claims:', claims);
+
+
+    //         // Combine user info with ID token claims for full profile
+    //         const logtoUserData: LogtoUserData = {
+    //           sub: claims!.sub,
+    //           jwt: jwt || '', // Include JWT token if available
+    //         };
+
+    /**
+     *   user_create = UserCreate(
+        linkedin_url = user_data.linkedin_url,
+        auth_id = auth_id,
+        email = email,
+        full_name = user_data.full_name,
+        profile_picture = user_data.profile_picture,
+        bio = user_data.bio,
+        title = user_data.title,
+        is_active = True,
+        created_at = func.now(),
+        updated_at = func.now(),
+        
+        # Fields from signup flow
+        fields_of_expertise = user_data.fields_of_expertise,
+        professional_background = user_data.professional_background,
+        can_help_with = user_data.can_help_with,
+        interests = user_data.interests,
+        
+        # Legacy fields (keeping for backward compatibility)
+        personality_traits = [],
+        skills = [],
+    )
+     */
+    // const { isAuthenticated, getIdTokenClaims } = useLogto();
+    // const [user, setUser] = useState<IdTokenClaims>();
+
+    // useEffect(() => {
+    //   (async () => {
+
+    //   })();
+    // }, [getIdTokenClaims, isAuthenticated]);
+
+    // const claims = await getIdTokenClaims();
+    // setUser(claims!)
+    if (isAuthenticated) {
+      const claims = await getIdTokenClaims();
+      setUser(claims);
+      console.log("Logto user claims:", claims);
+      const jwt = await getIdToken();
+
+      console.log("Signup flow completed:", signupData);
+      const body = {
+        step1: {
+          fields_of_expertise: signupData.step1?.connectWith,
+          professional_background: signupData.step1?.connectDetails,
+          can_help_with: signupData.step1.offerings,
+
+        },
+        step2: {
+          interests: signupData.step2?.interests,
+        },
+        step3: {
+          full_name: signupData.step3?.fullName,
+          linkedin_url: signupData.step3?.linkedinUrl,
+        },
+        auth_id: claims?.sub,
+        email: claims?.email,
+        // profile_picture: user?.picture,
+        // bio: user?.bio,
+        // title: user?.title,
+        jwt,
+      }
+      console.log("Submitting signup data:", body);
+
+      const x = await fetchCurrentUser(body);
+      console.log({ x });
+
+    }
+
+
+
 
     toast({
       title: "Welcome to Meetball!",

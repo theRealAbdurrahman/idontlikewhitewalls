@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
-import { useLogto } from '@logto/react';
+import { useEffect, useState } from 'react';
+import { IdTokenClaims, useLogto } from '@logto/react';
 import { useAuthStore } from '../stores/authStore';
 import { fetchCurrentUser, LogtoUserData } from '../api-client/api-client';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Hook that bridges Logto authentication with our AuthStore
@@ -10,6 +11,8 @@ import { fetchCurrentUser, LogtoUserData } from '../api-client/api-client';
 export const useLogtoAuthBridge = () => {
   const { isAuthenticated, isLoading, error, getIdTokenClaims, getIdToken } = useLogto();
   const { setCurrentUser, setAuthenticated, setLoading, setError } = useAuthStore();
+  const [user, setUser] = useState<IdTokenClaims>();
+  const navigate = useNavigate();
 
   // Sync authentication state
   useEffect(() => {
@@ -49,9 +52,15 @@ export const useLogtoAuthBridge = () => {
           };
           
           console.log('Fetching backend user for Logto data:', logtoUserData);
-          
+          let backendUser;
+          try {
+            backendUser = await fetchCurrentUser(logtoUserData);
+          } catch (fetchError) {
+            console.error('Failed to fetch backend user:', fetchError);
+            navigate('/signup'); // Redirect to signup if user not found
+            return;
+          }
           // Get or create user in backend
-          const backendUser = await fetchCurrentUser(logtoUserData);
           
           console.log('Backend user received:', backendUser);
           
@@ -68,7 +77,7 @@ export const useLogtoAuthBridge = () => {
     };
 
     syncUserData();
-  }, [isAuthenticated, isLoading, getIdTokenClaims, setCurrentUser, setError]);
+  }, []);
 
   return {
     isAuthenticated,
