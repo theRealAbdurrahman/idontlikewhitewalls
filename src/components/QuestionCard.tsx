@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { MoreVerticalIcon, BookmarkIcon, ArrowUpIcon } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateInteractionApiV1InteractionsPost,
   useDeleteInteractionApiV1InteractionsInteractionIdDelete
@@ -75,6 +76,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const { chatThreads, messages } = useAppStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Local state for report modal
   const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
@@ -87,6 +89,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
 
   // Check if this is the current user's own question
   const isOwnQuestion = question.authorId === user?.id;
+
+  // Helper function to invalidate relevant caches after interactions
+  const invalidateInteractionCaches = () => {
+    queryClient.invalidateQueries({ queryKey: ['questions'] });
+    queryClient.invalidateQueries({ queryKey: ['interactions'] });
+  };
 
   /**
    * Handle report submission
@@ -155,7 +163,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
     // Use API to toggle upvote
     if (question.isUpvoted) {
       // TODO: Need to track interaction IDs to delete specific interactions
-      console.log("Delete upvote interaction for question:", question.id);
+      // For now, show user feedback that toggle functionality is coming
+      toast({
+        title: "Feature coming soon",
+        description: "Remove upvote functionality will be available soon.",
+        variant: "default",
+      });
     } else {
       createInteractionMutation.mutate({
         data: {
@@ -167,10 +180,22 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
       }, {
         onSuccess: () => {
           console.log("Upvote created successfully");
-          // TODO: Refetch questions or update local state
+          // Invalidate caches to refresh the question feed
+          invalidateInteractionCaches();
+          // Show success feedback
+          toast({
+            title: "Question uplifted!",
+            description: "Your upvote has been recorded.",
+          });
         },
         onError: (error) => {
           console.error("Failed to create upvote:", error);
+          // Show error feedback
+          toast({
+            title: "Failed to upvote",
+            description: "Please try again. Check your connection.",
+            variant: "destructive",
+          });
         }
       });
     }
@@ -183,7 +208,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
     // Use API to toggle me too
     if (question.isMeToo) {
       // TODO: Need to track interaction IDs to delete specific interactions
-      console.log("Delete me too interaction for question:", question.id);
+      // For now, show user feedback that toggle functionality is coming
+      toast({
+        title: "Feature coming soon",
+        description: "Remove 'me too' functionality will be available soon.",
+        variant: "default",
+      });
     } else {
       createInteractionMutation.mutate({
         data: {
@@ -195,10 +225,22 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
       }, {
         onSuccess: () => {
           console.log("Me too created successfully");
-          // TODO: Refetch questions or update local state
+          // Invalidate caches to refresh the question feed
+          invalidateInteractionCaches();
+          // Show success feedback
+          toast({
+            title: "Me too recorded!",
+            description: "You've indicated you have the same question.",
+          });
         },
         onError: (error) => {
           console.error("Failed to create me too:", error);
+          // Show error feedback
+          toast({
+            title: "Failed to record 'me too'",
+            description: "Please try again. Check your connection.",
+            variant: "destructive",
+          });
         }
       });
     }
@@ -211,7 +253,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
     // Use API to toggle bookmark
     if (question.isBookmarked) {
       // TODO: Need to track interaction IDs to delete specific interactions
-      console.log("Delete bookmark interaction for question:", question.id);
+      // For now, show user feedback that toggle functionality is coming
+      toast({
+        title: "Feature coming soon",
+        description: "Remove bookmark functionality will be available soon.",
+        variant: "default",
+      });
     } else {
       createInteractionMutation.mutate({
         data: {
@@ -223,10 +270,22 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
       }, {
         onSuccess: () => {
           console.log("Bookmark created successfully");
-          // TODO: Refetch questions or update local state
+          // Invalidate caches to refresh the question feed
+          invalidateInteractionCaches();
+          // Show success feedback
+          toast({
+            title: "Question bookmarked!",
+            description: "Question saved to your bookmarks.",
+          });
         },
         onError: (error) => {
           console.error("Failed to create bookmark:", error);
+          // Show error feedback
+          toast({
+            title: "Failed to bookmark",
+            description: "Please try again. Check your connection.",
+            variant: "destructive",
+          });
         }
       });
     }
