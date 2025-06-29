@@ -158,34 +158,33 @@ export const fetchCurrentUser = async (logtoData: LogtoUserData): Promise<UserPr
   }
 
   try {
-    // Prepare query parameters for user creation
-    const params = new URLSearchParams({
+    // Prepare request body with user data
+    const requestBody = {
       logto_sub: logtoData.sub,
-    });
-
-    // Add optional user data if available
-    if (logtoData.email) params.append('email', logtoData.email);
-    if (logtoData.given_name) params.append('first_name', logtoData.given_name);
-    if (logtoData.family_name) params.append('last_name', logtoData.family_name);
-    if (logtoData.picture) params.append('profile_picture', logtoData.picture);
-    if (logtoData.bio) params.append('bio', logtoData.bio);
-    if (logtoData.job_title) params.append('title', logtoData.job_title);
-    if (logtoData.linkedin_url) params.append('linkedin_url', logtoData.linkedin_url);
+      email: logtoData.email,
+      given_name: logtoData.given_name,
+      family_name: logtoData.family_name,
+      picture: logtoData.picture,
+      bio: logtoData.bio,
+      job_title: logtoData.job_title,
+      linkedin_url: logtoData.linkedin_url,
+    };
 
     // If no name parts, try to parse from name field
     if (!logtoData.given_name && !logtoData.family_name && logtoData.name) {
       const nameParts = logtoData.name.split(' ');
       if (nameParts.length > 0) {
-        params.append('first_name', nameParts[0]);
+        requestBody.given_name = nameParts[0];
         if (nameParts.length > 1) {
-          params.append('last_name', nameParts.slice(1).join(' '));
+          requestBody.family_name = nameParts.slice(1).join(' ');
         }
       }
     }
 
     const response = await customInstance<UserProfile>({
-      url: `/api/v1/users/me?${params.toString()}`,
-      method: 'GET',
+      url: `/api/v1/users/me`,
+      method: 'POST',
+      data: requestBody,
     });
 
     return response.data;

@@ -9,7 +9,7 @@ import { fetchCurrentUser, LogtoUserData } from '../api-client/api-client';
  */
 export const useLogtoAuthBridge = () => {
   const { isAuthenticated, isLoading, user, error, getIdTokenClaims } = useLogto();
-  const { updateUserFromLogto, setAuthenticated, setLoading, setError } = useAuthStore();
+  const { setCurrentUser, setAuthenticated, setLoading, setError } = useAuthStore();
 
   // Sync authentication state
   useEffect(() => {
@@ -58,20 +58,20 @@ export const useLogtoAuthBridge = () => {
           
           console.log('Backend user received:', backendUser);
           
-          // Store backend user data (with UUID) in auth store
-          updateUserFromLogto(backendUser);
+          // Store the backend user data in auth store
+          setCurrentUser(backendUser);
         } catch (error) {
           console.error('Failed to sync user with backend:', error);
           setError('Failed to sync user data');
         }
       } else if (!isAuthenticated) {
         // Clear user data when not authenticated
-        updateUserFromLogto(null);
+        setCurrentUser(null);
       }
     };
 
     syncUserData();
-  }, [isAuthenticated, isLoading, user, getIdTokenClaims, updateUserFromLogto, setError]);
+  }, [isAuthenticated, isLoading, user, getIdTokenClaims, setCurrentUser, setError]);
 
   return {
     isAuthenticated,
