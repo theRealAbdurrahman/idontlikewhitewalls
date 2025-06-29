@@ -467,7 +467,7 @@ export const CreateEvent: React.FC = () => {
                                 <img
                                   src={selectedBannerImage}
                                   alt="Event banner preview"
-                                  className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                                  className="w-full aspect-square object-cover rounded-lg border border-gray-200"
                                 />
                                 <Button
                                   type="button"
@@ -619,13 +619,10 @@ export const CreateEvent: React.FC = () => {
                           <LocationInput
                             value={field.value}
                             onChange={field.onChange}
-                            placeholder="e.g., Trinity College Dublin, Dublin 2"
+                            placeholder="i.e. LX Factory, Lisbon"
                             disabled={isSubmitting}
                           />
                         </FormControl>
-                        <FormDescription>
-                          Start typing to search for locations. Google Maps URL is auto-generated when you select a location.
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -790,9 +787,6 @@ export const CreateEvent: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <FormDescription>
-                      Use tags to help people discover your event
-                    </FormDescription>
                   </FormItem>
 
                   {/* Tag Other Events */}
