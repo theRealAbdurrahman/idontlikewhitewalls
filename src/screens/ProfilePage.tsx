@@ -894,6 +894,17 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                   className="connect-details-text text-gray-700 leading-relaxed mt-4"
                   showIndicator={false}
                 />
+
+                {/* Additional Information Section with Second CollapsibleText */}
+                <div className="space-y-2 mt-6">
+                  <h3 className="text-sm font-semibold text-gray-900">Professional Background</h3>
+                  <CollapsibleText
+                    text="I'm a passionate product manager with over 8 years of experience in the tech industry. I've led cross-functional teams to deliver innovative solutions that have impacted millions of users. My expertise spans product strategy, user experience design, data analytics, and agile development methodologies. I'm particularly interested in emerging technologies like AI and machine learning, and how they can be leveraged to create more personalized and efficient user experiences. I believe in building products that not only solve real problems but also delight users and drive business growth."
+                    maxLines={3}
+                    className="text-gray-700 text-sm leading-relaxed"
+                    showIndicator={true}
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
