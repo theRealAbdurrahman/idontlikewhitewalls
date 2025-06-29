@@ -5,7 +5,6 @@ import {
   ArrowLeftIcon,
   UserPlusIcon,
   MessageCircleIcon,
-  ExternalLinkIcon,
   LinkedinIcon,
   InstagramIcon,
   EditIcon,
@@ -13,17 +12,7 @@ import {
   HashIcon,
   TrashIcon,
   EditIcon as Edit2Icon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  ShareIcon,
-  MoreVerticalIcon,
-  HandshakeIcon,
-  FileTextIcon,
-  LinkIcon,
-  GridIcon,
-  Link2
+  QrCode
 } from "lucide-react";
 import {
   useUserProfile,
@@ -524,7 +513,7 @@ const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
     joinedAt: apiUser.created_at,
     profileVersion: "standard" as const, // Default profile version
     virtues: ["Creative", "Innovative", "Collaborative", "Authentic", "Empathetic", "Visionary"], // Mock virtues for funky profile
-    connectWith: ["Tech", "Business", "Finance", "Innovation", "Startups"], // Connection tags from signup
+    connectWith: ["Tech", "Business", "Innovation", "Startups"], // Connection tags from signup
   };
 };
 
@@ -734,7 +723,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
         onMouseLeave={handleMouseUp}
       >
         {/* Navigation buttons for desktop */}
-        <button
+        {/* <button
           className="swipe-nav-button left"
           onClick={() => onProfileViewChange("standard")}
           disabled={currentProfileView === "standard"}
@@ -750,7 +739,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
           style={{ opacity: currentProfileView === "funky" ? 0.3 : 0.7 }}
         >
           <ChevronRightIcon className="w-5 h-5 text-gray-600" />
-        </button>
+        </button> */}
 
         <div
           ref={contentRef}
@@ -855,7 +844,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                       </TooltipContent>
                     </Tooltip>
 
-                    {/* Connect Button */}
+                    { }
                     <Tooltip delayDuration={200}>
                       <TooltipTrigger asChild>
                         <button
@@ -863,11 +852,11 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                           className="minimalist-action-button"
                           aria-label="Connect with user"
                         >
-                          <UserPlusIcon className="w-5 h-5" />
+                          <QrCode className="w-5 h-5" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="action-button-tooltip">
-                        Connect
+                        Scan QR code to connect
                       </TooltipContent>
                     </Tooltip>
 
@@ -918,7 +907,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
 
           {/* Funky Profile View */}
           <div className="profile-view">
-            <Card className="bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 rounded-2xl border-2 border-dashed border-purple-200 shadow-lg">
+            <Card className="min-h-full bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 rounded-2xl border-2 border-dashed border-purple-200 shadow-lg">
               <CardContent className="p-6">
                 <div className="text-center mb-6">
                   <div className="relative inline-block">
@@ -994,7 +983,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3">
+                {/* <div className="flex gap-3">
                   <Button
                     onClick={onMessage}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
@@ -1012,7 +1001,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                     <UserPlusIcon className="w-4 h-4 mr-2" />
                     {profileUser.isConnected ? "Connected" : "Connect"}
                   </Button>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
           </div>
@@ -1020,7 +1009,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
       </div>
 
       {/* Profile View Indicators */}
-      <div className="profile-indicators">
+      {/* <div className="profile-indicators">
         <div
           className={`profile-indicator ${currentProfileView === "standard" ? "active" : ""}`}
           onClick={() => onProfileViewChange("standard")}
@@ -1031,7 +1020,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
           onClick={() => onProfileViewChange("funky")}
           aria-label="Switch to personal profile view"
         />
-      </div>
+      </div> */}
     </div>
   );
 };
@@ -1573,13 +1562,6 @@ export const ProfilePage: React.FC = () => {
                 <div className="space-y-4 max-h-[600px] overflow-y-auto">
                   {filteredUserQuestions.length > 0 ? (
                     <>
-                      {/* Questions count */}
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-sm text-gray-600">
-                          {filteredUserQuestions.length} question{filteredUserQuestions.length !== 1 ? 's' : ''} posted
-                        </p>
-                      </div>
-                      
                       {/* Question cards */}
                       {filteredUserQuestions.map((question) => (
                         <QuestionCard key={question.id} question={question} />
