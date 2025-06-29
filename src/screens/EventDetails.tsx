@@ -494,7 +494,7 @@ export const EventDetails: React.FC = () => {
                   {event.organizerName && (
                     <p className="text-gray-600 flex items-center gap-2">
                       <BuildingIcon className="w-4 h-4" />
-                      <span>Hosted by {event.organizerName}</span>
+                      <span>{event.organizerName}</span>
                     </p>
                   )}
                 </div>
@@ -518,15 +518,6 @@ export const EventDetails: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <ClockIcon className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">Duration</p>
-                    <p className="text-gray-600 text-sm mt-1">{dateTimeInfo.duration}</p>
-                  </div>
-                </div>
 
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
