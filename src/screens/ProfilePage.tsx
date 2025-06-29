@@ -12,7 +12,10 @@ import {
   HashIcon,
   TrashIcon,
   EditIcon as Edit2Icon,
-  QrCode
+  QrCode,
+  QrCodeIcon,
+  CheckCircleIcon,
+  HeartIcon
 } from "lucide-react";
 import {
   useUserProfile,
@@ -542,6 +545,13 @@ interface SwipeableProfileProps {
   onConnect: () => void;
   onMessage: () => void;
   setIsAddNoteOpen: (isOpen: boolean) => void;
+  isOwnProfile: boolean;
+  onQRCode: () => void;
+  onEditTags: () => void;
+  onWeMet: () => void;
+  onRemember: () => void;
+  weMet: boolean;
+  remember: boolean;
 }
 
 const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
@@ -550,7 +560,14 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
   onProfileViewChange,
   onConnect,
   onMessage,
-  setIsAddNoteOpen
+  setIsAddNoteOpen,
+  isOwnProfile,
+  onQRCode,
+  onEditTags,
+  onWeMet,
+  onRemember,
+  weMet,
+  remember
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -789,96 +806,166 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
                     )}
 
                     {/* Connection Tags Section */}
-                    {profileUser.connectWith && profileUser.connectWith.length > 0 && (
-                      <div className="mb-4">
-                        <div className="flex flex-wrap gap-2">
-                          {profileUser.connectWith.map((tag, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="bg-[#FFE066] text-gray-800 border-none font-medium text-xs px-3 py-1 rounded-full hover:bg-[#FFD700] transition-colors cursor-default"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex-1">
+                        {profileUser.connectWith && profileUser.connectWith.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {profileUser.connectWith.map((tag, index) => (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="bg-[#3ec6c6] border-[#3ec6c6] text-white hover:bg-[#2ea5a5] transition-colors"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
+                      {/* Edit tags button for own profile */}
+                      {isOwnProfile && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={onEditTags}
+                          className="ml-2 text-gray-500 hover:text-gray-700"
+                        >
+                          <EditIcon className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                     {/* TODO: add the virtues and tags here */}
 
                   </div>
                 </div>
 
                 {/* Action Buttons - Enhanced with minimalistic design */}
-                <div className="flex justify-center gap-4 mt-6">
-                  <TooltipProvider>
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setIsAddNoteOpen(true)}
-                          className="label-button flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50 border-dashed"
-                          aria-label="Add custom connection preference"
-                        >
-                          <PlusIcon className="w-4 h-4" /> add note
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent className="action-button-tooltip">
-                        add note
-                      </TooltipContent>
-                    </Tooltip>
-                    {/* Message Button */}
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={onMessage}
-                          className="minimalist-action-button primary"
-                          aria-label="Send message"
-                        >
-                          <MessageCircleIcon className="w-5 h-5" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="action-button-tooltip">
-                        Message
-                      </TooltipContent>
-                    </Tooltip>
+                <div className="flex gap-3">
+                  {/* Conditional rendering based on profile ownership */}
+                  {isOwnProfile ? (
+                    // Own Profile Actions
+                    <>
+                      <Button
+                        onClick={onQRCode}
+                        variant="outline"
+                        className="flex-1 flex items-center justify-center gap-2 h-12 text-sm font-medium"
+                      >
+                        <QrCodeIcon className="w-4 h-4" />
+                        QR Code
+                      </Button>
+                      
+                      <Button
+                        onClick={handleLinkedInProfile}
+                        variant="outline"
+                        className="flex-1 flex items-center justify-center gap-2 h-12 text-sm font-medium"
+                        disabled={!profileUser.linkedinUrl}
+                      >
+                        <LinkedinIcon className="w-4 h-4" />
+                        LinkedIn
+                      </Button>
+                    </>
+                  ) : (
+                    // Other User's Profile Actions
+                    <TooltipProvider>
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsAddNoteOpen(true)}
+                            className="label-button flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50 border-dashed"
+                            aria-label="Add custom connection preference"
+                          >
+                            <PlusIcon className="w-4 h-4" /> add note
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="action-button-tooltip">
+                          add note
+                        </TooltipContent>
+                      </Tooltip>
+                      {/* Message Button */}
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={onMessage}
+                            className="minimalist-action-button primary"
+                            aria-label="Send message"
+                          >
+                            <MessageCircleIcon className="w-5 h-5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="action-button-tooltip">
+                          Message
+                        </TooltipContent>
+                      </Tooltip>
 
-                    { }
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={onConnect}
-                          className="minimalist-action-button"
-                          aria-label="Connect with user"
-                        >
-                          <QrCode className="w-5 h-5" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="action-button-tooltip">
-                        Scan QR code to connect
-                      </TooltipContent>
-                    </Tooltip>
+                      { }
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={onConnect}
+                            className="minimalist-action-button"
+                            aria-label="Connect with user"
+                          >
+                            <QrCode className="w-5 h-5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="action-button-tooltip">
+                          Scan QR code to connect
+                        </TooltipContent>
+                      </Tooltip>
 
-                    {/* LinkedIn Profile Button */}
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={handleLinkedInProfile}
-                          className="minimalist-action-button linkedin"
-                          aria-label="View LinkedIn profile"
-                          disabled={!profileUser.linkedinUrl}
-                        >
-                          <LinkedinIcon className="w-5 h-5" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="action-button-tooltip">
-                        LinkedIn Profile
-                      </TooltipContent>
-                    </Tooltip>
+                      {/* LinkedIn Profile Button */}
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={handleLinkedInProfile}
+                            className="minimalist-action-button linkedin"
+                            aria-label="View LinkedIn profile"
+                            disabled={!profileUser.linkedinUrl}
+                          >
+                            <LinkedinIcon className="w-5 h-5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="action-button-tooltip">
+                          LinkedIn Profile
+                        </TooltipContent>
+                      </Tooltip>
 
-                  </TooltipProvider>
+                    </TooltipProvider>
+                  )}
                 </div>
+
+                {/* Social Interaction Buttons - Only for other users */}
+                {!isOwnProfile && (
+                  <div className="flex gap-3 mt-3">
+                    <Button
+                      onClick={onWeMet}
+                      variant={weMet ? "default" : "outline"}
+                      className={`flex-1 flex items-center justify-center gap-2 h-10 text-sm font-medium ${
+                        weMet 
+                          ? "bg-green-600 hover:bg-green-700 text-white" 
+                          : "border-green-600 text-green-600 hover:bg-green-50"
+                      }`}
+                    >
+                      <CheckCircleIcon className="w-4 h-4" />
+                      {weMet ? "We met ✓" : "We met"}
+                    </Button>
+                    
+                    <Button
+                      onClick={onRemember}
+                      variant={remember ? "default" : "outline"}
+                      className={`flex-1 flex items-center justify-center gap-2 h-10 text-sm font-medium ${
+                        remember 
+                          ? "bg-red-600 hover:bg-red-700 text-white" 
+                          : "border-red-600 text-red-600 hover:bg-red-50"
+                      }`}
+                    >
+                      <HeartIcon className="w-4 h-4" />
+                      {remember ? "Remember ✓" : "Remember"}
+                    </Button>
+                  </div>
+                )}
 
                 {/* CollapsibleText Section - Updated to use CollapsibleText component */}
                 <div className="space-y-2 mt-6">
@@ -1047,6 +1134,10 @@ export const ProfilePage: React.FC = () => {
   const [editingNote, setEditingNote] = useState<PrivateNote | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [questionsError, setQuestionsError] = useState<string | null>(null);
+  const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [weMet, setWeMet] = useState(false);
+  const [remember, setRemember] = useState(false);
 
   // New state for swipeable profile views
   const [currentProfileView, setCurrentProfileView] = useState<ProfileViewType>("standard");
@@ -1062,6 +1153,33 @@ export const ProfilePage: React.FC = () => {
     error: profileError,
     refetch: refetchProfile
   } = useUserProfile(id);
+
+  // Check if user is viewing their own profile
+  const isOwnProfile = profileUser?.id === currentUser?.id;
+
+  // Authentication check
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Authentication Required
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Please log in to view profiles.
+            </p>
+            <Button 
+              onClick={() => navigate("/login")}
+              className="w-full bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
+            >
+              Log In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   /**
    * Handle success and error cases using useEffect (React Query v5 pattern)
@@ -1250,6 +1368,16 @@ export const ProfilePage: React.FC = () => {
   const handleConnect = () => {
     if (!profileUser) return;
 
+    // Only allow connecting with other users
+    if (isOwnProfile) {
+      toast({
+        title: "Invalid action",
+        description: "You cannot connect with yourself.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // TODO: Implement connection API call
     console.log("Connect with user:", profileUser.id);
 
@@ -1262,12 +1390,70 @@ export const ProfilePage: React.FC = () => {
   const handleMessage = () => {
     if (!profileUser) return;
 
+    // Only allow messaging other users
+    if (isOwnProfile) {
+      toast({
+        title: "Invalid action",
+        description: "You cannot message yourself.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // TODO: Navigate to chat with user
     console.log("Message user:", profileUser.id);
     navigate("/messages");
   };
 
+  /**
+   * Handle QR code sharing
+   */
+  const handleQRCode = () => {
+    setIsQRDialogOpen(true);
+  };
+
+  /**
+   * Handle editing connection tags
+   */
+  const handleEditTags = () => {
+    setIsEditingTags(true);
+    toast({
+      title: "Edit connection tags",
+      description: "Connection tag editing feature coming soon!",
+    });
+  };
+
+  /**
+   * Handle "We met" action
+   */
   const handleWeMet = () => {
+    if (!profileUser) return;
+    
+    setWeMet(!weMet);
+    toast({
+      title: weMet ? "Removed 'We met'" : "Marked 'We met'",
+      description: weMet 
+        ? `You've unmarked that you met ${profileUser.name}.`
+        : `You've marked that you met ${profileUser.name}.`,
+    });
+  };
+
+  /**
+   * Handle "Remember" action
+   */
+  const handleRemember = () => {
+    if (!profileUser) return;
+    
+    setRemember(!remember);
+    toast({
+      title: remember ? "Removed reminder" : "Added reminder",
+      description: remember 
+        ? `You've removed the reminder for ${profileUser.name}.`
+        : `You'll be reminded about ${profileUser.name}.`,
+    });
+  };
+
+  const handleWeMet2 = () => {
     if (!profileUser) return;
 
     // Add automatic note about meeting
@@ -1288,7 +1474,7 @@ export const ProfilePage: React.FC = () => {
     });
   };
 
-  const handleRemember = () => {
+  const handleRemember2 = () => {
     setActiveTab("notes");
     setIsAddNoteOpen(true);
   };
@@ -1304,9 +1490,6 @@ export const ProfilePage: React.FC = () => {
   const handleProfileViewChange = (view: ProfileViewType) => {
     setCurrentProfileView(view);
   };
-
-  // Determine if this is the current user's own profile
-  const isOwnProfile = profileUser?.id === currentUser?.id;
 
   // Loading state
   if (profileLoading) {
@@ -1452,7 +1635,7 @@ export const ProfilePage: React.FC = () => {
             {/* Action buttons in header */}
             <div className="flex items-center gap-2">
               <Button
-                onClick={handleWeMet}
+                onClick={handleWeMet2}
                 size="sm"
                 variant="outline"
                 className="px-3 py-1 h-8 text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
@@ -1460,7 +1643,7 @@ export const ProfilePage: React.FC = () => {
                 We Met
               </Button>
               <Button
-                onClick={handleRemember}
+                onClick={handleRemember2}
                 size="sm"
                 variant="outline"
                 className="px-3 py-1 h-8 text-xs bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100"
@@ -1480,6 +1663,13 @@ export const ProfilePage: React.FC = () => {
             onConnect={handleConnect}
             onMessage={handleMessage}
             setIsAddNoteOpen={setIsAddNoteOpen}
+            isOwnProfile={isOwnProfile}
+            onQRCode={handleQRCode}
+            onEditTags={handleEditTags}
+            onWeMet={handleWeMet}
+            onRemember={handleRemember}
+            weMet={weMet}
+            remember={remember}
           />
         </div>
 
@@ -1731,6 +1921,53 @@ export const ProfilePage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* QR Code Dialog - Only for own profile */}
+      {isOwnProfile && (
+        <Dialog open={isQRDialogOpen} onOpenChange={setIsQRDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Share Your Profile</DialogTitle>
+              <DialogDescription>
+                Let others scan this QR code to quickly access your profile.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex flex-col items-center py-6">
+              {/* Mock QR Code - In real app, generate actual QR code */}
+              <div className="w-48 h-48 bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center mb-4">
+                <div className="text-center">
+                  <QrCodeIcon className="w-16 h-16 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">QR Code</p>
+                  <p className="text-xs text-gray-400 mt-1">Profile: {profileUser.name}</p>
+                </div>
+              </div>
+              
+              <p className="text-sm text-gray-600 text-center">
+                Share this QR code at events for quick profile connections
+              </p>
+            </div>
+            
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  // TODO: Implement QR code saving
+                  toast({
+                    title: "QR Code saved",
+                    description: "QR code has been saved to your device.",
+                  });
+                }}
+              >
+                Save QR Code
+              </Button>
+              <Button onClick={() => setIsQRDialogOpen(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };
