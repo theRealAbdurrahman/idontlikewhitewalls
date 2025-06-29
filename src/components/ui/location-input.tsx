@@ -67,7 +67,7 @@ interface LocationInputProps {
 export const LocationInput: React.FC<LocationInputProps> = ({
   value,
   onChange,
-  placeholder = "e.g., Trinity College Dublin, Dublin 2",
+  placeholder = "LX Factory, R. Rodrigues de Faria",
   disabled = false,
   className
 }) => {
