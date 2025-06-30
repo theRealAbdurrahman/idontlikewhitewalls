@@ -9,6 +9,7 @@ import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { useMutation, useQuery, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
 import { apiConfig, shouldLogApiRequests } from '../config/api';
 import { UserProfileApiResponse, UserProfileResponse } from '../models';
+import { isWebcontainerEnv, getMockToken } from '../utils/webcontainer';
 
 /**
  * Configure axios instance with base URL and interceptors
@@ -19,23 +20,36 @@ const axiosInstance = Axios.create({
   headers: apiConfig.headers,
 });
 
-// Request interceptor for debugging in development
-if (shouldLogApiRequests) {
-  axiosInstance.interceptors.request.use(
-    (config) => {
+// Request interceptor for webcontainer auth and debugging
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Inject webcontainer token if in webcontainer environment and no auth header exists
+    if (isWebcontainerEnv() && !config.headers?.Authorization) {
+      const mockToken = getMockToken();
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${mockToken}`;
+      console.log('🔧 Webcontainer: Injected mock auth token');
+    }
+
+    // Debug logging in development
+    if (shouldLogApiRequests) {
       console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
         data: config.data,
         params: config.params,
+        headers: config.headers,
       });
-      return config;
-    },
-    (error) => {
-      console.error('❌ API Request Error:', error);
-      return Promise.reject(error);
     }
-  );
+    
+    return config;
+  },
+  (error) => {
+    console.error('❌ API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
 
-  // Response interceptor for debugging in development
+// Response interceptor for debugging in development
+if (shouldLogApiRequests) {
   axiosInstance.interceptors.response.use(
     (response) => {
       console.log(`✅ API Response: ${response.status} ${response.config.url}`, response.data);
