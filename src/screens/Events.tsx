@@ -228,7 +228,7 @@ export const Events: React.FC = () => {
         location: event.location || "",
         date: event.start_date,
         endDate: event.end_date,
-        bannerImage: `https://images.pexels.com/photos/${[1181533, 159711, 3183150, 3182773, 574077][index % 5]}/pexels-photo-${[1181533, 159711, 3183150, 3182773, 574077][index % 5]}.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1`,
+        bannerImage: event.image_url || `https://images.pexels.com/photos/${[1181533, 159711, 3183150, 3182773, 574077][index % 5]}/pexels-photo-${[1181533, 159711, 3183150, 3182773, 574077][index % 5]}.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1`,
         organizerId: event.creator_id,
         organizerName: "Event Organizer",
         attendeeCount: Math.floor(Math.random() * 500) + 50,
