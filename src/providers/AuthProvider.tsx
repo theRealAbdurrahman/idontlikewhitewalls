@@ -127,6 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                 } catch (fetchError) {
                     console.error('❌ Failed to fetch user profile:', fetchError);
+                    if (fetchError.status === 404) { navigate('/signup'); }
                     setError('Failed to fetch user data');
                 } finally {
                     userSyncInProgress.current = false;
