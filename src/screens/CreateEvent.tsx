@@ -369,9 +369,9 @@ export const CreateEvent: React.FC = () => {
       const eventData = {
         name: data.name,
         description: data.description,
+        // location: data.location.displayName,
+        // event_url: normalizedEventUrl,
         location: data.location.displayName,
-        event_url: normalizedEventUrl,
-        google_maps_url: data.location.googleMapsUrl,
         start_date: data.startDateTime,
         end_date: data.endDateTime,
         parent_event_id: null,
