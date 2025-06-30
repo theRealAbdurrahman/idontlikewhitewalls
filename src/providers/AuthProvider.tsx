@@ -134,7 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     console.log('✅ User authenticated, fetching user profile...');
 
                     // Get JWT token from Logto
-                    const jwt = await getIdToken();
+                    const jwt = await getIdToken?.();
 
                     if (!jwt) {
                         throw new Error('Failed to get JWT token');
@@ -150,7 +150,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                 } catch (fetchError) {
                     console.error('❌ Failed to fetch user profile:', fetchError);
-                    if (fetchError.status === 404) { navigate('/signup'); }
+                    if (fetchError && typeof fetchError === 'object' && 'status' in fetchError && (fetchError as any).status === 404) {
+                        navigate('/signup');
+                    }
                     setError('Failed to fetch user data');
                 } finally {
                     userSyncInProgress.current = false;
@@ -248,7 +250,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         const callbackUrl = getAuthCallbackUrl();
-        logtoSignIn(callbackUrl);
+        logtoSignIn?.(callbackUrl);
     };
 
     /**
@@ -272,7 +274,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setError(null);
 
         // Sign out from Logto
-        logtoSignOut(logoutUrl);
+        logtoSignOut?.(logoutUrl);
     };
 
     /**
@@ -285,7 +287,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         try {
-            const token = await logtoGetAccessToken();
+            const token = await logtoGetAccessToken?.();
             return token || null;
         } catch (error) {
             console.error('Failed to get access token:', error);
@@ -305,7 +307,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setLoading(true);
 
             // Get JWT token from Logto
-            const jwt = await getIdToken();
+            const jwt = await getIdToken?.();
 
             if (!jwt) {
                 throw new Error('Failed to get JWT token');
@@ -314,7 +316,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const userProfileResponse = await getCurrentUserProfile(jwt);
 
             if (userProfileResponse) {
-                setCurrentUser(userProfileResponse.data);
+                setCurrentUser(userProfileResponse);
             }
         } catch (error) {
             console.error('Failed to refresh user:', error);
