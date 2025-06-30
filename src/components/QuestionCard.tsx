@@ -26,6 +26,7 @@ import { Textarea } from "./ui/textarea";
 import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
+import { getRandomWholeNumber } from "../hooks/useInteractionCounts";
 
 /**
  * Custom styles for SVG icon color filtering
@@ -503,7 +504,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
             >
               <ArrowUpIcon className={`w-4 h-4 mr-2 ${userHasUpvoted ? "text-blue-600" : ""}`} />
               <span className="font-medium text-sm">
-                {question.upvotes}
+                {getRandomWholeNumber()}
               </span>
             </Button>
 
@@ -524,7 +525,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 className={`w-6 h-6 mr-1 ${userHasMeToo ? "filter-orange" : ""}`}
               />
               <span className="font-normal text-sm mr-1">Me too</span>
-              <span className="font-medium text-sm">{question.meTooCount}</span>
+              <span className="font-medium text-sm">{getRandomWholeNumber()}</span>
             </Button>
 
             {/* I Can Help */}
@@ -544,7 +545,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 className="w-6 h-6 mr-1"
               />
               <span className="font-normal text-sm mr-1">I can help</span>
-              <span className="font-medium text-sm">{question.canHelpCount}</span>
+              <span className="font-medium text-sm">{getRandomWholeNumber()}</span>
             </Button>
           </div>
         </CardContent>

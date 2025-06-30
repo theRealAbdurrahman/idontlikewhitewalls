@@ -469,7 +469,7 @@ export const EventDetails: React.FC = () => {
           <div className="flex justify-center items-center p-6">
             <div className="relative w-80 h-80 overflow-hidden rounded-2xl shadow-lg">
             <img
-              src={event.bannerImage || event.image || "https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&dpr=1"}
+                src={event.bannerImage || event.image || "https://cdn.discordapp.com/attachments/1379799133451325582/1389316221626749019/Unicorn_Summit.png?ex=68642d0f&is=6862db8f&hm=c8ec879be7aa03620d11396bbe662cca85b072c6035171f9942bcc3cd8707c0c&"}
               alt={event.name}
               className="w-full h-full object-cover rounded-2xl"
             />
