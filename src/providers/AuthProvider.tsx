@@ -91,6 +91,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setError
     } = useAuthStore();
 
+    // Initial cleanup for webcontainer mode
+    useEffect(() => {
+        if (isWebcontainer) {
+            // Immediately clear any persisted auth state in webcontainer
+            setAuthenticated(false);
+            setCurrentUser(null);
+            setLoading(false);
+            setError(null);
+        }
+    }, [isWebcontainer, setAuthenticated, setCurrentUser, setLoading, setError]);
+
     /**
      * SINGLE useEffect to handle ALL authentication synchronization
      * This prevents circular dependencies and infinite loops
@@ -109,8 +120,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Users must explicitly click login to authenticate
         if (isWebcontainer) {
             console.log('🔧 Webcontainer mode: Skipping auto-authentication, waiting for user action');
+
+            // Ensure we start with clean, unauthenticated state
+            setAuthenticated(false);
+            setCurrentUser(null);
             setLoading(false);
             setError(null);
+
+            // Force navigation to login if not already there
+            const currentPath = window.location.pathname;
+            const authPages = ['/login', '/signup', '/callback', '/logout'];
+
+            if (!authPages.includes(currentPath) && !navigationInProgress.current) {
+                console.log('🔀 Webcontainer mode: Redirecting to login from:', currentPath);
+                navigationInProgress.current = true;
+
+                setTimeout(() => {
+                    navigate('/login');
+                    setTimeout(() => {
+                        navigationInProgress.current = false;
+                    }, 1000);
+                }, 0);
+            }
+
             return;
         }
 
