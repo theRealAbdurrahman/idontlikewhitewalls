@@ -715,7 +715,7 @@ export const QuestionDetails: React.FC = () => {
                       }`}
                     >
                       <img 
-                        src="/Metoo (1).svg" 
+                      src="./Metoo (1).svg" 
                         alt="Me too" 
                         className={`w-6 h-6 mr-1 ${question.isMeToo ? "filter-orange" : ""}`} 
                       />
@@ -731,7 +731,7 @@ export const QuestionDetails: React.FC = () => {
                       className="action-button h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors"
                     >
                       <img 
-                        src="/I Can Help.svg" 
+                      src="./I Can Help.svg" 
                         alt="I can help" 
                         className="w-6 h-6 mr-1" 
                       />
@@ -768,7 +768,7 @@ export const QuestionDetails: React.FC = () => {
                 style={{ fontSize: 'min(14px, 3.5vw)', gap: '10px' }}
               >
                 <img 
-                  src="/Metoo (1).svg" 
+                  src="./Metoo (1).svg" 
                   alt="Me too" 
                   className="w-8 h-8" 
                   style={{ 
@@ -787,7 +787,7 @@ export const QuestionDetails: React.FC = () => {
                 style={{ fontSize: 'min(14px, 3.5vw)', gap: '10px' }}
               >
                 <img 
-                  src="/I Can Help.svg" 
+                  src="./I Can Help.svg" 
                   alt="I can help" 
                   className="w-4 h-4" 
                   style={{ 

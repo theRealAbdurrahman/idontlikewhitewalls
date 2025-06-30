@@ -519,7 +519,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 } ${isOwnQuestion ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <img
-                src="/Metoo (1).svg"
+                src="./Metoo (1).svg"
                 alt="Me too"
                 className={`w-6 h-6 mr-1 ${userHasMeToo ? "filter-orange" : ""}`}
               />
@@ -539,7 +539,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 }`}
             >
               <img
-                src="/I Can Help.svg"
+                src="./I Can Help.svg"
                 alt="I can help"
                 className="w-6 h-6 mr-1"
               />
