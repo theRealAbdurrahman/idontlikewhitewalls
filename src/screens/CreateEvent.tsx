@@ -63,7 +63,6 @@ import { Badge } from "../components/ui/badge";
 import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
-import { isValidUrl } from "../utils/urlValidation";
 import { generateBestGeometricImage } from "../utils/geometricImageGenerator";
 
 /**

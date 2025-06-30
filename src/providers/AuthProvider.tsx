@@ -117,12 +117,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         throw new Error('Failed to get JWT token');
                     }
 
-                    // Fetch current user profile from backend (two-step process)
                     const userProfileResponse = await getCurrentUserProfile(jwt);
-                    console.log('✅ User profile fetched successfully');
+                    console.log('✅ User profile fetched successfully', userProfileResponse);
 
                     // Store the user data in auth store
-                    setCurrentUser(userProfileResponse.data);
+                    setCurrentUser(userProfileResponse);
+                    console.log('✅ User data stored in auth store:', user);
+
 
                 } catch (fetchError) {
                     console.error('❌ Failed to fetch user profile:', fetchError);
@@ -261,7 +262,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 throw new Error('Failed to get JWT token');
             }
 
-            // Fetch current user profile from backend (two-step process)
             const userProfileResponse = await getCurrentUserProfile(jwt);
 
             if (userProfileResponse) {

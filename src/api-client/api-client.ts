@@ -8,7 +8,7 @@
 import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { useMutation, useQuery, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
 import { apiConfig, shouldLogApiRequests } from '../config/api';
-import { UserProfileApiResponse } from '../models';
+import { UserProfileApiResponse, UserProfileResponse } from '../models';
 
 /**
  * Configure axios instance with base URL and interceptors
@@ -192,10 +192,10 @@ export const getUserProfileById = async (jwt: string, userId: string): Promise<U
  * @param jwt - JWT token for authentication
  * @returns Promise resolving to the user profile
  */
-export const getCurrentUserProfile = async (jwt: string): Promise<UserProfileApiResponse> => {
+export const getCurrentUserProfile = async (jwt: string): Promise<UserProfileResponse> => {
   try {
     // GET /api/v1/users/me now returns the full user profile directly
-    const response = await customInstance<UserProfileApiResponse>({
+    const response = await customInstance<UserProfileResponse>({
       url: `/api/v1/users/me`,
       method: 'GET',
       headers: {
