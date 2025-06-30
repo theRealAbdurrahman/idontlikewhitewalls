@@ -129,28 +129,30 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
             const questionsArray = getQuestionsArray(questionsData.data);
 
-            const transformedQuestions = questionsArray.map((question: any) => ({
-                id: question.id,
-                authorId: question.user_id,
-                authorName: !question.is_anonymous ? question.user.full_name : "Anonymous",
-                authorAvatar: undefined,
-                eventId: question.event_id,
-                eventName: undefined, // TODO: Match with events
-                title: question.title,
-                description: question.content,
-                image: undefined,
-                tags: question.tags || [],
-                createdAt: question.created_at || new Date().toISOString(),
-                visibility: "anyone" as const,
-                isAnonymous: question.is_anonymous || false,
-                upvotes: 0, // TODO: Calculate from interactions
-                meTooCount: 0, // TODO: Calculate from interactions
-                canHelpCount: 0, // TODO: Calculate from interactions
-                isUpvoted: false, // TODO: Determine from user's interactions
-                isMeToo: false, // TODO: Determine from user's interactions
-                isBookmarked: false, // TODO: Determine from user's interactions
-                replies: 0,
-            }));
+            const transformedQuestions = questionsArray.map((question: any) => {
+                return {
+                    id: question.id,
+                    authorId: question.user_id,
+                    authorName: !question.is_anonymous ? (question as any).user?.full_name || "User" : "Anonymous",
+                    authorAvatar: undefined,
+                    eventId: question.event_id,
+                    eventName: undefined, // TODO: Match with events
+                    title: question.title,
+                    description: question.content,
+                    image: undefined,
+                    tags: (question as any).tags || [],
+                    createdAt: question.created_at || new Date().toISOString(),
+                    visibility: "anyone" as const,
+                    isAnonymous: question.is_anonymous || false,
+                    upvotes: 0, // Will be populated by interaction counts in components
+                    meTooCount: 0, // Will be populated by interaction counts in components
+                    canHelpCount: 0, // Will be populated by interaction counts in components
+                    isUpvoted: false, // TODO: Determine from user's interactions
+                    isMeToo: false, // TODO: Determine from user's interactions
+                    isBookmarked: false, // TODO: Determine from user's interactions
+                    replies: 0,
+                };
+            });
 
             setQuestions(transformedQuestions);
         }

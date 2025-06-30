@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { MessageCircleIcon, UserPlusIcon, ArrowLeftIcon } from "lucide-react";
+import { MessageCircleIcon, UserPlusIcon } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -8,6 +8,7 @@ import { Badge } from "../components/ui/badge";
 import { useUserProfile } from "../api-client/api-client";
 import { useAuth } from "../providers";
 import { useToast } from "../hooks/use-toast";
+import { useUserInteractionStats } from "../hooks/useInteractionCounts";
 
 /**
  * User Profile screen component for viewing other users' profiles
@@ -24,6 +25,9 @@ export const UserProfile: React.FC = () => {
     isLoading: profileLoading,
     error: profileError
   } = useUserProfile(id);
+
+  // Get interaction stats for this user
+  const userStats = useUserInteractionStats(id || '');
 
   // Check if this is the current user's own profile
   const isOwnProfile = userProfileData?.id === currentUser?.id;
@@ -51,16 +55,16 @@ export const UserProfile: React.FC = () => {
     `${userProfileData.first_name || ''} ${userProfileData.last_name || ''}`.trim() || 'Unknown User' :
     'Unknown User';
 
-  // Create stats from available data (some will be placeholders until we have interaction counts)
+  // Create stats from available data with real interaction counts
   const stats = userProfileData ? [
-    { label: "Questions", value: 0 }, // TODO: Get from API when available
-    { label: "Me Too", value: 0 }, // TODO: Get from API when available  
-    { label: "Can Help", value: 0 }, // TODO: Get from API when available
+    { label: "Questions", value: 0 }, // TODO: Get from API when available (needs questions by user_id)
+    { label: "Me Too", value: userStats.meTooGiven }, // Real count from interactions API
+    { label: "Can Help", value: userStats.canHelpGiven }, // Real count from interactions API
     { label: "Connections", value: 0 }, // TODO: Get from API when available
   ] : [];
 
   // Loading state
-  if (profileLoading) {
+  if (profileLoading || userStats.isLoading) {
     return (
       <div className="px-4 py-6">
         <div className="flex items-center justify-center min-h-[50vh]">

@@ -125,11 +125,11 @@ export const useInteractionCounts = (): AllInteractionCounts => {
     // Helper function to get counts for a specific target
     const getCountsForTarget = useCallback((targetId: string): InteractionCounts => {
         return countsLookup.get(targetId) || {
-            upvotes: getRandomWholeNumber(),
-            meTooCount: getRandomWholeNumber(),
-            canHelpCount: getRandomWholeNumber(),
-            bookmarkCount: getRandomWholeNumber(),
-            viewCount: getRandomWholeNumber(),
+            upvotes: 0,
+            meTooCount: 0,
+            canHelpCount: 0,
+            bookmarkCount: 0,
+            viewCount: 0,
         };
     }, [countsLookup]);
 
@@ -142,9 +142,7 @@ export const useInteractionCounts = (): AllInteractionCounts => {
 };
 
 // function that returns randowm whole number from 5 to 16 
-export const getRandomWholeNumber = (min: number = 5, max: number = 16): number => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-};
+
 
 /**
  * Hook to get interaction counts for a specific question
