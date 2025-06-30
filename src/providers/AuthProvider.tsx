@@ -6,6 +6,7 @@ import { getApiBaseUrl } from '../config/api';
 import { LogtoUserData, getCurrentUserProfile } from '../api-client/api-client';
 import { UserProfileResponse } from '../models';
 import { getAuthCallbackUrl, getLogoutRedirectUrl } from '../utils/auth';
+import { isWebcontainerEnv, getMockUser, getMockToken, logWebcontainerInfo } from '../utils/webcontainer';
 
 /**
  * Centralized Authentication Context Interface
@@ -56,16 +57,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const navigationInProgress = useRef(false);
     const userSyncInProgress = useRef(false);
 
-    // Logto hooks - All Logto interactions happen here
+    // Check if we're in webcontainer environment
+    const isWebcontainer = isWebcontainerEnv();
+    
+    // Log webcontainer info for debugging
+    useEffect(() => {
+        if (isWebcontainer) {
+            logWebcontainerInfo();
+        }
+    }, [isWebcontainer]);
+
+    // Logto hooks - Only use if not in webcontainer
+    const logtoHooks = useLogto();
     const {
-        isAuthenticated: logtoIsAuthenticated,
-        isLoading: logtoIsLoading,
-        error: logtoError,
+        isAuthenticated: logtoIsAuthenticated = false,
+        isLoading: logtoIsLoading = false,
+        error: logtoError = null,
         signIn: logtoSignIn,
         signOut: logtoSignOut,
         getIdToken,
         getAccessToken: logtoGetAccessToken
-    } = useLogto();
+    } = isWebcontainer ? {} : logtoHooks;
 
     // Zustand store - Single source of truth for auth state
     const {
@@ -82,14 +94,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     /**
      * SINGLE useEffect to handle ALL authentication synchronization
      * This prevents circular dependencies and infinite loops
+     * Includes webcontainer mock authentication
      */
     useEffect(() => {
         console.log('🔄 AuthProvider: Single effect triggered:', {
+            isWebcontainer,
             logtoIsAuthenticated,
             logtoIsLoading,
             currentPath: window.location.pathname,
             userSyncInProgress: userSyncInProgress.current
         });
+
+        // Handle webcontainer environment
+        if (isWebcontainer) {
+            console.log('🔧 Webcontainer mode: Setting up mock authentication');
+            setAuthenticated(true);
+            setLoading(false);
+            setError(null);
+            setCurrentUser(getMockUser());
+            return;
+        }
 
         // Sync basic states immediately (no async operations)
         setAuthenticated(logtoIsAuthenticated);
@@ -210,17 +234,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     /**
-     * Enhanced sign in with callback URL
+     * Enhanced sign in with callback URL (with webcontainer bypass)
      */
     const signIn = () => {
+        if (isWebcontainer) {
+            // In webcontainer mode, just navigate to home
+            console.log('🔧 Webcontainer mode: Bypassing sign in, going to home');
+            navigate('/home');
+            return;
+        }
+        
         const callbackUrl = getAuthCallbackUrl();
         logtoSignIn(callbackUrl);
     };
 
     /**
-     * Enhanced sign out with redirect URL and cleanup
+     * Enhanced sign out with redirect URL and cleanup (with webcontainer bypass)
      */
     const signOut = () => {
+        if (isWebcontainer) {
+            // In webcontainer mode, just clear state and go to login
+            console.log('🔧 Webcontainer mode: Mock sign out');
+            setAuthenticated(false);
+            setCurrentUser(null);
+            navigate('/login');
+            return;
+        }
+        
         const logoutUrl = getLogoutRedirectUrl();
 
         // Clear store state first
@@ -233,9 +273,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     /**
-     * Get access token for API calls
+     * Get access token for API calls (with webcontainer mock)
      */
     const getAccessToken = async (): Promise<string | null> => {
+        if (isWebcontainer) {
+            console.log('🔧 Webcontainer mode: Returning mock token');
+            return getMockToken();
+        }
+        
         try {
             const token = await logtoGetAccessToken();
             return token || null;

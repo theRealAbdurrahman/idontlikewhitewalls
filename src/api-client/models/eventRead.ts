@@ -24,4 +24,8 @@ export interface EventRead {
   creator_id: string;
   created_at: EventReadCreatedAt;
   updated_at: EventReadUpdatedAt;
+  image_url?: string;
+  is_active?: boolean;
+  is_cancelled?: boolean;
+  is_postponed?: boolean;
 }
