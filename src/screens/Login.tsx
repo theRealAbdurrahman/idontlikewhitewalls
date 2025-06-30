@@ -1,15 +1,11 @@
 import React, { useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { isWebcontainerEnv } from '../utils/webcontainer';
 import { useAuth } from '../providers';
 
 
 export const Login: React.FC = () => {
   const { signIn: authSignIn, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  
-  // Check if we're in webcontainer environment
-  const isWebcontainer = isWebcontainerEnv();
   
   // Auto-redirect if already authenticated (including webcontainer)
   useEffect(() => {
@@ -18,15 +14,6 @@ export const Login: React.FC = () => {
       navigate('/home');
     }
   }, [isAuthenticated, navigate]);
-  
-  // Auto-redirect in webcontainer environment
-  useEffect(() => {
-    if (isWebcontainer) {
-      console.log('🔧 Webcontainer detected: Auto-redirecting to demo');
-      // Use the enhanced signIn from AuthProvider which handles webcontainer
-      authSignIn();
-    }
-  }, [isWebcontainer, authSignIn]);
 
   const handleLogin = () => {
     // Use the enhanced signIn from AuthProvider

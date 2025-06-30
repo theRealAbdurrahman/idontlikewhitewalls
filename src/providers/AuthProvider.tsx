@@ -94,7 +94,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     /**
      * SINGLE useEffect to handle ALL authentication synchronization
      * This prevents circular dependencies and infinite loops
-     * Includes webcontainer mock authentication
+     * Webcontainer mode authentication is now handled via signIn() method only
      */
     useEffect(() => {
         console.log('🔄 AuthProvider: Single effect triggered:', {
@@ -105,13 +105,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             userSyncInProgress: userSyncInProgress.current
         });
 
-        // Handle webcontainer environment
+        // Skip automatic authentication in webcontainer mode
+        // Users must explicitly click login to authenticate
         if (isWebcontainer) {
-            console.log('🔧 Webcontainer mode: Setting up mock authentication');
-            setAuthenticated(true);
+            console.log('🔧 Webcontainer mode: Skipping auto-authentication, waiting for user action');
             setLoading(false);
             setError(null);
-            setCurrentUser(getMockUser());
             return;
         }
 
@@ -238,8 +237,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
      */
     const signIn = () => {
         if (isWebcontainer) {
-            // In webcontainer mode, just navigate to home
-            console.log('🔧 Webcontainer mode: Bypassing sign in, going to home');
+            // In webcontainer mode, set up mock authentication when user clicks login
+            console.log('🔧 Webcontainer mode: Setting up mock authentication on user action');
+            setAuthenticated(true);
+            setLoading(false);
+            setError(null);
+            setCurrentUser(getMockUser());
             navigate('/home');
             return;
         }
