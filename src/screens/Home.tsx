@@ -187,15 +187,6 @@ export const Home: React.FC = () => {
 
   return (
     <>
-      {/* Environment Debug - Only shown in development */}
-      {import.meta.env.MODE === 'development' && (
-        <div className="w-full max-w-2xl mx-auto px-4 py-3 mb-2 border-b border-gray-200">
-          <details>
-            <summary className="cursor-pointer font-medium text-gray-700">Environment Debug Info</summary>
-            <EnvDebug />
-          </details>
-        </div>
-      )}
 
       {/* Question Feed - Centered with max-width */}
       <div className="w-full max-w-2xl mx-auto px-4 py-3">
