@@ -34,7 +34,7 @@ export const isWebcontainerEnv = (): boolean => {
   }
   
   // Check for development mode
-  if (import.meta.env?.DEV || process.env?.NODE_ENV === 'development') {
+  if (import.meta.env?.DEV || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development')) {
     // Additional dev checks
     if (hostname === 'localhost' || hostname.startsWith('127.0.0.1')) {
       return true;
@@ -84,7 +84,7 @@ export const logWebcontainerInfo = () => {
       origin: window.location.origin,
       href: window.location.href,
       isDev: import.meta.env?.DEV,
-      nodeEnv: process.env?.NODE_ENV,
+      nodeEnv: typeof process !== 'undefined' ? process.env?.NODE_ENV : 'browser',
     });
   }
 };
