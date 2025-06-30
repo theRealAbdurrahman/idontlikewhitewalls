@@ -1121,8 +1121,8 @@ export const CreateEvent: React.FC = () => {
                   {/* Private Event */}
                   <div
                     className={isPrivateLocal
-                      ? "flex items-center justify-between p-3 rounded-lg transition-all bg-yellow-50 border border-yellow-300 cursor-pointer"
-                      : "flex items-center justify-between p-3 rounded-lg transition-all hover:bg-gray-50 cursor-pointer"
+                      ? "flex items-start justify-between p-3 rounded-lg transition-all bg-yellow-50 border border-yellow-300 cursor-pointer"
+                      : "flex items-start justify-between p-3 rounded-lg transition-all hover:bg-gray-50 border border-transparent cursor-pointer"
                     }
                     onClick={(e) => {
                       // Prevent toggling when clicking directly on the switch
@@ -1141,9 +1141,9 @@ export const CreateEvent: React.FC = () => {
                       }
                     }}
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 cursor-pointer">
                       <div className="space-y-0.5">
-                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Private Event</label>
+                        <label className="text-sm font-medium leading-none cursor-pointer">Private Event</label>
                       </div>
                       {generatedPin && (
                         <div className="mt-2">
@@ -1163,7 +1163,7 @@ export const CreateEvent: React.FC = () => {
                       aria-checked={isPrivateLocal}
                       disabled={isSubmitting}
                       className={`
-                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-0.5
                         ${isPrivateLocal ? 'bg-blue-600' : 'bg-gray-200'}
                         ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                       `}
@@ -1195,10 +1195,35 @@ export const CreateEvent: React.FC = () => {
                     control={form.control}
                     name="allowCrossTagging"
                     render={({ field }) => (
-                      <div className="flex items-center justify-between p-3 rounded-lg">
-                        <div className="space-y-0.5">
-                          <FormLabel>Allow Event Cross-tagging</FormLabel>
-                          <FormDescription>
+                      <div 
+                        className="flex items-start justify-between p-3 rounded-lg transition-all hover:bg-gray-50 cursor-pointer"
+                        onClick={(e) => {
+                          // Prevent toggling when clicking directly on the switch
+                          if ((e.target as HTMLElement).closest('[role="switch"]')) {
+                            return;
+                          }
+                          field.onChange(!field.value);
+                        }}
+                      >
+                        <div className="space-y-0.5 flex-1 cursor-pointer">
+                          <FormLabel 
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              field.onChange(!field.value);
+                            }}
+                          >
+                            Allow Event Cross-tagging
+                          </FormLabel>
+                          <FormDescription 
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              field.onChange(!field.value);
+                            }}
+                          >
                             Let attendees tag this event in their posts
                           </FormDescription>
                         </div>
@@ -1209,11 +1234,14 @@ export const CreateEvent: React.FC = () => {
                             aria-checked={field.value}
                             disabled={isSubmitting}
                             className={`
-                              relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+                              relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-0.5
                               ${field.value ? 'bg-blue-600' : 'bg-gray-200'}
                               ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                             `}
-                            onClick={() => field.onChange(!field.value)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent container click
+                              field.onChange(!field.value);
+                            }}
                           >
                             <span
                               className={`
