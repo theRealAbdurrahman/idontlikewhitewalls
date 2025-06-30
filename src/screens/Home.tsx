@@ -19,7 +19,8 @@ export const Home: React.FC = () => {
   
   const { isAuthenticated, isLoading, signIn } = useLogto();
   const navigate = useNavigate();
-  
+  const { activeFilters, sortBy } = useAppStore();
+
   // Bridge Logto authentication with our AuthStore
   useLogtoAuthBridge();
 
@@ -30,12 +31,11 @@ export const Home: React.FC = () => {
       const callbackUrl = getAuthCallbackUrl();
       // Store current path before redirecting to auth
       sessionStorage.setItem('redirectPath', window.location.pathname);
-      signIn(callbackUrl);
+      // signIn(callbackUrl);
       console.log(callbackUrl);
     }
   }, [isAuthenticated, isLoading, signIn]);
 
-  const { activeFilters, sortBy } = useAppStore();
 
   // Fetch questions from API with real-time polling
   const {

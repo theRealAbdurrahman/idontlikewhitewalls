@@ -11,13 +11,12 @@ import { useNavigate } from 'react-router-dom';
 export const useLogtoAuthBridge = () => {
   const { isAuthenticated, isLoading, error, getIdTokenClaims, getIdToken } = useLogto();
   const { setCurrentUser, setAuthenticated, setLoading, setError } = useAuthStore();
-  const [user, setUser] = useState<IdTokenClaims>();
   const navigate = useNavigate();
 
   // Sync authentication state
   useEffect(() => {
     setAuthenticated(isAuthenticated);
-  }, [isAuthenticated, setAuthenticated]);
+  }, [isAuthenticated]);
 
   // Sync loading state
   useEffect(() => {
@@ -50,22 +49,19 @@ export const useLogtoAuthBridge = () => {
             sub: claims!.sub,
             jwt: jwt || '', // Include JWT token if available
           };
-          
           console.log('Fetching backend user for Logto data:', logtoUserData);
-          let backendUser;
           try {
-            backendUser = await fetchCurrentUser(logtoUserData);
+            // this request always fails because it doesn't have the data it needs and BE returns an error
+            // so it always redirects to signup
+            // but if we remove something doesn't work so we need another way to check if the user is signed up
+            const backendUser = await fetchCurrentUser(logtoUserData);
+            navigate('/home')
           } catch (fetchError) {
             console.error('Failed to fetch backend user:', fetchError);
-            navigate('/signup'); // Redirect to signup if user not found
+            navigate('/signup'); // Redirect to home page after fetching user
             return;
           }
-          // Get or create user in backend
-          
-          console.log('Backend user received:', backendUser);
-          
-          // Store the backend user data in auth store
-          setCurrentUser(backendUser);
+
         } catch (error) {
           console.error('Failed to sync user with backend:', error);
           setError('Failed to sync user data');
@@ -73,15 +69,20 @@ export const useLogtoAuthBridge = () => {
       } else if (!isAuthenticated) {
         // Clear user data when not authenticated
         setCurrentUser(null);
+        navigate('/login'); // Redirect to login page
       }
     };
 
     syncUserData();
-  }, []);
-
+  }, [isAuthenticated]);
+  const checkIfUserSignedUp = async (logtoUserData: any): Promise<boolean> => {
+    const user = await fetchCurrentUser(logtoUserData);
+    return user ? true : false;
+  };
   return {
     isAuthenticated,
     isLoading,
     error,
+    checkIfUserSignedUp,
   };
 };

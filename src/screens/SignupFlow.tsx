@@ -10,6 +10,7 @@ import { StickyNote } from "../components/ui/sticky-note";
 import { useToast } from "../hooks/use-toast";
 import { IdTokenClaims, useLogto } from "@logto/react";
 import { fetchCurrentUser } from "../api-client/api-client";
+import { useAuthStore } from "../stores/authStore";
 
 /**
  * Interface for Step 1 data structure
@@ -964,7 +965,7 @@ export const SignupFlow: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { getIdToken, getIdTokenClaims, isAuthenticated } = useLogto();
-  const [user, setUser] = useState<IdTokenClaims>();
+  const { user, setCurrentUser, setAuthenticated, setLoading, setError, isAuthenticated: isAuthFromStore } = useAuthStore();
 
   // Ref for scrolling to top of form
   const formContainerRef = useRef<HTMLDivElement>(null);
@@ -1133,60 +1134,8 @@ export const SignupFlow: React.FC = () => {
    * Handle completing the signup flow
    */
   const handleComplete = async () => {
-    // TODO: Submit data to backend
-    // call fetchCurrentUser with the signup form and the logto data
-    //  const jwt = await getIdToken();
-
-    //       try {
-    //         // Get detailed user claims from ID token
-    //         const claims = await getIdTokenClaims();
-    //         console.log('Logto user claims:', claims);
-
-
-    //         // Combine user info with ID token claims for full profile
-    //         const logtoUserData: LogtoUserData = {
-    //           sub: claims!.sub,
-    //           jwt: jwt || '', // Include JWT token if available
-    //         };
-
-    /**
-     *   user_create = UserCreate(
-        linkedin_url = user_data.linkedin_url,
-        auth_id = auth_id,
-        email = email,
-        full_name = user_data.full_name,
-        profile_picture = user_data.profile_picture,
-        bio = user_data.bio,
-        title = user_data.title,
-        is_active = True,
-        created_at = func.now(),
-        updated_at = func.now(),
-        
-        # Fields from signup flow
-        fields_of_expertise = user_data.fields_of_expertise,
-        professional_background = user_data.professional_background,
-        can_help_with = user_data.can_help_with,
-        interests = user_data.interests,
-        
-        # Legacy fields (keeping for backward compatibility)
-        personality_traits = [],
-        skills = [],
-    )
-     */
-    // const { isAuthenticated, getIdTokenClaims } = useLogto();
-    // const [user, setUser] = useState<IdTokenClaims>();
-
-    // useEffect(() => {
-    //   (async () => {
-
-    //   })();
-    // }, [getIdTokenClaims, isAuthenticated]);
-
-    // const claims = await getIdTokenClaims();
-    // setUser(claims!)
     if (isAuthenticated) {
       const claims = await getIdTokenClaims();
-      setUser(claims);
       console.log("Logto user claims:", claims);
       const jwt = await getIdToken();
 
@@ -1214,8 +1163,23 @@ export const SignupFlow: React.FC = () => {
       }
       console.log("Submitting signup data:", body);
 
-      const x = await fetchCurrentUser(body);
-      console.log({ x });
+
+
+
+      try {
+        debugger;
+        const x = await fetchCurrentUser(body);
+        setCurrentUser(x);
+        setAuthenticated(true);
+        console.log({ x });
+      }
+      catch (error) {
+        console.error("Error submitting signup data:", error);
+        toast({
+          title: "Error",
+          description: "There was an issue completing your signup. Please try again later.",
+        });
+      }
 
     }
 
