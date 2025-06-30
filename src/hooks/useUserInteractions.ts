@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useReadInteractionsApiV1InteractionsGet } from '../api-client/api-client';
-import { InteractionRead, InteractionType, InteractionTarget } from '../api-client/models';
-import { useAuthStore } from '../stores/authStore';
+import { InteractionRead, InteractionType } from '../api-client/models';
+import { useAuth } from '../providers';
 
 /**
  * Interface for user interaction lookup
@@ -24,7 +24,7 @@ export interface UserInteractionLookup {
  * Provides efficient access to user's interactions for toggle functionality
  */
 export const useUserInteractions = (): UserInteractionLookup => {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   
   // Fetch all interactions - will be filtered client-side due to API limitations
   const { 

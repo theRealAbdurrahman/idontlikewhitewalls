@@ -27,7 +27,7 @@ import {
   DialogTrigger,
 } from "../components/ui/dialog";
 import { useAppStore } from "../stores/appStore";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 import { useToast } from "../hooks/use-toast";
 import { openLocationInGoogleMaps } from "../utils/googleMaps";
 
@@ -128,7 +128,7 @@ export const EventDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { events, joinEvent, checkInEvent, setActiveFilters } = useAppStore();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   // Local state

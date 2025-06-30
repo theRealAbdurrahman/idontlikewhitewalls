@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useEffect, ReactNode } from "react";
-import { 
-  useReadEventsApiV1EventsGet, 
+import {
+  useReadEventsApiV1EventsGet,
   useReadQuestionsApiV1QuestionsGet,
   useReadInteractionsApiV1InteractionsGet,
 } from "../api-client/api-client";
 import { useAuthStore } from "../stores/authStore";
 import { useAppStore } from "../stores/appStore";
+import { useLogto } from "@logto/react";
+import { useLogtoAuthBridge } from "../hooks/useLogtoAuthBridge";
 // COMMENTED OUT: Mock data imports for future reference
 // import { mockEvents, mockQuestions, mockNotifications, mockChatThreads } from "../data/mockData";
 
@@ -34,28 +36,38 @@ interface AuthProviderProps {
  * Authentication provider component that manages auth state and loads initial data
  */
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const { isAuthenticated, user, loading } = useAuthStore();
+  const { user, loading, setCurrentUser } = useAuthStore();
+  const { isAuthenticated } = useLogto();
+  const { isAuthenticated: isLogtoAuthenticated } = useLogtoAuthBridge(); // Initialize Logto auth bridge
   const { setEvents, setQuestions, setNotifications, setChatThreads, setUnreadNotifications, setUnreadMessages } = useAppStore();
+  console.log("user", user);
 
   // Fetch data from API using TanStack Query
-  const { 
-    data: eventsData, 
-    isLoading: eventsLoading, 
-    error: eventsError 
+  const {
+    data: eventsData,
+    isLoading: eventsLoading,
+    error: eventsError
   } = useReadEventsApiV1EventsGet();
-  
-  const { 
-    data: questionsData, 
-    isLoading: questionsLoading, 
-    error: questionsError 
+
+  const {
+    data: questionsData,
+    isLoading: questionsLoading,
+    error: questionsError
   } = useReadQuestionsApiV1QuestionsGet();
-  
-  const { 
-    data: interactionsData, 
-    isLoading: interactionsLoading, 
-    error: interactionsError 
+
+  const {
+    data: interactionsData,
+    isLoading: interactionsLoading,
+    error: interactionsError
   } = useReadInteractionsApiV1InteractionsGet();
 
+
+  // useEffect(() => {
+  //   // implement get user data and add it to the state
+  //   if (isAuthenticated) {
+  //     const user = await
+  //   }
+  // })
   // Load API data when available
   useEffect(() => {
     if (eventsData?.data) {
@@ -123,8 +135,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .map((interaction) => ({
           id: interaction.id,
           type: interaction.interaction_type === "uplift" ? "upvote" as const :
-                interaction.interaction_type === "me_too" ? "me_too" as const :
-                interaction.interaction_type === "i_can_help" ? "can_help" as const :
+            interaction.interaction_type === "me_too" ? "me_too" as const :
+              interaction.interaction_type === "i_can_help" ? "can_help" as const :
                 "upvote" as const,
           title: `New ${interaction.interaction_type} interaction`,
           message: `Someone ${interaction.interaction_type}ed your content`,

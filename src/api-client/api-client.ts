@@ -8,6 +8,7 @@
 import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { useMutation, useQuery, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
 import { apiConfig, shouldLogApiRequests } from '../config/api';
+import { UserProfileApiResponse, UserProfileResponse } from '../models';
 
 /**
  * Configure axios instance with base URL and interceptors
@@ -141,12 +142,80 @@ export interface LogtoUserData {
 }
 
 /**
- * Get or create current user from Logto authentication data
+ * @deprecated Use getCurrentUserProfile() instead - GET /api/v1/users/me now returns full user profile
+ * Get current user ID from /api/v1/users/me
+ * @param jwt - JWT token for authentication
+ * @returns Promise resolving to the current user's ID
+ */
+export const getCurrentUserId = async (jwt: string): Promise<string> => {
+  try {
+    const response = await customInstance<{ user_id: string }>({
+      url: `/api/v1/users/me`,
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+
+    return response.data.user_id;
+  } catch (error) {
+    console.error('Failed to fetch current user ID:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get user profile by user ID
+ * @param jwt - JWT token for authentication
+ * @param userId - The user ID to fetch
+ * @returns Promise resolving to the user profile
+ */
+export const getUserProfileById = async (jwt: string, userId: string): Promise<UserProfileApiResponse> => {
+  try {
+    const response = await customInstance<UserProfileApiResponse>({
+      url: `/api/v1/users/${userId}`,
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch user profile by ID:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get current user profile for authenticated user
+ * @param jwt - JWT token for authentication
+ * @returns Promise resolving to the user profile
+ */
+export const getCurrentUserProfile = async (jwt: string): Promise<UserProfileResponse> => {
+  try {
+    // GET /api/v1/users/me now returns the full user profile directly
+    const response = await customInstance<UserProfileResponse>({
+      url: `/api/v1/users/me`,
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch current user profile:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get or create current user from Logto authentication data (for signup flow)
  * @param logtoData - User data from Logto authentication
  * @returns Promise resolving to the backend user profile
  */
-export const fetchCurrentUser = async (logtoData: any): Promise<UserProfile> => {
-  console.log({ logtoData });
+export const signUpAndfetchCurrentUser = async (logtoData: any): Promise<UserProfileApiResponse> => {
 
   if (!logtoData.auth_id) {
     throw new Error('Logto sub (user ID) is required');
@@ -170,18 +239,10 @@ export const fetchCurrentUser = async (logtoData: any): Promise<UserProfile> => 
       },
       auth_id: logtoData?.auth_id,
       email: logtoData?.email,
-      // full_name: logtoData?.full_name,
-      // // profile_picture: user?.picture,
-      // // bio: user?.bio,
-      // // title: user?.title,
-      // fields_of_expertise: logtoData?.fields_of_expertise,
-      // professional_background: logtoData?.professional_background,
-      // can_help_with: logtoData?.can_help_with,
-      // interests: logtoData?.interests,
     };
 
 
-    const response = await customInstance<UserProfile>({
+    const response = await customInstance<UserProfileApiResponse>({
       url: `/api/v1/users/me`,
       method: 'POST',
       data: requestBody,

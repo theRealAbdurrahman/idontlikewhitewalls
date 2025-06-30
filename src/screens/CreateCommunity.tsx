@@ -37,7 +37,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../components/ui/dialog";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 import { useToast } from "../hooks/use-toast";
 
 /**
@@ -102,7 +102,7 @@ const countries = [
  */
 export const CreateCommunity: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   // Local state
