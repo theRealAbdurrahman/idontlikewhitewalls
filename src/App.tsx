@@ -22,8 +22,8 @@ import { SignupFlow } from "./screens/SignupFlow";
 import { Logout } from "./screens/Logout";
 
 const config: LogtoConfig = {
-  endpoint: 'https://login.meetball.fun',
-  appId: 'uhmy6e6frjsbed2pwni1u',
+  endpoint: import.meta.env.VITE_LOGTO_ENDPOINT || 'https://login.meetball.fun',
+  appId: import.meta.env.VITE_LOGTO_APP_ID || 'uhmy6e6frjsbed2pwni1u',
   scopes: [
     UserScope.Email,
     UserScope.Phone,
