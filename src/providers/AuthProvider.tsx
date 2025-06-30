@@ -240,7 +240,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (isWebcontainer) {
             // In webcontainer mode, just navigate to home
             console.log('🔧 Webcontainer mode: Bypassing sign in, going to home');
-            navigate('/login');
+            navigate('/home');
             return;
         }
         
