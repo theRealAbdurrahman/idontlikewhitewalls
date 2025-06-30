@@ -125,7 +125,7 @@ export const CreateCommunity: React.FC = () => {
       location: "",
       description: "",
       communityUrl: "",
-      manager: user?.name || "",
+      manager: user?.full_name || "",
       coHost: "",
       isOpen: true,
     },

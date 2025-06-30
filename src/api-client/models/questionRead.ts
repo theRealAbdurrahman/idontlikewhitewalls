@@ -10,6 +10,7 @@ import type { QuestionReadIsAnonymous } from './questionReadIsAnonymous';
 import type { QuestionReadIsFeatured } from './questionReadIsFeatured';
 import type { QuestionReadCreatedAt } from './questionReadCreatedAt';
 import type { QuestionReadUpdatedAt } from './questionReadUpdatedAt';
+import { UserCreate } from '../api-client';
 
 export interface QuestionRead {
   id: string;
@@ -22,4 +23,8 @@ export interface QuestionRead {
   is_featured: QuestionReadIsFeatured;
   created_at: QuestionReadCreatedAt;
   updated_at: QuestionReadUpdatedAt;
+  i_can_help_count: number;
+  me_too_count: number;
+  uplifts_count: number;
+  user: UserCreate
 }

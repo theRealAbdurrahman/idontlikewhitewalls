@@ -539,7 +539,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 }`}
             >
               <img
-                src="/I Can Help.svg"
+                src="./I Can Help.svg"
                 alt="I can help"
                 className="w-6 h-6 mr-1"
               />

@@ -27,9 +27,9 @@ export class CacheManager {
    * Use after: creating, updating, or deleting questions
    */
   invalidateQuestions(options: CacheInvalidationOptions = {}) {
+    // Invalidate all questions queries (matches ['questions', params] pattern)
     this.queryClient.invalidateQueries({ 
-      queryKey: ['questions'],
-      exact: options.exact
+      queryKey: ['questions']
     });
     
     // Also invalidate specific question if provided

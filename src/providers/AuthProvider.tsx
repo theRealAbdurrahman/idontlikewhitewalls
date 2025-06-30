@@ -91,10 +91,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setError
     } = useAuthStore();
 
+    // Initial cleanup for webcontainer mode
+    useEffect(() => {
+        if (isWebcontainer) {
+            // Immediately clear any persisted auth state in webcontainer
+            setAuthenticated(false);
+            setCurrentUser(null);
+            setLoading(false);
+            setError(null);
+        }
+    }, [isWebcontainer, setAuthenticated, setCurrentUser, setLoading, setError]);
+
     /**
      * SINGLE useEffect to handle ALL authentication synchronization
      * This prevents circular dependencies and infinite loops
-     * Includes webcontainer mock authentication
+     * Webcontainer mode authentication is now handled via signIn() method only
      */
     useEffect(() => {
         console.log('🔄 AuthProvider: Single effect triggered:', {
@@ -105,13 +116,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             userSyncInProgress: userSyncInProgress.current
         });
 
-        // Handle webcontainer environment
+        // Skip automatic authentication in webcontainer mode
+        // Users must explicitly click login to authenticate
         if (isWebcontainer) {
-            console.log('🔧 Webcontainer mode: Setting up mock authentication');
-            setAuthenticated(true);
+            console.log('🔧 Webcontainer mode: Skipping auto-authentication, waiting for user action');
+
+            // Ensure we start with clean, unauthenticated state
+            setAuthenticated(false);
+            setCurrentUser(null);
             setLoading(false);
             setError(null);
-            setCurrentUser(getMockUser());
+
+            // Force navigation to login if not already there
+            const currentPath = window.location.pathname;
+            const authPages = ['/login', '/signup', '/callback', '/logout'];
+
+            if (!authPages.includes(currentPath) && !navigationInProgress.current) {
+                console.log('🔀 Webcontainer mode: Redirecting to login from:', currentPath);
+                navigationInProgress.current = true;
+
+                setTimeout(() => {
+                    navigate('/login');
+                    setTimeout(() => {
+                        navigationInProgress.current = false;
+                    }, 1000);
+                }, 0);
+            }
+
             return;
         }
 
@@ -135,7 +166,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     console.log('✅ User authenticated, fetching user profile...');
 
                     // Get JWT token from Logto
-                    const jwt = await getIdToken();
+                    const jwt = await getIdToken?.();
 
                     if (!jwt) {
                         throw new Error('Failed to get JWT token');
@@ -151,7 +182,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                 } catch (fetchError) {
                     console.error('❌ Failed to fetch user profile:', fetchError);
-                    if (fetchError.status === 404) { navigate('/signup'); }
+                    if (fetchError && typeof fetchError === 'object' && 'status' in fetchError && (fetchError as any).status === 404) {
+                        navigate('/signup');
+                    }
                     setError('Failed to fetch user data');
                 } finally {
                     userSyncInProgress.current = false;
@@ -238,14 +271,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
      */
     const signIn = () => {
         if (isWebcontainer) {
-            // In webcontainer mode, just navigate to home
-            console.log('🔧 Webcontainer mode: Bypassing sign in, going to home');
+            // In webcontainer mode, set up mock authentication when user clicks login
+            console.log('🔧 Webcontainer mode: Setting up mock authentication on user action');
+            setAuthenticated(true);
+            setLoading(false);
+            setError(null);
+            setCurrentUser(getMockUser());
             navigate('/home');
             return;
         }
         
         const callbackUrl = getAuthCallbackUrl();
-        logtoSignIn(callbackUrl);
+        logtoSignIn?.(callbackUrl);
     };
 
     /**
@@ -269,7 +306,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setError(null);
 
         // Sign out from Logto
-        logtoSignOut(logoutUrl);
+        logtoSignOut?.(logoutUrl);
     };
 
     /**
@@ -282,7 +319,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         try {
-            const token = await logtoGetAccessToken();
+            const token = await logtoGetAccessToken?.();
             return token || null;
         } catch (error) {
             console.error('Failed to get access token:', error);
@@ -302,7 +339,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setLoading(true);
 
             // Get JWT token from Logto
-            const jwt = await getIdToken();
+            const jwt = await getIdToken?.();
 
             if (!jwt) {
                 throw new Error('Failed to get JWT token');
@@ -311,7 +348,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const userProfileResponse = await getCurrentUserProfile(jwt);
 
             if (userProfileResponse) {
-                setCurrentUser(userProfileResponse.data);
+                setCurrentUser(userProfileResponse);
             }
         } catch (error) {
             console.error('Failed to refresh user:', error);

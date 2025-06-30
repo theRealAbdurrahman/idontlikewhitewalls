@@ -1,18 +1,15 @@
 import { useHandleSignInCallback } from '@logto/react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { useAuthStore } from '../stores/authStore';
 
 export const Callback = () => {
   const navigate = useNavigate();
   const { isLoading, isAuthenticated, error } = useHandleSignInCallback();
-  // const { isAuthenticated: isAuth } = useAuthStore();
 
   
   useEffect(() => {
     // Only navigate when authentication is complete (not loading)
     if (!isLoading && isAuthenticated && !error) {
-      debugger;
       console.log("Authentication successful");
       // Check if we have a stored path to redirect to
       const redirectPath = sessionStorage.getItem('redirectPath') || '/home';
@@ -24,10 +21,10 @@ export const Callback = () => {
 
   // Show loading state while processing
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <div className="flex justify-center items-center min-h-screen">
       <div>
         <h2>Completing authentication...</h2>
-        {error && <p style={{ color: 'red' }}>Error: {error.message}</p>}
+        {error && <p className="text-red-500">Error: {error.message}</p>}
       </div>
     </div>
   );

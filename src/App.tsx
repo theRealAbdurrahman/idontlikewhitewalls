@@ -39,7 +39,7 @@ export const App = (): JSX.Element => {
         <DataProvider>
           <Layout>
             <Routes>
-              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/signup" element={<SignupFlow />} />
               <Route path="/login" element={<Login />} />
               <Route path="/callback" element={<Callback />} />
@@ -112,7 +112,7 @@ export const App = (): JSX.Element => {
                 </ProtectedRoute>
               } />
 
-              <Route path="*" element={<Navigate to="/home" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </Layout>
         </DataProvider>

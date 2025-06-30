@@ -46,6 +46,7 @@ import {
 import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
+import { UserProfileResponse } from "../models";
 
 /**
  * Interface for user profile data used in the component
@@ -496,10 +497,10 @@ const DEFAULT_CONNECT_DETAILS = "Hi there! I'm excited to connect with others wh
  * Transform API UserProfile to component UserProfile interface
  * Now uses bio field as connectDetails from signup step 2
  */
-const transformApiUserToProfile = (apiUser: ApiUserProfile): UserProfile => {
+const transformApiUserToProfile = (apiUser: UserProfileResponse): UserProfile => {
   return {
     id: apiUser.id,
-    name: `${apiUser.first_name || ''} ${apiUser.last_name || ''}`.trim() || 'Unknown User',
+    name: apiUser.full_name || "Unknown User",
     title: apiUser.title || undefined,
     company: undefined, // Not available in API yet
     location: undefined, // Not available in API yet  

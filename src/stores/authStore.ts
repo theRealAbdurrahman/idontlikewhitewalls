@@ -109,7 +109,8 @@ export const useAuthStore = create<AuthState & AuthActions>()(
     {
       name: "auth-storage",
       partialize: (state) => ({
-        isAuthenticated: state.isAuthenticated,
+        // Don't persist authentication state to force fresh login flow
+        // isAuthenticated: state.isAuthenticated,
         user: state.user,
       }),
     }

@@ -7,7 +7,6 @@ import { QuestionCard } from "../components/QuestionCard";
 import { useAppStore } from "../stores/appStore";
 import { QuestionRead } from '../api-client/models/questionRead';
 import { EnvDebug } from '../components/EnvDebug';
-import { useQuestionUserLookup } from '../hooks/useUserLookup';
 import { useAuth } from "../providers";
 
 /**
@@ -16,21 +15,22 @@ import { useAuth } from "../providers";
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { activeFilters, sortBy } = useAppStore();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user: currentUser } = useAuth();
 
-  // Remove the old commented out effects and use the new system
-  
-  // Fetch questions from API - now handled by DataProvider
+  // Fetch questions from API with real-time polling
   const {
     data: questionsData,
     isLoading: questionsLoading,
     error: questionsError
-  } = useReadQuestionsApiV1QuestionsGet();
+  } = useReadQuestionsApiV1QuestionsGet(undefined, {
+    refetchInterval: 30000, // Poll every 30 seconds for real-time updates
+    refetchIntervalInBackground: false, // Only poll when tab is active
+  });
 
   // Get raw questions data from API
   const rawQuestions = useMemo(() => {
     if (!questionsData?.data) return [];
-    
+
     // Create a safe wrapper function to handle the type mismatch
     function ensureQuestionArray(data: any): QuestionRead[] {
       // Check if data is an array
@@ -44,26 +44,58 @@ export const Home: React.FC = () => {
       // Return empty array as fallback
       return [];
     }
-    
+
     return ensureQuestionArray(questionsData.data);
   }, [questionsData?.data]);
 
-  // Use user lookup hook to get user data for all questions
-  const { getQuestionUserData, isLoading: usersLoading } = useQuestionUserLookup(rawQuestions);
+  /**
+   * Get user display data for a question
+   * This is more efficient than useQuestionUserLookup as it doesn't fetch external user profiles
+   */
+  const getQuestionUserData = (question: QuestionRead) => {
+    // Handle anonymous questions
+    if (question.is_anonymous) {
+      return {
+        displayName: 'Anonymous',
+        avatarUrl: null,
+        isAnonymous: true,
+      };
+    }
+    const isCurrentUserQuestion = currentUser && question.user_id === currentUser.id;
+    // Handle current user's own questions
+    if (currentUser) {
+      const firstName = question.user.full_name?.split(' ')[0] || '';
+      const lastName = question.user.full_name?.split(' ').slice(1).join(' ') || '';
+      const displayName = `${firstName} ${lastName}`.trim() || 'You';
+
+      return {
+        displayName,
+        avatarUrl: isCurrentUserQuestion ? currentUser.profile_picture : null,
+        isAnonymous: false,
+      };
+    }
+
+    // For other users, use a fallback display name
+    // We could fetch their profiles later if needed, but for the feed view this is sufficient
+    return {
+      displayName: 'User', // Simple fallback - could be enhanced later
+      avatarUrl: null,
+      isAnonymous: false,
+    };
+  };
 
   // Transform API data to component format with real user data
   const questions = useMemo(() => {
+    if (!rawQuestions.length) return [];
+
     return rawQuestions.map((question) => {
       const userData = getQuestionUserData(question);
-      
-      // Access interaction counts from backend response (they might not be in TypeScript types yet)
-      const questionWithCounts = question as any;
-      
+
       return {
         id: question.id,
         authorId: question.user_id,
         authorName: userData.displayName,
-        authorAvatar: userData.avatarUrl || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
+        authorAvatar: userData.avatarUrl || undefined,
         eventId: question.event_id,
         eventName: undefined, // Will need to be populated from events data
         title: question.title,
@@ -73,16 +105,16 @@ export const Home: React.FC = () => {
         createdAt: question.created_at || new Date().toISOString(),
         visibility: "anyone" as const,
         isAnonymous: question.is_anonymous || false,
-        upvotes: questionWithCounts.uplifts_count || 0, // Real count from backend
-        meTooCount: questionWithCounts.me_too_count || 0, // Real count from backend  
-        canHelpCount: questionWithCounts.i_can_help_count || 0, // Real count from backend
+        upvotes: question.uplifts_count || 0,
+        meTooCount: question.me_too_count || 0,
+        canHelpCount: question.i_can_help_count || 0,
         isUpvoted: false, // Will be determined from user's interactions
         isMeToo: false, // Will be determined from user's interactions
         isBookmarked: false, // Will be determined from user's interactions
         replies: 0, // Default for now
       };
     });
-  }, [rawQuestions, getQuestionUserData]);
+  }, [rawQuestions, currentUser]);
 
   // Filter questions based on active filters
   const filteredQuestions = useMemo(() => {
@@ -133,13 +165,11 @@ export const Home: React.FC = () => {
   }
 
   // Handle loading and error states
-  if (questionsLoading || usersLoading) {
+  if (questionsLoading) {
     return (
       <div className="w-full max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center justify-center">
-          <p className="text-gray-500 text-base">
-            {questionsLoading ? "Loading questions..." : "Loading user data..."}
-          </p>
+          <p className="text-gray-500 text-base">Loading questions...</p>
         </div>
       </div>
     );
@@ -157,16 +187,7 @@ export const Home: React.FC = () => {
 
   return (
     <>
-      {/* Environment Debug - Only shown in development */}
-      {import.meta.env.MODE === 'development' && (
-        <div className="w-full max-w-2xl mx-auto px-4 py-3 mb-2 border-b border-gray-200">
-          <details>
-            <summary className="cursor-pointer font-medium text-gray-700">Environment Debug Info</summary>
-            <EnvDebug />
-          </details>
-        </div>
-      )}
-      
+
       {/* Question Feed - Centered with max-width */}
       <div className="w-full max-w-2xl mx-auto px-4 py-3">
         <div className="flex flex-col gap-[15px]">
@@ -194,7 +215,7 @@ export const Home: React.FC = () => {
       >
         <PlusIcon className="w-[22px] h-[22px] text-white" />
       </Button>
-      
+
       {/* Bottom Gradient */}
       <div className="fixed w-full h-[97px] bottom-0 left-0 bg-[linear-gradient(180deg,rgba(240,239,235,0)_0%,rgba(240,239,235,1)_100%)] pointer-events-none" />
     </>

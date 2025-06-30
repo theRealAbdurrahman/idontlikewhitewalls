@@ -13,7 +13,7 @@ export const getBaseUrl = (): string => {
   }
   
   // For any deployment (including staging), use the current window location
-  // This makes it work dynamically for app-28-juno.meetball.fun, app.meetball.fun, etc.
+  // This makes it work dynamically for app-28-juno.meetball.fun, bolt.meetball.fun, etc.
   return `${window.location.protocol}//${window.location.host}`;
 };
 

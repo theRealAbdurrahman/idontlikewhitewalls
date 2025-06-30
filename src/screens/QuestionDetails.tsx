@@ -38,6 +38,7 @@ import {
 } from "../components/ui/dropdown-menu";
 import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
+import { useCacheManager } from "../hooks/useCacheManager";
 
 /**
  * Interface for users who interacted with the question
@@ -107,6 +108,7 @@ export const QuestionDetails: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { questions, chatThreads, messages } = useAppStore();
+  const { afterInteraction } = useCacheManager();
   
   // Local state
   const [activeTab, setActiveTab] = useState<"me_too" | "can_help">("me_too");
@@ -279,6 +281,14 @@ export const QuestionDetails: React.FC = () => {
           target_id: question.id,
           interaction_type: InteractionType.uplift,
         }
+      }, {
+        onSuccess: () => {
+          console.log("Upvote created successfully");
+          afterInteraction(question.id);
+        },
+        onError: (error) => {
+          console.error("Failed to create upvote:", error);
+        }
       });
     }
   };
@@ -296,6 +306,14 @@ export const QuestionDetails: React.FC = () => {
           target_id: question.id,
           interaction_type: InteractionType.me_too,
         }
+      }, {
+        onSuccess: () => {
+          console.log("Me too created successfully");
+          afterInteraction(question.id);
+        },
+        onError: (error) => {
+          console.error("Failed to create me too:", error);
+        }
       });
     }
   };
@@ -312,6 +330,14 @@ export const QuestionDetails: React.FC = () => {
           target_type: InteractionTarget.question,
           target_id: question.id,
           interaction_type: InteractionType.bookmark,
+        }
+      }, {
+        onSuccess: () => {
+          console.log("Bookmark created successfully");
+          afterInteraction(question.id);
+        },
+        onError: (error) => {
+          console.error("Failed to create bookmark:", error);
         }
       });
     }
@@ -689,7 +715,7 @@ export const QuestionDetails: React.FC = () => {
                       }`}
                     >
                       <img 
-                        src="/Metoo (1).svg" 
+                      src="/Metoo (1).svg" 
                         alt="Me too" 
                         className={`w-6 h-6 mr-1 ${question.isMeToo ? "filter-orange" : ""}`} 
                       />
@@ -705,7 +731,7 @@ export const QuestionDetails: React.FC = () => {
                       className="action-button h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors"
                     >
                       <img 
-                        src="/I Can Help.svg" 
+                      src="./I Can Help.svg" 
                         alt="I can help" 
                         className="w-6 h-6 mr-1" 
                       />
@@ -761,7 +787,7 @@ export const QuestionDetails: React.FC = () => {
                 style={{ fontSize: 'min(14px, 3.5vw)', gap: '10px' }}
               >
                 <img 
-                  src="/I Can Help.svg" 
+                  src="./I Can Help.svg" 
                   alt="I can help" 
                   className="w-4 h-4" 
                   style={{ 
