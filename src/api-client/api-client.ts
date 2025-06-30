@@ -142,6 +142,7 @@ export interface LogtoUserData {
 }
 
 /**
+ * @deprecated Use getCurrentUserProfile() instead - GET /api/v1/users/me now returns full user profile
  * Get current user ID from /api/v1/users/me
  * @param jwt - JWT token for authentication
  * @returns Promise resolving to the current user's ID
@@ -187,19 +188,22 @@ export const getUserProfileById = async (jwt: string, userId: string): Promise<U
 };
 
 /**
- * Get current user profile for authenticated user (two-step process)
+ * Get current user profile for authenticated user
  * @param jwt - JWT token for authentication
  * @returns Promise resolving to the user profile
  */
 export const getCurrentUserProfile = async (jwt: string): Promise<UserProfileApiResponse> => {
   try {
-    // Step 1: Get current user's ID
-    const userId = await getCurrentUserId(jwt);
+    // GET /api/v1/users/me now returns the full user profile directly
+    const response = await customInstance<UserProfileApiResponse>({
+      url: `/api/v1/users/me`,
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
     
-    // Step 2: Get user profile by ID
-    const userProfile = await getUserProfileById(jwt, userId);
-    
-    return userProfile;
+    return response.data;
   } catch (error) {
     console.error('Failed to fetch current user profile:', error);
     throw error;
