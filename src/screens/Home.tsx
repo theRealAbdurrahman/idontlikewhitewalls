@@ -30,7 +30,7 @@ export const Home: React.FC = () => {
   // Get raw questions data from API
   const rawQuestions = useMemo(() => {
     if (!questionsData?.data) return [];
-    
+
     // Create a safe wrapper function to handle the type mismatch
     function ensureQuestionArray(data: any): QuestionRead[] {
       // Check if data is an array
@@ -44,7 +44,7 @@ export const Home: React.FC = () => {
       // Return empty array as fallback
       return [];
     }
-    
+
     return ensureQuestionArray(questionsData.data);
   }, [questionsData?.data]);
 
@@ -86,12 +86,11 @@ export const Home: React.FC = () => {
 
   // Transform API data to component format with real user data
   const questions = useMemo(() => {
+    if (!rawQuestions.length) return [];
+
     return rawQuestions.map((question) => {
       const userData = getQuestionUserData(question);
-      
-      // Access interaction counts from backend response (they might not be in TypeScript types yet)
-      const questionWithCounts = question as any;
-      
+
       return {
         id: question.id,
         authorId: question.user_id,
@@ -106,9 +105,9 @@ export const Home: React.FC = () => {
         createdAt: question.created_at || new Date().toISOString(),
         visibility: "anyone" as const,
         isAnonymous: question.is_anonymous || false,
-        upvotes: questionWithCounts.uplifts_count || 0, // Real count from backend
-        meTooCount: questionWithCounts.me_too_count || 0, // Real count from backend  
-        canHelpCount: questionWithCounts.i_can_help_count || 0, // Real count from backend
+        upvotes: question.uplifts_count || 0,
+        meTooCount: question.me_too_count || 0,
+        canHelpCount: question.i_can_help_count || 0,
         isUpvoted: false, // Will be determined from user's interactions
         isMeToo: false, // Will be determined from user's interactions
         isBookmarked: false, // Will be determined from user's interactions
@@ -197,7 +196,7 @@ export const Home: React.FC = () => {
           </details>
         </div>
       )}
-      
+
       {/* Question Feed - Centered with max-width */}
       <div className="w-full max-w-2xl mx-auto px-4 py-3">
         <div className="flex flex-col gap-[15px]">
@@ -225,7 +224,7 @@ export const Home: React.FC = () => {
       >
         <PlusIcon className="w-[22px] h-[22px] text-white" />
       </Button>
-      
+
       {/* Bottom Gradient */}
       <div className="fixed w-full h-[97px] bottom-0 left-0 bg-[linear-gradient(180deg,rgba(240,239,235,0)_0%,rgba(240,239,235,1)_100%)] pointer-events-none" />
     </>
