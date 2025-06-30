@@ -132,7 +132,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
             const transformedQuestions = questionsArray.map((question: any) => ({
                 id: question.id,
                 authorId: question.user_id,
-                authorName: "Question Author", // TODO: Fetch user data
+                authorName: !question.is_anonymous ? question.user.full_name : "Anonymous",
                 authorAvatar: undefined,
                 eventId: question.event_id,
                 eventName: undefined, // TODO: Match with events

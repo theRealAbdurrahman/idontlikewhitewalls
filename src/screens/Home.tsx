@@ -60,16 +60,16 @@ export const Home: React.FC = () => {
         isAnonymous: true,
       };
     }
-
+    const isCurrentUserQuestion = currentUser && question.user_id === currentUser.id;
     // Handle current user's own questions
-    if (currentUser && question.user_id === currentUser.id) {
-      const firstName = currentUser.full_name?.split(' ')[0] || '';
-      const lastName = currentUser.full_name?.split(' ').slice(1).join(' ') || '';
-      const displayName = currentUser.full_name || `${firstName} ${lastName}`.trim() || 'You';
+    if (currentUser) {
+      const firstName = question.user.full_name?.split(' ')[0] || '';
+      const lastName = question.user.full_name?.split(' ').slice(1).join(' ') || '';
+      const displayName = `${firstName} ${lastName}`.trim() || 'You';
 
       return {
         displayName,
-        avatarUrl: currentUser.profile_picture || null,
+        avatarUrl: isCurrentUserQuestion ? currentUser.profile_picture : null,
         isAnonymous: false,
       };
     }
