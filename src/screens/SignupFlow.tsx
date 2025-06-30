@@ -9,7 +9,7 @@ import { Badge } from "../components/ui/badge";
 import { StickyNote } from "../components/ui/sticky-note";
 import { useToast } from "../hooks/use-toast";
 import { IdTokenClaims, useLogto } from "@logto/react";
-import { fetchCurrentUser } from "../api-client/api-client";
+import { signUpAndfetchCurrentUser } from "../api-client/api-client";
 import { useAuthStore } from "../stores/authStore";
 
 /**
@@ -1168,8 +1168,8 @@ export const SignupFlow: React.FC = () => {
 
       try {
         debugger;
-        const x = await fetchCurrentUser(body);
-        setCurrentUser(x);
+        const x = await signUpAndfetchCurrentUser(body);
+        setCurrentUser(x.data);
         setAuthenticated(true);
         console.log({ x });
       }

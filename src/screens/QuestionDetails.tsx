@@ -36,7 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
 
 /**
@@ -105,7 +105,7 @@ const customStyles = `
 export const QuestionDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { questions, chatThreads, messages } = useAppStore();
   
   // Local state

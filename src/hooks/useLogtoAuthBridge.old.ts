@@ -1,25 +1,19 @@
-/**
- * @deprecated This hook has been integrated into the centralized AuthProvider
- * Use useAuth() from '../providers/AuthProvider' instead
- * 
- * This file is kept for compatibility but should not be used in new code.
- * All authentication logic is now centralized in AuthProvider.
- */
-
 import { useEffect } from 'react';
 import { useLogto } from '@logto/react';
 import { useAuthStore } from '../stores/authStore';
-import { signUpAndfetchCurrentUser, LogtoUserData } from '../api-client/api-client';
+import { LogtoUserData } from '../api-client/api-client';
+import { useNavigate } from 'react-router-dom';
+import { getApiBaseUrl } from '../config/api'; // Add this import
+
 
 /**
- * @deprecated Hook that bridges Logto authentication with our AuthStore
- * This functionality has been moved to AuthProvider
+ * Hook that bridges Logto authentication with our AuthStore
+ * This synchronizes Logto state with our Zustand store
  */
 export const useLogtoAuthBridge = () => {
-  console.warn('useLogtoAuthBridge is deprecated. Use useAuth() from providers/AuthProvider instead.');
-
   const { isAuthenticated, isLoading, error, getIdTokenClaims, getIdToken } = useLogto();
   const { setCurrentUser, setAuthenticated, setLoading, setError } = useAuthStore();
+  const navigate = useNavigate();
 
   // Sync authentication state
   // useEffect(() => {
@@ -43,45 +37,38 @@ export const useLogtoAuthBridge = () => {
   // Sync user data when authenticated
   useEffect(() => {
     const syncUserData = async () => {
+      debugger;
       if (isAuthenticated && !isLoading) {
+
         try {
-        // Get detailed user claims and token from Logto
-          const jwt = await getIdToken();
-          const claims = await getIdTokenClaims();
+          const logtoData = await fetchLogtoUserData();
+          const isUserDidNotCompleteSignUp = await checkIfUserSignedUp(logtoData);
 
-          console.log('Logto user claims:', claims);
-
-          if (!claims) {
-            throw new Error('Failed to get user claims');
+          if (isUserDidNotCompleteSignUp) {
+            navigate('/signup');
+            sessionStorage.setItem('redirectPath', '/signup');
+            return;
           }
+          sessionStorage.setItem('redirectPath', '/home');
 
-          // Combine user info with ID token claims for full profile
-          const logtoUserData: LogtoUserData = {
-            sub: claims.sub,
-            jwt: jwt || '',
-          };
-
-          console.log('Fetching backend user for Logto data:', logtoUserData);
-
-          // Get or create user in backend
-          const backendUser = await signUpAndfetchCurrentUser(logtoUserData);
-
-          console.log('Backend user received:', backendUser);
-
-          // Store the backend user data in auth store
-          setCurrentUser(backendUser.data);
-        } catch (error) {
-          console.error('Failed to sync user with backend:', error);
-          setError('Failed to sync user data');
+          navigate('/home')
+        } catch (fetchError) {
+          console.error('Failed to fetch backend user:', fetchError);
+          setError(fetchError as string)
+          navigate('/signup'); // Redirect to home page after fetching user
+          return;
         }
       } else if (!isAuthenticated) {
         // Clear user data when not authenticated
         setCurrentUser(null);
+        navigate('/login'); // Redirect to login page
       }
     };
 
     syncUserData();
-  }, [isAuthenticated, isLoading, getIdTokenClaims, setCurrentUser, setError]);
+  }, [isAuthenticated, isLoading]);
+
+
 
   // Helper function to fetch Logto user data
   const fetchLogtoUserData = async (): Promise<LogtoUserData> => {
@@ -100,16 +87,23 @@ export const useLogtoAuthBridge = () => {
     };
   };
 
+
+
+
   const checkIfUserSignedUp = async (logtoUserData: any): Promise<boolean> => {
     try {
       // Use the sub from logtoUserData as the auth_id
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+      const baseUrl = getApiBaseUrl();
       const response = await fetch(`${baseUrl}api/v1/users/is_new/${logtoUserData.sub}`, {
         method: 'GET',
+        // headers: {
+        //   'Authorization': `Bearer ${logtoUserData.jwt}`,
+        //   'Content-Type': 'application/json'
+        // }
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`API request failed with status ${response.status}`);
       }
 
       const data = await response.json();
@@ -121,7 +115,6 @@ export const useLogtoAuthBridge = () => {
       return false;
     }
   };
-
   return {
     isAuthenticated,
     isLoading,

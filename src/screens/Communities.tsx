@@ -12,7 +12,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 
 /**
  * Mock community interface
@@ -87,7 +87,7 @@ const mockCommunities: Community[] = [
  */
 export const Communities: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
 
   const handleCreateCommunity = () => {
     navigate("/create-community");

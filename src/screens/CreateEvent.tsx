@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { 
-  XIcon, 
-  ImageIcon, 
-  CalendarIcon, 
-  MapPinIcon, 
+import { isValidUrl, normalizeWebUrl } from "../utils/urlValidation";
+
+import {
+  XIcon,
+  ImageIcon,
+  CalendarIcon,
+  MapPinIcon,
   UsersIcon,
   BuildingIcon,
   TagIcon,
@@ -58,7 +60,7 @@ import {
   DialogTrigger,
 } from "../components/ui/dialog";
 import { Badge } from "../components/ui/badge";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
 import { isValidUrl } from "../utils/urlValidation";
@@ -109,11 +111,11 @@ type EventFormData = z.infer<typeof eventFormSchema>;
  */
 const eventTypes = [
   "Conference",
-  "Panel", 
+  "Panel",
   "Meetup",
   "Fireside Chat",
   "Walk",
-  "Afterparty", 
+  "Afterparty",
   "Coworking Session",
   "Adventure",
   "Other"
@@ -133,11 +135,11 @@ const communities = [
  */
 export const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { events } = useAppStore();
   const { toast } = useToast();
   const { afterEventCreate } = useCacheManager();
-  
+
   // Local state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedPin, setGeneratedPin] = useState<string>("");
@@ -148,7 +150,7 @@ export const CreateEvent: React.FC = () => {
   const [isTagEventDialogOpen, setIsTagEventDialogOpen] = useState(false);
   const [eventSearchQuery, setEventSearchQuery] = useState("");
   const [selectedTaggedEvents, setSelectedTaggedEvents] = useState<string[]>([]);
-  
+
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -159,19 +161,19 @@ export const CreateEvent: React.FC = () => {
   const getDefaultDates = () => {
     const now = new Date();
     const nextHour = new Date(now);
-    
+
     // Round up to next whole hour
     // If we're at 5:10 AM, round up to 6:00 AM
     // If we're at 5:00 AM exactly, go to 6:00 AM  
     nextHour.setHours(now.getHours() + 1, 0, 0, 0);
-    
+
     const twoHoursLater = new Date(nextHour);
     twoHoursLater.setHours(nextHour.getHours() + 2);
-    
+
     const formatDateTime = (date: Date) => {
       return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:MM
     };
-    
+
     return {
       start: formatDateTime(nextHour),
       end: formatDateTime(twoHoursLater)
@@ -321,7 +323,7 @@ export const CreateEvent: React.FC = () => {
   /**
    * Filter events for tagging
    */
-  const filteredEvents = events.filter(event => 
+  const filteredEvents = events.filter(event =>
     event.name.toLowerCase().includes(eventSearchQuery.toLowerCase()) &&
     !selectedTaggedEvents.includes(event.id)
   );
@@ -371,9 +373,9 @@ export const CreateEvent: React.FC = () => {
 
     try {
       // Normalize URLs before sending to API (https-only)
-      const normalizedEventUrl = data.eventUrl ? 
+      const normalizedEventUrl = data.eventUrl ?
         normalizeWebUrl(data.eventUrl) : null;
-      
+
       // Prepare event data for API
       const eventData = {
         name: data.name,
@@ -422,9 +424,9 @@ export const CreateEvent: React.FC = () => {
 
     } catch (error: any) {
       console.error("Failed to create event:", error);
-      
+
       let errorMessage = "Please check your connection and try again.";
-      
+
       if (error?.response?.status === 400) {
         errorMessage = "Please check your event details and try again.";
       } else if (error?.response?.status === 401) {
@@ -434,7 +436,7 @@ export const CreateEvent: React.FC = () => {
       } else if (error?.response?.status >= 500) {
         errorMessage = "Server error. Please try again in a moment.";
       }
-      
+
       toast({
         title: "Failed to create event",
         description: errorMessage,
@@ -462,7 +464,7 @@ export const CreateEvent: React.FC = () => {
             {eventName && eventName.trim() ? eventName : "Create Event"}
           </h1>
         </div>
-        
+
         <Button
           variant="ghost"
           size="icon"
@@ -488,7 +490,7 @@ export const CreateEvent: React.FC = () => {
                       <FormControl>
                         <div>
                           {selectedBannerImage ? (
-                            <div 
+                            <div
                               className="relative group cursor-pointer"
                               onClick={() => fileInputRef.current?.click()}
                             >
@@ -512,7 +514,7 @@ export const CreateEvent: React.FC = () => {
                               </Button>
                             </div>
                           ) : (
-                            <div 
+                            <div
                               className="w-64 h-64 border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-gray-400 transition-colors cursor-pointer flex flex-col items-center justify-center"
                               onClick={() => fileInputRef.current?.click()}
                             >
@@ -525,7 +527,7 @@ export const CreateEvent: React.FC = () => {
                               </p>
                             </div>
                           )}
-                          
+
                           <input
                             ref={fileInputRef}
                             type="file"
@@ -585,7 +587,7 @@ export const CreateEvent: React.FC = () => {
                       return (
                         <FormItem>
                           <FormControl>
-                            <div 
+                            <div
                               className={cn(
                                 "px-6 py-3 text-center transition-all duration-200 rounded-md",
                                 !isEditMode && "cursor-pointer hover:bg-gray-50"
@@ -680,7 +682,7 @@ export const CreateEvent: React.FC = () => {
                               render={({ field }) => {
                                 const dateValue = field.value ? field.value.split('T')[0] : '';
                                 const timeValue = field.value ? field.value.split('T')[1] : '';
-                                
+
                                 return (
                                   <>
                                     <FormItem className="flex-1">
@@ -718,7 +720,7 @@ export const CreateEvent: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Visual connector line */}
                       <div className="flex items-center gap-4">
                         <div className="w-16 flex justify-center">
@@ -741,7 +743,7 @@ export const CreateEvent: React.FC = () => {
                               render={({ field }) => {
                                 const dateValue = field.value ? field.value.split('T')[0] : '';
                                 const timeValue = field.value ? field.value.split('T')[1] : '';
-                                
+
                                 return (
                                   <>
                                     <FormItem className="flex-1">
@@ -779,7 +781,7 @@ export const CreateEvent: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Form Messages */}
                       <FormField
                         control={form.control}
@@ -792,16 +794,16 @@ export const CreateEvent: React.FC = () => {
                         render={() => <FormMessage />}
                       />
                     </div>
-                    
+
                     {/* Vertical Divider */}
                     <div className="hidden lg:block w-px bg-gray-300 self-stretch"></div>
-                    
+
                     {/* Timezone Info */}
                     <div className="lg:w-36 flex lg:flex-col items-center lg:items-start justify-center lg:justify-center gap-2 lg:gap-1 pt-2 lg:pt-0">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="10"/>
-                          <polyline points="12,6 12,12 16,14"/>
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12,6 12,12 16,14" />
                         </svg>
                         <span className="font-medium">GMT+01:00</span>
                       </div>
@@ -981,7 +983,7 @@ export const CreateEvent: React.FC = () => {
                           Add
                         </Button>
                       </div>
-                      
+
                       {selectedTags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {selectedTags.map((tag, index) => (
@@ -1022,7 +1024,7 @@ export const CreateEvent: React.FC = () => {
                               Connect your event with other related events in the community.
                             </DialogDescription>
                           </DialogHeader>
-                          
+
                           <div className="space-y-4">
                             <div className="relative">
                               <SearchIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -1033,7 +1035,7 @@ export const CreateEvent: React.FC = () => {
                                 className="pl-10"
                               />
                             </div>
-                            
+
                             <div className="max-h-60 overflow-y-auto space-y-2">
                               {filteredEvents.length > 0 ? (
                                 filteredEvents.slice(0, 10).map((event) => (
@@ -1056,7 +1058,7 @@ export const CreateEvent: React.FC = () => {
                               )}
                             </div>
                           </div>
-                          
+
                           <DialogFooter>
                             <Button
                               type="button"
@@ -1192,33 +1194,33 @@ export const CreateEvent: React.FC = () => {
               <div className="fixed bottom-0 left-0 right-0 bg-[#f0efeb]/95 backdrop-blur-lg shadow-lg border-t border-gray-200">
                 <div className="max-w-2xl mx-auto p-4">
                   <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleClose}
-                    className="flex-1 rounded-2xl"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white rounded-2xl"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                        Creating...
-                      </>
-                    ) : (
-                      <>
-                        <PlusIcon className="w-4 h-4 mr-2" />
-                        Create Event
-                      </>
-                    )}
-                  </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleClose}
+                      className="flex-1 rounded-2xl"
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      type="submit"
+                      className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white rounded-2xl"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <PlusIcon className="w-4 h-4 mr-2" />
+                          Create Event
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
               </div>

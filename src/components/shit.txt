@@ -1,0 +1,230 @@
+User can offer help by privately messaging the question author, with optional public visibility of their intent
+
+In a user wants to offer help to someone who posted a question, he can tap "I Can Help" on the Question, So that he can share relevant support while optionally letting others know I’ve offered to help, without revealing my actual message (only the recipient can see that)
+
+
+Acceptance Criteria
+
+1. Visual Structure
+
+Step 1: Entry Point
+
+- On every question card, there is an “I can help” button with:
+
+  - Icon
+
+  - Label: *“I can help”*
+
+  - Counter of how many users have offered help
+
+- Button appears to the right of "Me too"
+
+Step 2: Private Chat Screen
+
+- Chat Header: “I can help” (Instead of the Question asker name - Changes to asked name when the asker replies)
+
+- Open chat window between user and the Question Author, insert a Preview with a snapshot of original question (name, profile, content) as a message from Question asker to User.
+
+- Below that:
+
+  - Chat-style message composer
+
+  - Placeholder: *“This is how I can help \[Name\]...”* (Name = question author)
+
+  - Toggle: *“Others can see you offered to help. Your message will remain private.”*
+
+    - Default: ON
+
+- Message input section:
+
+  - Rich input bar (icons for image, microphone, location)
+
+  - Send button
+
+Step 3: After Sending
+
+- The message appears in the chat interface (WhatsApp-style)
+
+- User’s message is name and timestamped and styled distinctly
+
+- Visibility toggle remains shown under their last message, disabled (since it's already been sent)
+
+2. Functionality
+
+- Tapping “I can help” on a question opens the private chat screen pre-loaded with the question preview
+
+- User types their message and taps 'Send' button:
+
+  - Message is sent privately to the question author
+
+  - Toggle state (on/off) is saved per message
+
+- Toggle “Others can see I offered to help”:
+
+  - ON (default): The user's profile appears in the visible "I can help" count
+
+  - OFF: User chooses to stay anonymous, only the question author can see it
+
+- Message is always private, regardless of toggle state
+
+- User can only send help messages once per question thread, until they receive a response
+
+3. Design Specs
+
+- Chat interface:
+
+  - Input field padding and rounded edges
+
+  - Toggle switch styled to Meetball's design system
+
+  - Message bubbles styled like private DM apps
+
+- Preview of question at top:
+
+  - Cropped view with name, content, and hashtags
+
+  - Not tappable for full view
+
+- Toggle state:
+
+  - default system toggles
+
+  - Green = ON, Grey = OFF
+
+  - Caption should wrap and scale on smaller screens
+
+4. Edge Cases
+
+- If user is not logged in, tapping “I can help” triggers login/signup flow
+
+- If message fails to send, show toast message *“We lost you for a bit and the message couldn’t be sent. Try again.”*
+
+- If toggle is off and user reopens the screen later, the toggle should persist their last choice
+
+- If question is deleted or expired, show message: *“This question has been resolved and, or, is no longer active.”*
+
+Notes for Dev
+
+- Backend:
+
+  - Save toggle value alongside message object
+
+  - Messages stored in private thread tied to question ID
+
+- Visibility logic:
+
+  - If toggle = ON/OFF, user is included in public count
+
+- Analytics:
+
+  - Track usage of toggle, number of messages sent per question, and message open rates
+
+
+
+
+
+
+
+Users checked into an Event can open a question to view the full post (public view) and see a list of users who interacted "Me Too" and "I Can Help" with it.
+
+As a Meetball user,
+I want to view the full content of a question,
+And see a list of people who either said "Me Too" or "I Can Help",
+So that I can connect with relevant people while respecting those who’ve opted out of messaging.
+
+
+## Acceptance Criteria
+
+#### 1. Visual Structure
+
+##### Entry Point
+
+- Tapping on the content area (text or image) of any question opens the Full Question Page.
+
+##### Full Question View
+
+- Displays:
+
+  - Full title and description (untruncated)
+
+  - Attached image (if any)
+
+  - Same engagement buttons: Uplift, Me too, I can help
+
+  - Toggle tabs:
+
+    - Me too (default)
+
+    - I can help
+
+- Below the toggle:
+
+  - List of users who clicked each button, default view "Me too" first
+
+  - Each entry includes:
+
+    - Profile photo
+
+    - Name
+
+    - Optional labels (e.g. #WeMet, , etc.)
+
+    - Chat icon if that person allows contact
+
+#### 2. Functionality
+
+- On scroll, tabs become sticky below header
+
+- Tapping "Me too" or "I can help" tabs filters the list below to the respective responders
+
+- Tapping on a user’s profile navigates to their full profile public view.
+
+- Tapping the chat icon opens direct message thread (if user allows)
+
+  - If chat icon is not present, the person has opted out of direct messages from strangers.
+  - If user selected "Is Public Visible" not-Checked when offering "I Can help", then Don't list the user in the list of "I Can Help" people, but add this text under the list of named offers "and \[xx\] others who reached out privately"
+
+#### 3. Design Specs
+
+- Dee attached
+
+#### 4. Edge Cases
+
+- If full question fails to load, show error message: *“Question not available. It may have been removed.”*
+
+- If the list is empty, display message "It only takes one person to show up. For \[Question Asker Name\], that might be you.
+
+- If a profile was deactivated, show name as “Unknown User” with grayed-out avatar
+
+- If a user turns off chat after interacting, chat icon should disappear dynamically
+
+- If user taps on chat but loses connection, show toast: *“Unable to open chat. Check your network.”*
+
+#### Notes for dev
+
+- \-
+
+
+
+## Profile Details
+
+1. Full Name
+
+Text box Label: Full Name Placeholder: *e.g., Jordan Lee*
+
+*This will be displayed to viewers of your profile*
+
+---
+
+2. Connect Your LinkedIn Profile This helps others see who you are when responding to your questions or offering to help *(Optional, but recommended)*
+
+Text box Label: LinkedIn Profile URL Placeholder: *e.g., [https://www.linkedin.com/in/jordanlee](https://www.linkedin.com/in/jordanlee)*
+
+*This will be displayed to viewers of your profile*
+
+If user enters an invalid format, display this message: Accepted formats:
+
+- your-profile
+- <https://www.linkedin.com/in/your-profile>
+- [linkedin.com/in/your-profile](http://linkedin.com/in/your-profile)
+- [www.linkedin.com/in/your-profile](http://www.linkedin.com/in/your-profile)

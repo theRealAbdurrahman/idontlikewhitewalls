@@ -1,14 +1,18 @@
 import { useHandleSignInCallback } from '@logto/react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useAuthStore } from '../stores/authStore';
 
 export const Callback = () => {
   const navigate = useNavigate();
   const { isLoading, isAuthenticated, error } = useHandleSignInCallback();
+  // const { isAuthenticated: isAuth } = useAuthStore();
+
   
   useEffect(() => {
     // Only navigate when authentication is complete (not loading)
     if (!isLoading && isAuthenticated && !error) {
+      debugger;
       console.log("Authentication successful");
       // Check if we have a stored path to redirect to
       const redirectPath = sessionStorage.getItem('redirectPath') || '/home';

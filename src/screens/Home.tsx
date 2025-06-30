@@ -1,51 +1,31 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo } from "react";
 import { PlusIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useReadQuestionsApiV1QuestionsGet } from "../api-client/api-client";
 import { Button } from "../components/ui/button";
 import { QuestionCard } from "../components/QuestionCard";
 import { useAppStore } from "../stores/appStore";
-import { useLogto } from '@logto/react';
 import { QuestionRead } from '../api-client/models/questionRead';
-import { getAuthCallbackUrl } from '../utils/auth';
 import { EnvDebug } from '../components/EnvDebug';
-import { useLogtoAuthBridge } from '../hooks/useLogtoAuthBridge';
 import { useQuestionUserLookup } from '../hooks/useUserLookup';
+import { useAuth } from "../providers";
 
 /**
  * Home screen component displaying the main question feed
  */
 export const Home: React.FC = () => {
-  
-  const { isAuthenticated, isLoading, signIn } = useLogto();
   const navigate = useNavigate();
   const { activeFilters, sortBy } = useAppStore();
+  const { isAuthenticated } = useAuth();
 
-  // Bridge Logto authentication with our AuthStore
-  useLogtoAuthBridge();
-
-  useEffect(() => {
-    // Only attempt authentication if not already in process
-    if (!isLoading && !isAuthenticated) {
-      // Get environment-specific callback URL
-      const callbackUrl = getAuthCallbackUrl();
-      // Store current path before redirecting to auth
-      sessionStorage.setItem('redirectPath', window.location.pathname);
-      // signIn(callbackUrl);
-      console.log(callbackUrl);
-    }
-  }, [isAuthenticated, isLoading, signIn]);
-
-
-  // Fetch questions from API with real-time polling
+  // Remove the old commented out effects and use the new system
+  
+  // Fetch questions from API - now handled by DataProvider
   const {
     data: questionsData,
     isLoading: questionsLoading,
     error: questionsError
-  } = useReadQuestionsApiV1QuestionsGet(undefined, {
-    refetchInterval: 30000, // Poll every 30 seconds for real-time updates
-    refetchIntervalInBackground: false, // Only poll when tab is active
-  });
+  } = useReadQuestionsApiV1QuestionsGet();
 
   // Get raw questions data from API
   const rawQuestions = useMemo(() => {
