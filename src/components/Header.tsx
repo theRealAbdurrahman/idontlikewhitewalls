@@ -90,7 +90,7 @@ export const Header: React.FC = () => {
           onClick={handleAvatarClick}
         >
           <img
-            src={user?.avatar || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1"}
+              src={user?.profile_picture || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1"}
             alt="Profile"
             className="w-full h-full object-cover"
           />

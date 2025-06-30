@@ -7,7 +7,6 @@ import { QuestionCard } from "../components/QuestionCard";
 import { useAppStore } from "../stores/appStore";
 import { QuestionRead } from '../api-client/models/questionRead';
 import { EnvDebug } from '../components/EnvDebug';
-import { useQuestionUserLookup } from '../hooks/useUserLookup';
 import { useAuth } from "../providers";
 
 /**
@@ -16,7 +15,7 @@ import { useAuth } from "../providers";
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { activeFilters, sortBy } = useAppStore();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user: currentUser } = useAuth();
 
   // Remove the old commented out effects and use the new system
   
@@ -48,8 +47,41 @@ export const Home: React.FC = () => {
     return ensureQuestionArray(questionsData.data);
   }, [questionsData?.data]);
 
-  // Use user lookup hook to get user data for all questions
-  const { getQuestionUserData, isLoading: usersLoading } = useQuestionUserLookup(rawQuestions);
+  /**
+   * Get user display data for a question
+   * This is more efficient than useQuestionUserLookup as it doesn't fetch external user profiles
+   */
+  const getQuestionUserData = (question: QuestionRead) => {
+    // Handle anonymous questions
+    if (question.is_anonymous) {
+      return {
+        displayName: 'Anonymous',
+        avatarUrl: null,
+        isAnonymous: true,
+      };
+    }
+
+    // Handle current user's own questions
+    if (currentUser && question.user_id === currentUser.id) {
+      const firstName = currentUser.full_name?.split(' ')[0] || '';
+      const lastName = currentUser.full_name?.split(' ').slice(1).join(' ') || '';
+      const displayName = currentUser.full_name || `${firstName} ${lastName}`.trim() || 'You';
+
+      return {
+        displayName,
+        avatarUrl: currentUser.profile_picture || null,
+        isAnonymous: false,
+      };
+    }
+
+    // For other users, use a fallback display name
+    // We could fetch their profiles later if needed, but for the feed view this is sufficient
+    return {
+      displayName: 'User', // Simple fallback - could be enhanced later
+      avatarUrl: null,
+      isAnonymous: false,
+    };
+  };
 
   // Transform API data to component format with real user data
   const questions = useMemo(() => {
@@ -63,7 +95,7 @@ export const Home: React.FC = () => {
         id: question.id,
         authorId: question.user_id,
         authorName: userData.displayName,
-        authorAvatar: userData.avatarUrl || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
+        authorAvatar: userData.avatarUrl || undefined,
         eventId: question.event_id,
         eventName: undefined, // Will need to be populated from events data
         title: question.title,
@@ -82,7 +114,7 @@ export const Home: React.FC = () => {
         replies: 0, // Default for now
       };
     });
-  }, [rawQuestions, getQuestionUserData]);
+  }, [rawQuestions, currentUser]);
 
   // Filter questions based on active filters
   const filteredQuestions = useMemo(() => {
@@ -133,13 +165,11 @@ export const Home: React.FC = () => {
   }
 
   // Handle loading and error states
-  if (questionsLoading || usersLoading) {
+  if (questionsLoading) {
     return (
       <div className="w-full max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center justify-center">
-          <p className="text-gray-500 text-base">
-            {questionsLoading ? "Loading questions..." : "Loading user data..."}
-          </p>
+          <p className="text-gray-500 text-base">Loading questions...</p>
         </div>
       </div>
     );
