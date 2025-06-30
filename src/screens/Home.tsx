@@ -17,14 +17,15 @@ export const Home: React.FC = () => {
   const { activeFilters, sortBy } = useAppStore();
   const { isAuthenticated, user: currentUser } = useAuth();
 
-  // Remove the old commented out effects and use the new system
-  
-  // Fetch questions from API - now handled by DataProvider
+  // Fetch questions from API with real-time polling
   const {
     data: questionsData,
     isLoading: questionsLoading,
     error: questionsError
-  } = useReadQuestionsApiV1QuestionsGet();
+  } = useReadQuestionsApiV1QuestionsGet(undefined, {
+    refetchInterval: 30000, // Poll every 30 seconds for real-time updates
+    refetchIntervalInBackground: false, // Only poll when tab is active
+  });
 
   // Get raw questions data from API
   const rawQuestions = useMemo(() => {
