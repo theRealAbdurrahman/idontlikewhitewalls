@@ -715,7 +715,7 @@ export const QuestionDetails: React.FC = () => {
                       }`}
                     >
                       <img 
-                      src="./Metoo (1).svg" 
+                      src="/Metoo (1).svg" 
                         alt="Me too" 
                         className={`w-6 h-6 mr-1 ${question.isMeToo ? "filter-orange" : ""}`} 
                       />
@@ -768,7 +768,7 @@ export const QuestionDetails: React.FC = () => {
                 style={{ fontSize: 'min(14px, 3.5vw)', gap: '10px' }}
               >
                 <img 
-                  src="./Metoo (1).svg" 
+                  src="/Metoo (1).svg" 
                   alt="Me too" 
                   className="w-8 h-8" 
                   style={{ 
