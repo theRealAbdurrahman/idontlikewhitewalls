@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -30,7 +30,6 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
-import { Switch } from "../components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -150,6 +149,8 @@ export const CreateEvent: React.FC = () => {
   const [eventSearchQuery, setEventSearchQuery] = useState("");
   const [selectedTaggedEvents, setSelectedTaggedEvents] = useState<string[]>([]);
 
+  // Local state for private toggle to avoid form.watch circular dependency
+  const [isPrivateLocal, setIsPrivateLocal] = useState(false);
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -269,23 +270,12 @@ export const CreateEvent: React.FC = () => {
   /**
    * Generate 3-digit PIN when private event is enabled
    */
-  const generatePin = () => {
+  const generatePin = useCallback(() => {
     const pin = Math.floor(100 + Math.random() * 900).toString();
     setGeneratedPin(pin);
     return pin;
-  };
+  }, []);
 
-  /**
-   * Handle private event toggle
-   */
-  const handlePrivateToggle = (checked: boolean) => {
-    form.setValue("isPrivate", checked);
-    if (checked) {
-      generatePin();
-    } else {
-      setGeneratedPin("");
-    }
-  };
 
   /**
    * Add tag functionality
@@ -1130,21 +1120,30 @@ export const CreateEvent: React.FC = () => {
 
                   {/* Private Event */}
                   <div
-                    className={form.watch("isPrivate")
-                      ? "flex items-center justify-between p-3 rounded-lg transition-all bg-yellow-50 border border-yellow-300 cursor-pointer"
-                      : "flex items-center justify-between p-3 rounded-lg transition-all hover:bg-gray-50 cursor-pointer"
+                    className={isPrivateLocal
+                      ? "flex items-start justify-between p-3 rounded-lg transition-all bg-yellow-50 border border-yellow-300 cursor-pointer"
+                      : "flex items-start justify-between p-3 rounded-lg transition-all hover:bg-gray-50 border border-transparent cursor-pointer"
                     }
                     onClick={(e) => {
                       // Prevent toggling when clicking directly on the switch
                       if ((e.target as HTMLElement).closest('[role="switch"]')) {
                         return;
                       }
-                      handlePrivateToggle(!form.watch("isPrivate"));
+                      const newValue = !isPrivateLocal;
+                      setIsPrivateLocal(newValue);
+                      form.setValue("isPrivate", newValue);
+                      
+                      // Handle PIN generation
+                      if (newValue) {
+                        generatePin();
+                      } else {
+                        setGeneratedPin("");
+                      }
                     }}
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 cursor-pointer">
                       <div className="space-y-0.5">
-                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Private Event</label>
+                        <label className="text-sm font-medium leading-none cursor-pointer">Private Event</label>
                       </div>
                       {generatedPin && (
                         <div className="mt-2">
@@ -1157,11 +1156,38 @@ export const CreateEvent: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <Switch
-                      checked={form.watch("isPrivate")}
-                      onCheckedChange={handlePrivateToggle}
+                    {/* Custom toggle to avoid Radix Switch infinite loop */}
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isPrivateLocal}
                       disabled={isSubmitting}
-                    />
+                      className={`
+                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-0.5
+                        ${isPrivateLocal ? 'bg-blue-600' : 'bg-gray-200'}
+                        ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                      `}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent container click
+                        const newValue = !isPrivateLocal;
+                        setIsPrivateLocal(newValue);
+                        form.setValue("isPrivate", newValue);
+                        
+                        // Handle PIN generation
+                        if (newValue) {
+                          generatePin();
+                        } else {
+                          setGeneratedPin("");
+                        }
+                      }}
+                    >
+                      <span
+                        className={`
+                          inline-block h-4 w-4 rounded-full bg-white shadow-lg transform transition-transform
+                          ${isPrivateLocal ? 'translate-x-6' : 'translate-x-1'}
+                        `}
+                      />
+                    </button>
                   </div>
 
                   {/* Allow Cross-tagging */}
@@ -1169,19 +1195,61 @@ export const CreateEvent: React.FC = () => {
                     control={form.control}
                     name="allowCrossTagging"
                     render={({ field }) => (
-                      <div className="flex items-center justify-between p-3 rounded-lg">
-                        <div className="space-y-0.5">
-                          <FormLabel>Allow Event Cross-tagging</FormLabel>
-                          <FormDescription>
+                      <div 
+                        className="flex items-start justify-between p-3 rounded-lg transition-all hover:bg-gray-50 cursor-pointer"
+                        onClick={(e) => {
+                          // Prevent toggling when clicking directly on the switch
+                          if ((e.target as HTMLElement).closest('[role="switch"]')) {
+                            return;
+                          }
+                          field.onChange(!field.value);
+                        }}
+                      >
+                        <div className="space-y-0.5 flex-1 cursor-pointer">
+                          <FormLabel 
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              field.onChange(!field.value);
+                            }}
+                          >
+                            Allow Event Cross-tagging
+                          </FormLabel>
+                          <FormDescription 
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              field.onChange(!field.value);
+                            }}
+                          >
                             Let attendees tag this event in their posts
                           </FormDescription>
                         </div>
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={field.value}
                             disabled={isSubmitting}
-                          />
+                            className={`
+                              relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-0.5
+                              ${field.value ? 'bg-blue-600' : 'bg-gray-200'}
+                              ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                            `}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent container click
+                              field.onChange(!field.value);
+                            }}
+                          >
+                            <span
+                              className={`
+                                inline-block h-4 w-4 rounded-full bg-white shadow-lg transform transition-transform
+                                ${field.value ? 'translate-x-6' : 'translate-x-1'}
+                              `}
+                            />
+                          </button>
                         </FormControl>
                       </div>
                     )}

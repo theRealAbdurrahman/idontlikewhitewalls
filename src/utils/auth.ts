@@ -7,10 +7,14 @@
  * @returns The base URL for the current environment
  */
 export const getBaseUrl = (): string => {
-  return import.meta.env.VITE_AUTH_BASE_URL || 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? `${window.location.protocol}//${window.location.host}`  // localhost with port
-      : 'https://app.meetball.fun');
+  // First check for explicit environment variable
+  if (import.meta.env.VITE_AUTH_BASE_URL) {
+    return import.meta.env.VITE_AUTH_BASE_URL;
+  }
+  
+  // For any deployment (including staging), use the current window location
+  // This makes it work dynamically for app-28-juno.meetball.fun, app.meetball.fun, etc.
+  return `${window.location.protocol}//${window.location.host}`;
 };
 
 /**
