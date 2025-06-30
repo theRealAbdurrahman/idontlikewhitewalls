@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
-import { useLogto } from '@logto/react';
+import { useEffect, useState } from 'react';
+import { IdTokenClaims, useLogto } from '@logto/react';
 import { useAuthStore } from '../stores/authStore';
 import { fetchCurrentUser, LogtoUserData } from '../api-client/api-client';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Hook that bridges Logto authentication with our AuthStore
@@ -10,11 +11,12 @@ import { fetchCurrentUser, LogtoUserData } from '../api-client/api-client';
 export const useLogtoAuthBridge = () => {
   const { isAuthenticated, isLoading, error, getIdTokenClaims, getIdToken } = useLogto();
   const { setCurrentUser, setAuthenticated, setLoading, setError } = useAuthStore();
+  const navigate = useNavigate();
 
   // Sync authentication state
   useEffect(() => {
     setAuthenticated(isAuthenticated);
-  }, [isAuthenticated, setAuthenticated]);
+  }, [isAuthenticated]);
 
   // Sync loading state
   useEffect(() => {
@@ -47,16 +49,19 @@ export const useLogtoAuthBridge = () => {
             sub: claims!.sub,
             jwt: jwt || '', // Include JWT token if available
           };
-          
           console.log('Fetching backend user for Logto data:', logtoUserData);
-          
-          // Get or create user in backend
-          const backendUser = await fetchCurrentUser(logtoUserData);
-          
-          console.log('Backend user received:', backendUser);
-          
-          // Store the backend user data in auth store
-          setCurrentUser(backendUser);
+          try {
+            // this request always fails because it doesn't have the data it needs and BE returns an error
+            // so it always redirects to signup
+            // but if we remove something doesn't work so we need another way to check if the user is signed up
+            const backendUser = await fetchCurrentUser(logtoUserData);
+            navigate('/home')
+          } catch (fetchError) {
+            console.error('Failed to fetch backend user:', fetchError);
+            navigate('/signup'); // Redirect to home page after fetching user
+            return;
+          }
+
         } catch (error) {
           console.error('Failed to sync user with backend:', error);
           setError('Failed to sync user data');
@@ -64,15 +69,20 @@ export const useLogtoAuthBridge = () => {
       } else if (!isAuthenticated) {
         // Clear user data when not authenticated
         setCurrentUser(null);
+        navigate('/login'); // Redirect to login page
       }
     };
 
     syncUserData();
-  }, [isAuthenticated, isLoading, getIdTokenClaims, setCurrentUser, setError]);
-
+  }, [isAuthenticated]);
+  const checkIfUserSignedUp = async (logtoUserData: any): Promise<boolean> => {
+    const user = await fetchCurrentUser(logtoUserData);
+    return user ? true : false;
+  };
   return {
     isAuthenticated,
     isLoading,
     error,
+    checkIfUserSignedUp,
   };
 };

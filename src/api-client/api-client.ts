@@ -145,10 +145,10 @@ export interface LogtoUserData {
  * @param logtoData - User data from Logto authentication
  * @returns Promise resolving to the backend user profile
  */
-export const fetchCurrentUser = async (logtoData: LogtoUserData): Promise<UserProfile> => {
+export const fetchCurrentUser = async (logtoData: any): Promise<UserProfile> => {
   console.log({ logtoData });
 
-  if (!logtoData.sub) {
+  if (!logtoData.auth_id) {
     throw new Error('Logto sub (user ID) is required');
   }
 
@@ -156,7 +156,28 @@ export const fetchCurrentUser = async (logtoData: LogtoUserData): Promise<UserPr
   try {
     // Prepare request body with user data
     const requestBody = {
-      logto_sub: logtoData.sub,
+      step1: {
+        fields_of_expertise: logtoData?.step1.fields_of_expertise,
+        professional_background: logtoData?.step1.professional_background,
+        can_help_with: logtoData?.step1.can_help_with,
+      },
+      step2: {
+        interests: logtoData?.step2.interests,
+      },
+      step3: {
+        full_name: logtoData?.step3.full_name,
+        linkedin_url: logtoData?.step3.linkedin_url,
+      },
+      auth_id: logtoData?.auth_id,
+      email: logtoData?.email,
+      // full_name: logtoData?.full_name,
+      // // profile_picture: user?.picture,
+      // // bio: user?.bio,
+      // // title: user?.title,
+      // fields_of_expertise: logtoData?.fields_of_expertise,
+      // professional_background: logtoData?.professional_background,
+      // can_help_with: logtoData?.can_help_with,
+      // interests: logtoData?.interests,
     };
 
 

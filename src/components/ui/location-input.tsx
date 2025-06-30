@@ -67,7 +67,7 @@ interface LocationInputProps {
 export const LocationInput: React.FC<LocationInputProps> = ({
   value,
   onChange,
-  placeholder = "LX Factory, R. Rodrigues de Faria",
+  placeholder = "Choose Location",
   disabled = false,
   className
 }) => {
@@ -76,6 +76,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -124,6 +125,29 @@ export const LocationInput: React.FC<LocationInputProps> = ({
    */
   const generateGoogleMapsUrl = (locationName: string): string => {
     return generateGoogleMapsSearchUrl(locationName);
+  };
+
+  /**
+   * Extract primary name from display name (text before first comma)
+   */
+  const extractPrimaryName = (displayName: string): string => {
+    const parts = displayName.split(',');
+    return parts[0]?.trim() || displayName;
+  };
+
+  /**
+   * Extract full address from display name (text after first comma)
+   */
+  const extractFullAddress = (displayName: string): string => {
+    const parts = displayName.split(',');
+    return parts.slice(1).join(',').trim();
+  };
+
+  /**
+   * Check if location is from a validated suggestion (has coordinates)
+   */
+  const isValidatedLocation = (): boolean => {
+    return Boolean(value?.coordinates && value?.displayName);
   };
 
   /**
@@ -356,6 +380,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({
     setShowSuggestions(false);
     setSuggestions([]);
     setSelectedIndex(-1);
+    setIsEditMode(false);
 
     // Mark this value as accepted to prevent unwanted API requests
     acceptedValueRef.current = displayName;
@@ -378,26 +403,66 @@ export const LocationInput: React.FC<LocationInputProps> = ({
    * Handle keyboard navigation
    */
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestions || suggestions.length === 0) return;
-
     switch (e.key) {
       case "ArrowDown":
-        e.preventDefault();
-        setSelectedIndex(prev => (prev + 1) % suggestions.length);
+        if (showSuggestions && suggestions.length > 0) {
+          e.preventDefault();
+          setSelectedIndex(prev => (prev + 1) % suggestions.length);
+        }
         break;
       case "ArrowUp":
-        e.preventDefault();
-        setSelectedIndex(prev => prev <= 0 ? suggestions.length - 1 : prev - 1);
+        if (showSuggestions && suggestions.length > 0) {
+          e.preventDefault();
+          setSelectedIndex(prev => prev <= 0 ? suggestions.length - 1 : prev - 1);
+        }
         break;
       case "Enter":
         e.preventDefault();
-        if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+        if (showSuggestions && selectedIndex >= 0 && suggestions[selectedIndex]) {
           selectSuggestion(suggestions[selectedIndex]);
+        } else {
+          // Exit edit mode when Enter is pressed without selecting a suggestion
+          setIsEditMode(false);
+          setShowSuggestions(false);
+          
+          // Update parent with current input value to preserve location state
+          if (inputValue.trim()) {
+            const googleMapsUrl = generateGoogleMapsUrl(inputValue);
+            
+            // If this matches a previously accepted value, preserve the coordinates
+            const shouldPreserveCoordinates = inputValue === acceptedValueRef.current;
+            
+            onChange?.({
+              displayName: inputValue,
+              input: inputValue,
+              coordinates: shouldPreserveCoordinates ? value?.coordinates : undefined,
+              googleMapsUrl,
+            });
+          }
+          
+          inputRef.current?.blur();
         }
         break;
       case "Escape":
         setShowSuggestions(false);
         setSelectedIndex(-1);
+        setIsEditMode(false);
+        
+        // Update parent with current input value to preserve location state
+        if (inputValue.trim()) {
+          const googleMapsUrl = generateGoogleMapsUrl(inputValue);
+          
+          // If this matches a previously accepted value, preserve the coordinates
+          const shouldPreserveCoordinates = inputValue === acceptedValueRef.current;
+          
+          onChange?.({
+            displayName: inputValue,
+            input: inputValue,
+            coordinates: shouldPreserveCoordinates ? value?.coordinates : undefined,
+            googleMapsUrl,
+          });
+        }
+        
         inputRef.current?.blur();
         break;
     }
@@ -409,12 +474,27 @@ export const LocationInput: React.FC<LocationInputProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node) &&
-        !inputRef.current?.contains(event.target as Node)
+        !inputRef.current?.contains(event.target as Node) &&
+        (!suggestionsRef.current || !suggestionsRef.current.contains(event.target as Node))
       ) {
         setShowSuggestions(false);
         setSelectedIndex(-1);
+        setIsEditMode(false);
+        
+        // Update parent with current input value to preserve location state
+        if (inputValue.trim()) {
+          const googleMapsUrl = generateGoogleMapsUrl(inputValue);
+          
+          // If this matches a previously accepted value, preserve the coordinates
+          const shouldPreserveCoordinates = inputValue === acceptedValueRef.current;
+          
+          onChange?.({
+            displayName: inputValue,
+            input: inputValue,
+            coordinates: shouldPreserveCoordinates ? value?.coordinates : undefined,
+            googleMapsUrl,
+          });
+        }
         
         // Only reset throttled burst pattern if input is not an accepted value
         if (inputValue !== acceptedValueRef.current) {
@@ -429,77 +509,102 @@ export const LocationInput: React.FC<LocationInputProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [inputValue]);
 
+  // Get display values for non-edit mode
+  const primaryName = value?.displayName ? extractPrimaryName(value.displayName) : '';
+  const fullAddress = value?.displayName ? extractFullAddress(value.displayName) : '';
+  const hasValidLocation = Boolean(value?.displayName);
+
   return (
     <div className={cn("relative", className)}>
-      <div className="relative">
-        <MapPinIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-        <Input
-          ref={inputRef}
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onFocus={() => {
-            if (inputValue) setShowSuggestions(true);
-          }}
-          placeholder={placeholder}
-          disabled={disabled}
-          className="pl-10 pr-10"
-          autoComplete="off"
-        />
-        
-        {/* Loading spinner */}
-        {isLoading && (
-          <LoaderIcon className="absolute right-3 top-3 w-4 h-4 text-gray-400 animate-spin" />
-        )}
-        
-        {/* Success indicator when location is selected */}
-        {!isLoading && value?.coordinates && (
-          <CheckIcon className="absolute right-3 top-3 w-4 h-4 text-green-500" />
-        )}
-      </div>
-
-      {/* Suggestions Dropdown */}
-      {showSuggestions && (suggestions.length > 0 || isLoading) && (
-        <div
-          ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
-        >
-          {isLoading && suggestions.length === 0 && (
-            <div className="flex items-center gap-2 px-4 py-3 text-sm text-gray-500">
-              <LoaderIcon className="w-4 h-4 animate-spin" />
-              Searching locations...
-            </div>
+      {isEditMode || !hasValidLocation ? (
+        /* Edit Mode - Single Input Field */
+        <div className="relative">
+          <Input
+            ref={inputRef}
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onFocus={() => {
+              setIsEditMode(true);
+              if (inputValue) setShowSuggestions(true);
+            }}
+            placeholder={placeholder}
+            disabled={disabled}
+            className={cn("pr-10 border-0 bg-white px-4 py-3 text-lg", className)}
+            autoComplete="off"
+          />
+          
+          {/* Loading spinner */}
+          {isLoading && (
+            <LoaderIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
           )}
-
-          {suggestions.map((suggestion, index) => {
-            const displayText = formatSuggestion(suggestion);
-            const isSelected = index === selectedIndex;
-
-            return (
-              <div
-                key={`${suggestion.osm_type}-${suggestion.osm_id}`}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors",
-                  isSelected && "bg-blue-50 text-blue-900"
-                )}
-                onClick={() => selectSuggestion(suggestion)}
-              >
-                <MapPinIcon className={cn("w-4 h-4 flex-shrink-0", isSelected ? "text-blue-500" : "text-gray-400")} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{displayText}</p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {formatSuggestionMeta(suggestion)}
-                  </p>
+          
+          {/* Suggestions Dropdown */}
+          {showSuggestions && (suggestions.length > 0 || isLoading) && (
+            <div
+              ref={suggestionsRef}
+              className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+            >
+              {isLoading && suggestions.length === 0 && (
+                <div className="flex items-center gap-2 px-4 py-3 text-sm text-gray-500">
+                  <LoaderIcon className="w-4 h-4 animate-spin" />
+                  Searching locations...
                 </div>
-              </div>
-            );
-          })}
+              )}
 
-          {!isLoading && suggestions.length === 0 && inputValue.length >= 3 && (
-            <div className="px-4 py-3 text-sm text-gray-500 text-center">
-              No locations found. Try a different search term.
+              {suggestions.map((suggestion, index) => {
+                const displayText = formatSuggestion(suggestion);
+                const isSelected = index === selectedIndex;
+
+                return (
+                  <div
+                    key={`${suggestion.osm_type}-${suggestion.osm_id}`}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors",
+                      isSelected && "bg-blue-50 text-blue-900"
+                    )}
+                    onClick={() => selectSuggestion(suggestion)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{displayText}</p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {formatSuggestionMeta(suggestion)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {!isLoading && suggestions.length === 0 && inputValue.length >= 3 && (
+                <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                  No locations found. Try a different search term.
+                </div>
+              )}
             </div>
           )}
+        </div>
+      ) : (
+        /* Display Mode - Title + Subtitle */
+        <div 
+          className="cursor-pointer px-4 py-3 transition-all duration-200 hover:bg-gray-50 rounded-md"
+          onClick={() => {
+            setIsEditMode(true);
+            setTimeout(() => inputRef.current?.focus(), 0);
+          }}
+        >
+          <div className="space-y-1">
+            {/* Primary Name (Title) */}
+            <div className="text-lg font-medium text-gray-900 transition-transform duration-300">
+              {primaryName || value?.displayName}
+            </div>
+            
+            {/* Full Address (Subtitle) - only show if it exists and is different from primary name */}
+            {fullAddress && isValidatedLocation() && (
+              <div className="text-sm text-gray-500 transition-opacity duration-300">
+                {fullAddress}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
