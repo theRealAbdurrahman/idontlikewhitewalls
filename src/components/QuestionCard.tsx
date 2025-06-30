@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
 
@@ -73,7 +73,7 @@ interface QuestionCardProps {
  * Question card component displaying individual questions in the feed
  */
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { chatThreads, messages } = useAppStore();
   const { toast } = useToast();
   const navigate = useNavigate();

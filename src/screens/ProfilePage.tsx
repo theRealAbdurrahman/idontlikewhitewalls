@@ -43,7 +43,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../components/ui/tooltip";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
 
@@ -1118,7 +1118,7 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
 export const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuthStore();
+  const { user: currentUser } = useAuth();
   const { questions } = useAppStore();
   const { toast } = useToast();
 

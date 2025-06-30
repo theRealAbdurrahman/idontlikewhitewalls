@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { XIcon, PlusIcon } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -8,6 +8,9 @@ import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 import { StickyNote } from "../components/ui/sticky-note";
 import { useToast } from "../hooks/use-toast";
+import { IdTokenClaims, useLogto } from "@logto/react";
+import { signUpAndfetchCurrentUser } from "../api-client/api-client";
+import { useAuthStore } from "../stores/authStore";
 
 /**
  * Interface for Step 1 data structure
@@ -242,6 +245,8 @@ interface Step1Props {
 const Step1: React.FC<Step1Props> = ({ data, onDataChange, onNext, onSkip }) => {
   const [customLabel, setCustomLabel] = useState("");
   const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [user, setUser] = useState<IdTokenClaims>();
+
 
   /**
    * Handle toggling connection preference labels
@@ -959,6 +964,8 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ currentStep, tota
 export const SignupFlow: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { getIdToken, getIdTokenClaims, isAuthenticated } = useLogto();
+  const { user, setCurrentUser, setAuthenticated, setLoading, setError, isAuthenticated: isAuthFromStore } = useAuthStore();
 
   // Ref for scrolling to top of form
   const formContainerRef = useRef<HTMLDivElement>(null);
@@ -1126,9 +1133,58 @@ export const SignupFlow: React.FC = () => {
   /**
    * Handle completing the signup flow
    */
-  const handleComplete = () => {
-    // TODO: Submit data to backend
-    console.log("Signup flow completed:", signupData);
+  const handleComplete = async () => {
+    if (isAuthenticated) {
+      const claims = await getIdTokenClaims();
+      console.log("Logto user claims:", claims);
+      const jwt = await getIdToken();
+
+      console.log("Signup flow completed:", signupData);
+      const body = {
+        step1: {
+          fields_of_expertise: signupData.step1?.connectWith,
+          professional_background: signupData.step1?.connectDetails,
+          can_help_with: signupData.step1.offerings,
+
+        },
+        step2: {
+          interests: signupData.step2?.interests,
+        },
+        step3: {
+          full_name: signupData.step3?.fullName,
+          linkedin_url: signupData.step3?.linkedinUrl,
+        },
+        auth_id: claims?.sub,
+        email: claims?.email,
+        // profile_picture: user?.picture,
+        // bio: user?.bio,
+        // title: user?.title,
+        jwt,
+      }
+      console.log("Submitting signup data:", body);
+
+
+
+
+      try {
+        debugger;
+        const x = await signUpAndfetchCurrentUser(body);
+        setCurrentUser(x.data);
+        setAuthenticated(true);
+        console.log({ x });
+      }
+      catch (error) {
+        console.error("Error submitting signup data:", error);
+        toast({
+          title: "Error",
+          description: "There was an issue completing your signup. Please try again later.",
+        });
+      }
+
+    }
+
+
+
 
     toast({
       title: "Welcome to Meetball!",

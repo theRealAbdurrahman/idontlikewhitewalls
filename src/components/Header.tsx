@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { SearchIcon, ArrowLeftIcon, Building2Icon } from "lucide-react";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 
 /**
  * Header component that adapts based on current route
@@ -11,7 +11,7 @@ import { useAuthStore } from "../stores/authStore";
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
 
   // Determine header configuration based on route
   const getHeaderConfig = () => {

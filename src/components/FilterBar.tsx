@@ -16,11 +16,11 @@ export const FilterBar: React.FC = () => {
   
   // Create filter categories
   const filterCategories = [
-    {
-      id: "meetverse",
-      label: "Meetverse",
-      isActive: activeFilters.includes("meetverse"),
-    },
+    // {
+    //   id: "meetverse",
+    //   label: "Meetverse",
+    //   isActive: activeFilters.includes("meetverse"),
+    // },
     // TODO: don't forget to use activeEvents to filter these categories
     // use all events just for demo
     ...events.map(event => ({

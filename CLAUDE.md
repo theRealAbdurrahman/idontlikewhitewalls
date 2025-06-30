@@ -10,8 +10,8 @@
 - Frontend: React/TypeScript with Vite
 - Backend: FastAPI with PostgreSQL
 - Key dependencies: @tanstack/react-query v5, tailwindcss v3.4
-- Team is working on branch `28-jun`
-- Always create feature branches and PRs targeting `28-jun`
+- Team is working on branch `staging`
+- Always create feature branches and PRs targeting `staging`
 
 ## Recent Issues Fixed
 - Question creation 422 error: caused by empty string event_id initialization

@@ -20,9 +20,9 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { Checkbox } from "../components/ui/checkbox";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 import { useToast } from "../hooks/use-toast";
-import { useLogtoAuthBridge } from "../hooks/useLogtoAuthBridge";
+
 
 /**
  * Interface for event selection
@@ -38,12 +38,10 @@ interface EventOption {
  */
 export const CreateQuestion: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { toast } = useToast();
   const { afterQuestionCreate } = useCacheManager();
-  
-  // Bridge Logto authentication with our AuthStore
-  useLogtoAuthBridge();
+
   
   // Fetch events data from API
   const { data: eventsData, isLoading: eventsLoading } = useReadEventsApiV1EventsGet();

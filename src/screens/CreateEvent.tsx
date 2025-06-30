@@ -1,23 +1,28 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { cn } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { 
-  XIcon, 
-  ImageIcon, 
-  CalendarIcon, 
-  MapPinIcon, 
+import { isValidUrl, normalizeWebUrl } from "../utils/urlValidation";
+
+import {
+  XIcon,
+  ImageIcon,
+  CalendarIcon,
+  MapPinIcon,
   UsersIcon,
   BuildingIcon,
   TagIcon,
   EyeIcon,
   LockIcon,
+  PencilIcon,
   PlusIcon,
   UploadIcon,
   SearchIcon,
   LinkIcon,
-  Edit2Icon
+  Edit2Icon,
+  FileTextIcon
 } from "lucide-react";
 import { useCreateEventApiV1EventsPost } from "../api-client/api-client";
 import { useCacheManager } from "../hooks/useCacheManager";
@@ -25,7 +30,6 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
-import { Switch } from "../components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -43,6 +47,8 @@ import {
   FormMessage,
 } from "../components/ui/form";
 import { LocationInput, LocationData } from "../components/ui/location-input";
+import { ClickableInput } from "../components/ui/clickable-input";
+import { ClickableSelect } from "../components/ui/clickable-select";
 import {
   Dialog,
   DialogContent,
@@ -53,10 +59,10 @@ import {
   DialogTrigger,
 } from "../components/ui/dialog";
 import { Badge } from "../components/ui/badge";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
-import { isValidUrl } from "../utils/urlValidation";
+import { generateBestGeometricImage } from "../utils/geometricImageGenerator";
 
 /**
  * Form validation schema using Zod
@@ -103,11 +109,11 @@ type EventFormData = z.infer<typeof eventFormSchema>;
  */
 const eventTypes = [
   "Conference",
-  "Panel", 
+  "Panel",
   "Meetup",
   "Fireside Chat",
   "Walk",
-  "Afterparty", 
+  "Afterparty",
   "Coworking Session",
   "Adventure",
   "Other"
@@ -127,36 +133,63 @@ const communities = [
  */
 export const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { events } = useAppStore();
   const { toast } = useToast();
   const { afterEventCreate } = useCacheManager();
-  
+
   // Local state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedPin, setGeneratedPin] = useState<string>("");
   const [tagInput, setTagInput] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedBannerImage, setSelectedBannerImage] = useState<string>("https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&dpr=1");
+  const [selectedBannerImage, setSelectedBannerImage] = useState<string>(generateBestGeometricImage(400, 400));
   const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
   const [isTagEventDialogOpen, setIsTagEventDialogOpen] = useState(false);
   const [eventSearchQuery, setEventSearchQuery] = useState("");
   const [selectedTaggedEvents, setSelectedTaggedEvents] = useState<string[]>([]);
-  
+
+  // Local state for private toggle to avoid form.watch circular dependency
+  const [isPrivateLocal, setIsPrivateLocal] = useState(false);
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // API mutation
   const createEventMutation = useCreateEventApiV1EventsPost();
 
+  // Helper function to get next rounded hour and 2 hours later
+  const getDefaultDates = () => {
+    const now = new Date();
+    const nextHour = new Date(now);
+
+    // Round up to next whole hour
+    // If we're at 5:10 AM, round up to 6:00 AM
+    // If we're at 5:00 AM exactly, go to 6:00 AM  
+    nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+
+    const twoHoursLater = new Date(nextHour);
+    twoHoursLater.setHours(nextHour.getHours() + 2);
+
+    const formatDateTime = (date: Date) => {
+      return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:MM
+    };
+
+    return {
+      start: formatDateTime(nextHour),
+      end: formatDateTime(twoHoursLater)
+    };
+  };
+
+  const defaultDates = getDefaultDates();
+
   // Form setup
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      bannerImage: "https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&dpr=1",
+      bannerImage: generateBestGeometricImage(400, 400),
       name: "",
-      startDateTime: "",
-      endDateTime: "",
+      startDateTime: defaultDates.start,
+      endDateTime: defaultDates.end,
       description: "",
       location: {
         displayName: "",
@@ -237,23 +270,12 @@ export const CreateEvent: React.FC = () => {
   /**
    * Generate 3-digit PIN when private event is enabled
    */
-  const generatePin = () => {
+  const generatePin = useCallback(() => {
     const pin = Math.floor(100 + Math.random() * 900).toString();
     setGeneratedPin(pin);
     return pin;
-  };
+  }, []);
 
-  /**
-   * Handle private event toggle
-   */
-  const handlePrivateToggle = (checked: boolean) => {
-    form.setValue("isPrivate", checked);
-    if (checked) {
-      generatePin();
-    } else {
-      setGeneratedPin("");
-    }
-  };
 
   /**
    * Add tag functionality
@@ -290,7 +312,7 @@ export const CreateEvent: React.FC = () => {
   /**
    * Filter events for tagging
    */
-  const filteredEvents = events.filter(event => 
+  const filteredEvents = events.filter(event =>
     event.name.toLowerCase().includes(eventSearchQuery.toLowerCase()) &&
     !selectedTaggedEvents.includes(event.id)
   );
@@ -340,9 +362,9 @@ export const CreateEvent: React.FC = () => {
 
     try {
       // Normalize URLs before sending to API (https-only)
-      const normalizedEventUrl = data.eventUrl ? 
+      const normalizedEventUrl = data.eventUrl ?
         normalizeWebUrl(data.eventUrl) : null;
-      
+
       // Prepare event data for API
       const eventData = {
         name: data.name,
@@ -391,9 +413,9 @@ export const CreateEvent: React.FC = () => {
 
     } catch (error: any) {
       console.error("Failed to create event:", error);
-      
+
       let errorMessage = "Please check your connection and try again.";
-      
+
       if (error?.response?.status === 400) {
         errorMessage = "Please check your event details and try again.";
       } else if (error?.response?.status === 401) {
@@ -403,7 +425,7 @@ export const CreateEvent: React.FC = () => {
       } else if (error?.response?.status >= 500) {
         errorMessage = "Server error. Please try again in a moment.";
       }
-      
+
       toast({
         title: "Failed to create event",
         description: errorMessage,
@@ -427,11 +449,11 @@ export const CreateEvent: React.FC = () => {
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-4 bg-[#f0efeb]/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
         <div className="flex items-center gap-3">
           <BuildingIcon className="w-6 h-6 text-[#3ec6c6]" />
-          <h1 className="text-lg font-semibold text-black">
+          <h1 className="text-base md:text-lg font-semibold text-black">
             {eventName && eventName.trim() ? eventName : "Create Event"}
           </h1>
         </div>
-        
+
         <Button
           variant="ghost"
           size="icon"
@@ -444,211 +466,181 @@ export const CreateEvent: React.FC = () => {
 
       {/* Form Container */}
       <div className="flex-1 overflow-y-auto pt-20">
-        <div className="max-w-2xl mx-auto p-4">
+        <div className="max-w-2xl mx-auto p-4 pb-24">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Banner Image - Moved to top */}
-              <Card>
-                <CardContent className="p-6 bg-[#FBFBFB] rounded-2xl">
-                  {/* <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                    <ImageIcon className="w-5 h-5" />
-                    Event Banner
-                  </h2> */}
+              <div className="flex flex-col items-center space-y-3">
+                <FormField
+                  control={form.control}
+                  name="bannerImage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div>
+                          {selectedBannerImage ? (
+                            <div
+                              className="relative group cursor-pointer"
+                              onClick={() => fileInputRef.current?.click()}
+                            >
+                              <img
+                                src={selectedBannerImage}
+                                alt="Event banner preview"
+                                className="w-80 h-80 md:w-96 md:h-96 object-cover rounded-2xl transition-all duration-200 group-hover:brightness-75"
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-2xl"></div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  fileInputRef.current?.click();
+                                }}
+                                className="absolute bottom-3 right-3 rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white group-hover:bg-black group-hover:text-white group-hover:border-black transition-all duration-200"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div
+                              className="w-64 h-64 border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-gray-400 transition-colors cursor-pointer flex flex-col items-center justify-center"
+                              onClick={() => fileInputRef.current?.click()}
+                            >
+                              <UploadIcon className="w-8 h-8 text-gray-400 mb-3" />
+                              <p className="text-sm text-gray-600 mb-2">
+                                Click to upload or drag and drop
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                PNG, JPG up to 5MB
+                              </p>
+                            </div>
+                          )}
 
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Spacer */}
+              <div className="h-1"></div>
+
+              {/* Event Name */}
+              <Card className="rounded-2xl">
+                <CardContent className="p-3 bg-white rounded-2xl">
                   <FormField
                     control={form.control}
-                    name="bannerImage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <div className="space-y-4">
-                            {selectedBannerImage ? (
-                              <div className="relative">
-                                <img
-                                  src={selectedBannerImage}
-                                  alt="Event banner preview"
-                                  className="w-full aspect-square object-cover rounded-lg border border-gray-200"
-                                />
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={removeBannerImage}
-                                  className="absolute top-2 right-2"
-                                >
-                                  <XIcon className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <div 
-                                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
-                                onClick={() => fileInputRef.current?.click()}
-                              >
-                                <UploadIcon className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                                <p className="text-sm text-gray-600 mb-2">
-                                  Click to upload or drag and drop
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  PNG, JPG up to 5MB • Recommended: 1200x630px
-                                </p>
-                              </div>
-                            )}
-                            
-                            <input
-                              ref={fileInputRef}
-                              type="file"
-                              accept="image/*"
-                              onChange={handleImageUpload}
-                              className="hidden"
-                              disabled={isSubmitting}
-                            />
-                            
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => fileInputRef.current?.click()}
-                              disabled={isSubmitting}
-                              className="w-full"
+                    name="name"
+                    render={({ field }) => {
+                      const [isEditMode, setIsEditMode] = React.useState(false);
+                      const [inputValue, setInputValue] = React.useState(field.value);
+                      const inputRef = React.useRef<HTMLInputElement>(null);
+
+                      const handleEdit = () => {
+                        if (isSubmitting) return;
+                        setIsEditMode(true);
+                        setInputValue(field.value);
+                        setTimeout(() => inputRef.current?.focus(), 0);
+                      };
+
+                      const handleSave = () => {
+                        setIsEditMode(false);
+                        field.onChange(inputValue);
+                      };
+
+                      const handleKeyDown = (e: React.KeyboardEvent) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleSave();
+                        } else if (e.key === "Escape") {
+                          setIsEditMode(false);
+                          setInputValue(field.value);
+                        }
+                      };
+
+                      React.useEffect(() => {
+                        setInputValue(field.value);
+                      }, [field.value]);
+
+                      return (
+                        <FormItem>
+                          <FormControl>
+                            <div
+                              className={cn(
+                                "px-6 py-3 text-center transition-all duration-200 rounded-md",
+                                !isEditMode && "cursor-pointer hover:bg-gray-50"
+                              )}
+                              onClick={!isEditMode ? handleEdit : undefined}
                             >
-                              <UploadIcon className="w-4 h-4 mr-2" />
-                              {selectedBannerImage ? "Change Image" : "Upload Banner Image"}
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                              {isEditMode ? (
+                                <div className="relative">
+                                  <Input
+                                    ref={inputRef}
+                                    value={inputValue}
+                                    onChange={(e) => setInputValue(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    onBlur={handleSave}
+                                    placeholder=""
+                                    disabled={isSubmitting}
+                                    className="text-4xl md:text-5xl font-bold border-0 bg-transparent text-center p-0 relative z-10"
+                                  />
+                                  {!inputValue && (
+                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-4xl md:text-5xl font-bold text-gray-400">
+                                      Event Name
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-4xl md:text-5xl font-bold text-gray-900">
+                                  {field.value || (
+                                    <span className="text-gray-400">Event Name</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </CardContent>
               </Card>
 
-              {/* Basic Information */}
-              <Card>
-                <CardContent className="p-6 space-y-4 bg-[#FBFBFB] rounded-2xl">
-                  {/* <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5" />
-                    Event Details
-                  </h2> */}
+              {/* Spacer */}
+              <div className="h-1"></div>
 
-                  {/* Event Name */}
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Event Name *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="e.g., Dublin Tech Summit 2025"
-                            {...field}
-                            disabled={isSubmitting}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Date & Time */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="startDateTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Start Date & Time *</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="datetime-local"
-                              {...field}
-                              disabled={isSubmitting}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="endDateTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>End Date & Time *</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="datetime-local"
-                              {...field}
-                              disabled={isSubmitting}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description *</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Describe your event, what attendees can expect, and why they should join..."
-                            className="min-h-[100px]"
-                            {...field}
-                            disabled={isSubmitting}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Location with Autocomplete */}
+              {/* Choose Location */}
+              <Card className="rounded-2xl">
+                <CardContent className="px-6 py-3 bg-white rounded-2xl">
                   <FormField
                     control={form.control}
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Location *</FormLabel>
-                        <FormControl>
-                          <LocationInput
-                            value={field.value}
-                            onChange={field.onChange}
-                            placeholder="i.e. LX Factory, Lisbon"
-                            disabled={isSubmitting}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Event URL */}
-                  <FormField
-                    control={form.control}
-                    name="eventUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Event URL</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                            <Input
-                              placeholder="e.g., https://yourevent.com"
-                              className="pl-10"
-                              {...field}
+                        <div className="flex items-center gap-3">
+                          <MapPinIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                          <FormControl className="flex-1">
+                            <LocationInput
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Choose Location"
                               disabled={isSubmitting}
+                              className="border-0 bg-white"
                             />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          Optional: Link to your event website or registration page
-                        </FormDescription>
+                          </FormControl>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -656,9 +648,218 @@ export const CreateEvent: React.FC = () => {
                 </CardContent>
               </Card>
 
+              {/* Spacer */}
+              <div className="h-1"></div>
+
+              {/* Date & Time */}
+              <Card className="rounded-2xl">
+                <CardContent className="px-6 py-3 bg-white rounded-2xl">
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Date & Time Inputs */}
+                    <div className="flex-1 space-y-4">
+                      {/* Start Date & Time */}
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 w-16 flex-shrink-0">
+                          <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                          <span className="text-sm text-gray-600">Start</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex gap-2 bg-gradient-to-r from-gray-100 to-transparent rounded-lg p-0.5">
+                            <FormField
+                              control={form.control}
+                              name="startDateTime"
+                              render={({ field }) => {
+                                const dateValue = field.value ? field.value.split('T')[0] : '';
+                                const timeValue = field.value ? field.value.split('T')[1] : '';
+
+                                return (
+                                  <>
+                                    <FormItem className="flex-1">
+                                      <FormControl>
+                                        <Input
+                                          type="date"
+                                          value={dateValue}
+                                          onChange={(e) => {
+                                            const newDateTime = e.target.value + 'T' + (timeValue || '12:00');
+                                            field.onChange(newDateTime);
+                                          }}
+                                          disabled={isSubmitting}
+                                          className="border-0 bg-transparent px-4 py-3 text-base md:text-lg rounded-md [&::-webkit-calendar-picker-indicator]:hidden"
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                    <FormItem className="w-40">
+                                      <FormControl>
+                                        <Input
+                                          type="time"
+                                          value={timeValue}
+                                          onChange={(e) => {
+                                            const newDateTime = (dateValue || new Date().toISOString().split('T')[0]) + 'T' + e.target.value;
+                                            field.onChange(newDateTime);
+                                          }}
+                                          disabled={isSubmitting}
+                                          className="border-0 bg-transparent px-4 py-3 text-base md:text-lg rounded-md"
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                  </>
+                                );
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Visual connector line */}
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 flex justify-center">
+                          <div className="w-0.5 h-8 bg-gray-300"></div>
+                        </div>
+                        <div className="flex-1"></div>
+                      </div>
+
+                      {/* End Date & Time */}
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 w-16 flex-shrink-0">
+                          <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                          <span className="text-sm text-gray-600">End</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex gap-2 bg-gradient-to-r from-gray-100 to-transparent rounded-lg p-0.5">
+                            <FormField
+                              control={form.control}
+                              name="endDateTime"
+                              render={({ field }) => {
+                                const dateValue = field.value ? field.value.split('T')[0] : '';
+                                const timeValue = field.value ? field.value.split('T')[1] : '';
+
+                                return (
+                                  <>
+                                    <FormItem className="flex-1">
+                                      <FormControl>
+                                        <Input
+                                          type="date"
+                                          value={dateValue}
+                                          onChange={(e) => {
+                                            const newDateTime = e.target.value + 'T' + (timeValue || '14:00');
+                                            field.onChange(newDateTime);
+                                          }}
+                                          disabled={isSubmitting}
+                                          className="border-0 bg-transparent px-4 py-3 text-base md:text-lg rounded-md [&::-webkit-calendar-picker-indicator]:hidden"
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                    <FormItem className="w-40">
+                                      <FormControl>
+                                        <Input
+                                          type="time"
+                                          value={timeValue}
+                                          onChange={(e) => {
+                                            const newDateTime = (dateValue || new Date().toISOString().split('T')[0]) + 'T' + e.target.value;
+                                            field.onChange(newDateTime);
+                                          }}
+                                          disabled={isSubmitting}
+                                          className="border-0 bg-transparent px-4 py-3 text-base md:text-lg rounded-md"
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                  </>
+                                );
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Form Messages */}
+                      <FormField
+                        control={form.control}
+                        name="startDateTime"
+                        render={() => <FormMessage />}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="endDateTime"
+                        render={() => <FormMessage />}
+                      />
+                    </div>
+
+                    {/* Vertical Divider */}
+                    <div className="hidden lg:block w-px bg-gray-300 self-stretch"></div>
+
+                    {/* Timezone Info */}
+                    <div className="lg:w-36 flex lg:flex-col items-center lg:items-start justify-center lg:justify-center gap-2 lg:gap-1 pt-2 lg:pt-0">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12,6 12,12 16,14" />
+                        </svg>
+                        <span className="font-medium">GMT+01:00</span>
+                      </div>
+                      <span className="text-sm text-gray-500">Lisbon</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Description */}
+              <Card className="rounded-2xl">
+                <CardContent className="p-3 bg-white rounded-2xl">
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ClickableInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Add Description"
+                            disabled={isSubmitting}
+                            icon={<FileTextIcon />}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Spacer */}
+              <div className="h-1"></div>
+
+              {/* Event URL */}
+              <Card className="rounded-2xl">
+                <CardContent className="p-3 bg-white rounded-2xl">
+                  <FormField
+                    control={form.control}
+                    name="eventUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ClickableInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="(Optional) Event URL"
+                            disabled={isSubmitting}
+                            icon={<LinkIcon />}
+                            type="url"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Spacer */}
+              <div className="h-1"></div>
+
               {/* Event Configuration */}
-              <Card>
-                <CardContent className="p-6 space-y-4 bg-[#FBFBFB] rounded-2xl">
+              <Card className="rounded-2xl">
+                <CardContent className="p-3 space-y-4 bg-white rounded-2xl">
                   {/* <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <UsersIcon className="w-5 h-5" />
                     Event Configuration
@@ -670,25 +871,29 @@ export const CreateEvent: React.FC = () => {
                     name="eventType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Event Type *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select event type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
+                        <FormControl>
+                          <ClickableSelect
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Event Type"
+                            disabled={isSubmitting}
+                            icon={<CalendarIcon />}
+                            displayValue={eventTypes.find(type => type.toLowerCase().replace(" ", "-") === field.value)}
+                          >
                             {eventTypes.map((type) => (
                               <SelectItem key={type} value={type.toLowerCase().replace(" ", "-")}>
                                 {type}
                               </SelectItem>
                             ))}
-                          </SelectContent>
-                        </Select>
+                          </ClickableSelect>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* Thin Spacer */}
+                  <div className="h-0.5"></div>
 
                   {/* Community Selection */}
                   <FormField
@@ -696,14 +901,15 @@ export const CreateEvent: React.FC = () => {
                     name="community"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Community *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select community" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
+                        <FormControl>
+                          <ClickableSelect
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select community"
+                            disabled={isSubmitting}
+                            icon={<BuildingIcon />}
+                            displayValue={communities.find(c => c.id === field.value)?.label}
+                          >
                             {communities.map((community) => (
                               <SelectItem key={community.id} value={community.id}>
                                 <div className="flex items-center gap-2">
@@ -714,13 +920,13 @@ export const CreateEvent: React.FC = () => {
                                 </div>
                               </SelectItem>
                             ))}
-                          </SelectContent>
-                        </Select>
+                          </ClickableSelect>
+                        </FormControl>
                         <FormDescription>
                           <Button
                             type="button"
                             variant="link"
-                            className="h-auto p-0 text-sm text-[#3ec6c6]"
+                            className="h-auto p-0 text-sm text-[#3ec6c6] ml-8"
                             onClick={() => navigate("/create-community")}
                           >
                             + Create New Community
@@ -733,9 +939,12 @@ export const CreateEvent: React.FC = () => {
                 </CardContent>
               </Card>
 
+              {/* Spacer */}
+              <div className="h-1"></div>
+
               {/* Tags and Related Events */}
-              <Card>
-                <CardContent className="p-6 space-y-4 bg-[#FBFBFB] rounded-2xl">
+              <Card className="rounded-2xl">
+                <CardContent className="p-3 space-y-4 bg-white rounded-2xl">
                   {/* <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <TagIcon className="w-5 h-5" />
                     Tags & Related Events
@@ -743,45 +952,38 @@ export const CreateEvent: React.FC = () => {
 
                   {/* Tags */}
                   <FormItem>
-                    <FormLabel>Tags</FormLabel>
                     <div className="space-y-2">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         <Input
-                          placeholder="Add tags (press Enter or comma to add)"
+                          placeholder="Tags"
                           value={tagInput}
                           onChange={(e) => setTagInput(e.target.value)}
                           onKeyPress={handleTagKeyPress}
                           disabled={isSubmitting || selectedTags.length >= 10}
-                          className="flex-1"
+                          className="flex-1 border border-gray-200 bg-white px-4 py-3 text-base md:text-lg"
                         />
                         <Button
                           type="button"
                           onClick={() => addTag(tagInput)}
                           disabled={!tagInput.trim() || selectedTags.length >= 10}
                           size="sm"
+                          className="rounded-2xl px-6"
                         >
                           Add
                         </Button>
                       </div>
-                      
+
                       {selectedTags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {selectedTags.map((tag, index) => (
                             <Badge
                               key={index}
                               variant="secondary"
-                              className="flex items-center gap-1"
+                              className="cursor-pointer hover:bg-red-100 hover:text-red-700 transition-colors"
+                              onClick={() => removeTag(tag)}
+                              title="Click to remove tag"
                             >
                               {tag}
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-auto w-auto p-0 ml-1"
-                                onClick={() => removeTag(tag)}
-                              >
-                                <XIcon className="w-3 h-3" />
-                              </Button>
                             </Badge>
                           ))}
                         </div>
@@ -791,18 +993,17 @@ export const CreateEvent: React.FC = () => {
 
                   {/* Tag Other Events */}
                   <FormItem>
-                    <FormLabel>Tag Other Events (Max 5)</FormLabel>
                     <div className="space-y-2">
                       <Dialog open={isTagEventDialogOpen} onOpenChange={setIsTagEventDialogOpen}>
                         <DialogTrigger asChild>
                           <Button
                             type="button"
                             variant="outline"
-                            className="w-full justify-start"
+                            className="w-full justify-start border-0 bg-gradient-to-br from-gray-100 to-gray-50 px-4 py-3 text-base md:text-lg text-gray-600 shadow-sm"
                             disabled={isSubmitting || selectedTaggedEvents.length >= 5}
                           >
                             <LinkIcon className="w-4 h-4 mr-2" />
-                            Tag related events
+                            Tag Other Events (Max 5)
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[500px]">
@@ -812,7 +1013,7 @@ export const CreateEvent: React.FC = () => {
                               Connect your event with other related events in the community.
                             </DialogDescription>
                           </DialogHeader>
-                          
+
                           <div className="space-y-4">
                             <div className="relative">
                               <SearchIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -823,7 +1024,7 @@ export const CreateEvent: React.FC = () => {
                                 className="pl-10"
                               />
                             </div>
-                            
+
                             <div className="max-h-60 overflow-y-auto space-y-2">
                               {filteredEvents.length > 0 ? (
                                 filteredEvents.slice(0, 10).map((event) => (
@@ -846,7 +1047,7 @@ export const CreateEvent: React.FC = () => {
                               )}
                             </div>
                           </div>
-                          
+
                           <DialogFooter>
                             <Button
                               type="button"
@@ -882,9 +1083,6 @@ export const CreateEvent: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <FormDescription>
-                      Help attendees discover related events and build connections
-                    </FormDescription>
                   </FormItem>
 
                   {/* Co-Host */}
@@ -893,17 +1091,15 @@ export const CreateEvent: React.FC = () => {
                     name="coHost"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Event Co-Host</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Search and invite co-hosts (Coming soon)"
-                            {...field}
-                            disabled
+                          <ClickableInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Co-Hosts (Coming soon)"
+                            disabled={true}
+                            icon={<UsersIcon />}
                           />
                         </FormControl>
-                        <FormDescription>
-                          User search and invitation system coming soon
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -911,58 +1107,149 @@ export const CreateEvent: React.FC = () => {
                 </CardContent>
               </Card>
 
+              {/* Spacer */}
+              <div className="h-1"></div>
+
               {/* Event Settings */}
-              <Card>
-                <CardContent className="p-6 space-y-4 bg-[#FBFBFB] rounded-2xl">
+              <Card className="rounded-2xl">
+                <CardContent className="p-3 space-y-4 bg-white rounded-2xl">
                   {/* <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <EyeIcon className="w-5 h-5" />
                     Event Settings
                   </h2> */}
 
                   {/* Private Event */}
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <FormLabel>Private Event</FormLabel>
-                      <FormDescription>
-                        Generate a 3-digit PIN for exclusive access
-                      </FormDescription>
+                  <div
+                    className={isPrivateLocal
+                      ? "flex items-start justify-between p-3 rounded-lg transition-all bg-yellow-50 border border-yellow-300 cursor-pointer"
+                      : "flex items-start justify-between p-3 rounded-lg transition-all hover:bg-gray-50 border border-transparent cursor-pointer"
+                    }
+                    onClick={(e) => {
+                      // Prevent toggling when clicking directly on the switch
+                      if ((e.target as HTMLElement).closest('[role="switch"]')) {
+                        return;
+                      }
+                      const newValue = !isPrivateLocal;
+                      setIsPrivateLocal(newValue);
+                      form.setValue("isPrivate", newValue);
+                      
+                      // Handle PIN generation
+                      if (newValue) {
+                        generatePin();
+                      } else {
+                        setGeneratedPin("");
+                      }
+                    }}
+                  >
+                    <div className="flex-1 cursor-pointer">
+                      <div className="space-y-0.5">
+                        <label className="text-sm font-medium leading-none cursor-pointer">Private Event</label>
+                      </div>
+                      {generatedPin && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-yellow-800">
+                            Event PIN: <code className="bg-yellow-100 px-2 py-1 rounded font-mono text-xs">{generatedPin}</code>
+                          </p>
+                          <p className="text-xs text-yellow-700 mt-1">
+                            Share this PIN with invited attendees
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <Switch
-                      checked={form.watch("isPrivate")}
-                      onCheckedChange={handlePrivateToggle}
+                    {/* Custom toggle to avoid Radix Switch infinite loop */}
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isPrivateLocal}
                       disabled={isSubmitting}
-                    />
+                      className={`
+                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-0.5
+                        ${isPrivateLocal ? 'bg-blue-600' : 'bg-gray-200'}
+                        ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                      `}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent container click
+                        const newValue = !isPrivateLocal;
+                        setIsPrivateLocal(newValue);
+                        form.setValue("isPrivate", newValue);
+                        
+                        // Handle PIN generation
+                        if (newValue) {
+                          generatePin();
+                        } else {
+                          setGeneratedPin("");
+                        }
+                      }}
+                    >
+                      <span
+                        className={`
+                          inline-block h-4 w-4 rounded-full bg-white shadow-lg transform transition-transform
+                          ${isPrivateLocal ? 'translate-x-6' : 'translate-x-1'}
+                        `}
+                      />
+                    </button>
                   </div>
-
-                  {generatedPin && (
-                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm font-medium text-yellow-800">
-                        Event PIN: <code className="bg-yellow-100 px-2 py-1 rounded font-mono">{generatedPin}</code>
-                      </p>
-                      <p className="text-xs text-yellow-700 mt-1">
-                        Share this PIN with invited attendees
-                      </p>
-                    </div>
-                  )}
 
                   {/* Allow Cross-tagging */}
                   <FormField
                     control={form.control}
                     name="allowCrossTagging"
                     render={({ field }) => (
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <FormLabel>Allow Event Cross-tagging</FormLabel>
-                          <FormDescription>
+                      <div 
+                        className="flex items-start justify-between p-3 rounded-lg transition-all hover:bg-gray-50 cursor-pointer"
+                        onClick={(e) => {
+                          // Prevent toggling when clicking directly on the switch
+                          if ((e.target as HTMLElement).closest('[role="switch"]')) {
+                            return;
+                          }
+                          field.onChange(!field.value);
+                        }}
+                      >
+                        <div className="space-y-0.5 flex-1 cursor-pointer">
+                          <FormLabel 
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              field.onChange(!field.value);
+                            }}
+                          >
+                            Allow Event Cross-tagging
+                          </FormLabel>
+                          <FormDescription 
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              field.onChange(!field.value);
+                            }}
+                          >
                             Let attendees tag this event in their posts
                           </FormDescription>
                         </div>
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={field.value}
                             disabled={isSubmitting}
-                          />
+                            className={`
+                              relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-0.5
+                              ${field.value ? 'bg-blue-600' : 'bg-gray-200'}
+                              ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                            `}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent container click
+                              field.onChange(!field.value);
+                            }}
+                          >
+                            <span
+                              className={`
+                                inline-block h-4 w-4 rounded-full bg-white shadow-lg transform transition-transform
+                                ${field.value ? 'translate-x-6' : 'translate-x-1'}
+                              `}
+                            />
+                          </button>
                         </FormControl>
                       </div>
                     )}
@@ -971,35 +1258,37 @@ export const CreateEvent: React.FC = () => {
               </Card>
 
               {/* Submit Section */}
-              <div className="sticky bottom-4 bg-[#f0efeb]/95 backdrop-blur-lg p-4 rounded-xl shadow-lg border border-gray-200">
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleClose}
-                    className="flex-1"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                        Creating...
-                      </>
-                    ) : (
-                      <>
-                        <PlusIcon className="w-4 h-4 mr-2" />
-                        Create Event
-                      </>
-                    )}
-                  </Button>
+              <div className="fixed bottom-0 left-0 right-0 bg-[#f0efeb]/95 backdrop-blur-lg shadow-lg border-t border-gray-200">
+                <div className="max-w-2xl mx-auto p-4">
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleClose}
+                      className="flex-1 rounded-2xl"
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      type="submit"
+                      className="flex-1 bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white rounded-2xl"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <PlusIcon className="w-4 h-4 mr-2" />
+                          Create Event
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </form>

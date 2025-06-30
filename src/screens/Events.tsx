@@ -9,7 +9,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 import { useToast } from "../hooks/use-toast";
 import { ParticipantRole, ParticipantStatus } from "../api-client/models";
 import { openLocationInGoogleMaps } from "../utils/googleMaps";
@@ -87,7 +87,7 @@ const customStyles = `
  */
 export const Events: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   // Local state for bookmarks (TODO: Move to appStore)

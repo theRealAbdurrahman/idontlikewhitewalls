@@ -19,7 +19,7 @@ import {
 import { useCacheManager } from "../hooks/useCacheManager";
 import { InteractionTarget, InteractionType } from "../api-client/models";
 import { useAppStore } from "../stores/appStore";
-import { useAuthStore } from "../stores/authStore";
+import { useAuth } from "../providers";
 
 /**
  * Chat screen component for individual conversations
@@ -28,7 +28,7 @@ export const Chat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { chatThreads, messages, addMessage, setMessages, questions, incrementQuestionHelpCount } = useAppStore();
   const { afterInteraction } = useCacheManager();
   

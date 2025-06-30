@@ -7,6 +7,18 @@ import { getAuthCallbackUrl } from '../utils/auth';
 export const Login: React.FC = () => {
   const { signIn } = useLogto();
   const navigate = useNavigate()
+  const handleBoltEnv = () => {
+    // if this is bolt environment, redirect to home
+    // and set user data in auth store with the demo account values
+    // mark user as authenticated and make the app work as if the user is logged in
+    if (window.location.host.includes('webcontainer') || window.location.host.includes('bolt')) {
+      const demoUser = {
+        id: 'demo-user',
+        name: 'Demo User',
+        email: 'demo@user.com'
+      };
+    }
+  }
 
   return (
     <div className="relative w-full h-screen bg-white overflow-hidden flex items-center justify-center">
