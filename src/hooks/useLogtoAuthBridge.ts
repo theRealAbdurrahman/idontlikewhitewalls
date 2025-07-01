@@ -40,48 +40,49 @@ export const useLogtoAuthBridge = () => {
     }
   }, [error, setError]);
 
+  // DISABLED: This functionality has been moved to AuthProvider
   // Sync user data when authenticated
-  useEffect(() => {
-    const syncUserData = async () => {
-      if (isAuthenticated && !isLoading) {
-        try {
-        // Get detailed user claims and token from Logto
-          const jwt = await getIdToken();
-          const claims = await getIdTokenClaims();
+  // useEffect(() => {
+  //   const syncUserData = async () => {
+  //     if (isAuthenticated && !isLoading) {
+  //       try {
+  //       // Get detailed user claims and token from Logto
+  //         const jwt = await getIdToken();
+  //         const claims = await getIdTokenClaims();
 
-          console.log('Logto user claims:', claims);
+  //         console.log('Logto user claims:', claims);
 
-          if (!claims) {
-            throw new Error('Failed to get user claims');
-          }
+  //         if (!claims) {
+  //           throw new Error('Failed to get user claims');
+  //         }
 
-          // Combine user info with ID token claims for full profile
-          const logtoUserData: LogtoUserData = {
-            sub: claims.sub,
-            jwt: jwt || '',
-          };
+  //         // Combine user info with ID token claims for full profile
+  //         const logtoUserData: LogtoUserData = {
+  //           auth_id: claims.sub,  // Fix: use auth_id instead of sub
+  //           jwt: jwt || '',
+  //         };
 
-          console.log('Fetching backend user for Logto data:', logtoUserData);
+  //         console.log('Fetching backend user for Logto data:', logtoUserData);
 
-          // Get or create user in backend
-          const backendUser = await signUpAndfetchCurrentUser(logtoUserData);
+  //         // Get or create user in backend
+  //         const backendUser = await signUpAndfetchCurrentUser(logtoUserData);
 
-          console.log('Backend user received:', backendUser);
+  //         console.log('Backend user received:', backendUser);
 
-          // Store the backend user data in auth store
-          setCurrentUser(backendUser.data);
-        } catch (error) {
-          console.error('Failed to sync user with backend:', error);
-          setError('Failed to sync user data');
-        }
-      } else if (!isAuthenticated) {
-        // Clear user data when not authenticated
-        setCurrentUser(null);
-      }
-    };
+  //         // Store the backend user data in auth store
+  //         setCurrentUser(backendUser.data);
+  //       } catch (error) {
+  //         console.error('Failed to sync user with backend:', error);
+  //         setError('Failed to sync user data');
+  //       }
+  //     } else if (!isAuthenticated) {
+  //       // Clear user data when not authenticated
+  //       setCurrentUser(null);
+  //     }
+  //   };
 
-    syncUserData();
-  }, [isAuthenticated, isLoading, getIdTokenClaims, setCurrentUser, setError]);
+  //   syncUserData();
+  // }, [isAuthenticated, isLoading, getIdTokenClaims, setCurrentUser, setError]);
 
   // Helper function to fetch Logto user data
   const fetchLogtoUserData = async (): Promise<LogtoUserData> => {
