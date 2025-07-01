@@ -110,14 +110,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
      * Webcontainer mode authentication is now handled via signIn() method only
      */
     useEffect(() => {
-        // Reduced logging to prevent console spam - only log significant state changes
-        if (process.env.NODE_ENV === 'development' && !userSyncInProgress.current) {
-            console.log('🔄 AuthProvider: Authentication state change:', {
-                isWebcontainer,
-                logtoIsAuthenticated,
-                logtoIsLoading
-            });
-        }
+        // Debug logging to identify infinite loop cause
+        console.log('🔄 AuthProvider useEffect triggered:', {
+            logtoIsAuthenticated,
+            logtoIsLoading,
+            logtoError: !!logtoError,
+            isWebcontainer,
+            storeIsAuthenticated,
+            storeLoading,
+            storeError: !!storeError,
+            userSyncInProgress: userSyncInProgress.current
+        });
 
         // Skip automatic authentication in webcontainer mode
         // Users must explicitly click login to authenticate
@@ -282,7 +285,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkIfUserSignedUp = async (logtoUserData: LogtoUserData): Promise<boolean> => {
         try {
             const baseUrl = getApiBaseUrl();
-            const response = await fetch(`${baseUrl}api/v1/users/is_new/${logtoUserData.sub}`, {
+            const response = await fetch(`${baseUrl}api/v1/users/is_new/${logtoUserData.auth_id}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${logtoUserData.jwt}`,

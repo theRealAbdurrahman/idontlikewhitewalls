@@ -151,7 +151,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile> => 
  * Interface for current user data from Logto
  */
 export interface LogtoUserData {
-  sub: string;
+  auth_id: string;  // Changed from 'sub' to match backend expectation
   jwt: string; // Optional JWT token
 }
 
