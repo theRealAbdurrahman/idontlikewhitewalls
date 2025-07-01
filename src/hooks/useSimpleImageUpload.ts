@@ -22,7 +22,7 @@ export interface ImageUploadResponse {
   details?: string[];
 }
 
-const UPLOAD_ENDPOINT = 'https://upload-images.meetball.fun/upload';
+const UPLOAD_ENDPOINT = 'https://stdio.meetball.fun/upload';
 
 /**
  * Simple image upload mutation

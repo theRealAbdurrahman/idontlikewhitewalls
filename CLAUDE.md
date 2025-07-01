@@ -15,3 +15,14 @@
 
 ## Recent Issues Fixed
 - Question creation 422 error: caused by empty string event_id initialization
+- Image upload system implemented with Cloudflare R2 and Worker
+- Custom domain configured: `stdio.meetball.fun` (standard input/output - handles uploads and serving)
+
+## Image Upload System
+- **Domain**: `stdio.meetball.fun` 
+- **Upload**: `POST /upload` - Direct image uploads to R2
+- **Serving**: `GET /image/{object_key}` - Image serving from R2
+- **Storage**: Cloudflare R2 bucket "demomeetball"
+- **Security**: Origin validation for `*.meetball.fun` domains
+- **Components**: ProfileImageUploadSimple, EventImageUploadSimple, SimpleImageUpload
+- **Hook**: useSimpleImageUpload for frontend integration
