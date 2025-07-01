@@ -20,10 +20,10 @@ export const isWebcontainerEnv = (): boolean => {
     'codesandbox',
     'codepen',
     'repl.it',
-    'localhost:5173', // Vite dev server
-    'localhost:3000', // Common React dev port
-    '127.0.0.1:5173',
-    '127.0.0.1:3000',
+    // 'localhost:5173', // Vite dev server
+    // 'localhost:3000', // Common React dev port
+    // '127.0.0.1:5173',
+    // '127.0.0.1:3000',
   ];
   
   // Check hostname and origin
@@ -34,12 +34,12 @@ export const isWebcontainerEnv = (): boolean => {
   }
   
   // Check for development mode
-  if (import.meta.env?.DEV || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development')) {
-    // Additional dev checks
-    if (hostname === 'localhost' || hostname.startsWith('127.0.0.1')) {
-      return true;
-    }
-  }
+  // if (import.meta.env?.DEV || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development')) {
+  //   // Additional dev checks
+  //   if (hostname === 'localhost' || hostname.startsWith('127.0.0.1')) {
+  //     return true;
+  //   }
+  // }
   
   return false;
 };
