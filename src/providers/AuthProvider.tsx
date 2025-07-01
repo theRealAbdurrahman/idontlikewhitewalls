@@ -56,6 +56,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const navigate = useNavigate();
     const navigationInProgress = useRef(false);
     const userSyncInProgress = useRef(false);
+    const fetchRetryCount = useRef(0);
+    const maxRetries = 3;
 
     // Check if we're in webcontainer environment
     const isWebcontainer = isWebcontainerEnv();
@@ -164,6 +166,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Main authentication flow
         const handleAuthFlow = async () => {
             if (logtoIsAuthenticated && !logtoIsLoading && !userSyncInProgress.current) {
+                // Check retry limit to prevent infinite loops
+                if (fetchRetryCount.current >= maxRetries) {
+                    console.warn('🚫 Max retry limit reached for user profile fetch, skipping...');
+                    return;
+                }
+
                 userSyncInProgress.current = true;
 
                 try {
@@ -183,13 +191,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     setCurrentUser(userProfileResponse);
                     console.log('✅ User data stored in auth store:', user);
 
+                    // Reset retry count on success
+                    fetchRetryCount.current = 0;
 
                 } catch (fetchError) {
-                    console.error('❌ Failed to fetch user profile:', fetchError);
+                    fetchRetryCount.current += 1;
+                    console.error(`❌ Failed to fetch user profile (attempt ${fetchRetryCount.current}/${maxRetries}):`, fetchError);
+                    
                     if (fetchError && typeof fetchError === 'object' && 'status' in fetchError && (fetchError as any).status === 404) {
                         navigate('/signup');
+                        return;
                     }
-                    setError('Failed to fetch user data');
+                    
+                    // Only set error if we haven't reached max retries and it's different to prevent infinite loops
+                    if (fetchRetryCount.current < maxRetries) {
+                        const errorMessage = `Failed to fetch user data (attempt ${fetchRetryCount.current}/${maxRetries})`;
+                        if (storeError !== errorMessage) {
+                            setError(errorMessage);
+                        }
+                    } else {
+                        const finalErrorMessage = 'Authentication failed after multiple attempts. Please refresh the page.';
+                        if (storeError !== finalErrorMessage) {
+                            setError(finalErrorMessage);
+                        }
+                    }
                 } finally {
                     userSyncInProgress.current = false;
                 }
@@ -199,6 +224,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 // Clear user data when not authenticated
                 setCurrentUser(null);
                 userSyncInProgress.current = false;
+                // Reset retry count when user becomes unauthenticated
+                fetchRetryCount.current = 0;
 
                 // Handle navigation for unauthenticated users
                 const currentPath = window.location.pathname;
@@ -242,7 +269,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         storeIsAuthenticated,
         storeLoading,
         storeError,
-        user,
+        // REMOVED 'user' from dependencies to prevent infinite loops
+        // since 'user' is SET inside this effect, not READ from it
         // Functions are stable and don't need to be dependencies:
         // navigate, setter functions, and getIdToken are stable/memoized
     ]);
