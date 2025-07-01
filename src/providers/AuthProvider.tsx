@@ -108,24 +108,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
      * Webcontainer mode authentication is now handled via signIn() method only
      */
     useEffect(() => {
-        console.log('🔄 AuthProvider: Single effect triggered:', {
-            isWebcontainer,
-            logtoIsAuthenticated,
-            logtoIsLoading,
-            currentPath: window.location.pathname,
-            userSyncInProgress: userSyncInProgress.current
-        });
+        // Reduced logging to prevent console spam - only log significant state changes
+        if (process.env.NODE_ENV === 'development' && !userSyncInProgress.current) {
+            console.log('🔄 AuthProvider: Authentication state change:', {
+                isWebcontainer,
+                logtoIsAuthenticated,
+                logtoIsLoading
+            });
+        }
 
         // Skip automatic authentication in webcontainer mode
         // Users must explicitly click login to authenticate
         if (isWebcontainer) {
             console.log('🔧 Webcontainer mode: Skipping auto-authentication, waiting for user action');
 
-            // Ensure we start with clean, unauthenticated state
-            setAuthenticated(false);
-            setCurrentUser(null);
-            setLoading(false);
-            setError(null);
+            // Ensure we start with clean, unauthenticated state - only update if needed
+            if (storeIsAuthenticated) setAuthenticated(false);
+            if (user) setCurrentUser(null);
+            if (storeLoading) setLoading(false);
+            if (storeError) setError(null);
 
             // Force navigation to login if not already there
             const currentPath = window.location.pathname;
@@ -146,15 +147,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             return;
         }
 
-        // Sync basic states immediately (no async operations)
-        setAuthenticated(logtoIsAuthenticated);
-        setLoading(logtoIsLoading);
+        // Sync basic states immediately (no async operations) - only if values actually changed
+        if (storeIsAuthenticated !== logtoIsAuthenticated) {
+            setAuthenticated(logtoIsAuthenticated);
+        }
+        if (storeLoading !== logtoIsLoading) {
+            setLoading(logtoIsLoading);
+        }
 
-        // Handle errors
-        if (logtoError) {
-            setError(logtoError.message || 'Authentication error');
-        } else {
-            setError(null);
+        // Handle errors - only update if error state actually changed
+        const newErrorMessage = logtoError ? (logtoError.message || 'Authentication error') : null;
+        if (storeError !== newErrorMessage) {
+            setError(newErrorMessage);
         }
 
         // Main authentication flow
@@ -228,13 +232,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             }
         };
     }, [
-        // Only include primitive values that actually change
+        // Authentication state from Logto
         logtoIsAuthenticated,
         logtoIsLoading,
-        // Don't include functions or objects that get recreated
-        // logtoError - handled inline
-        // navigate - stable function
-        // setter functions - not needed as dependencies
+        logtoError,
+        // Environment flag
+        isWebcontainer,
+        // Store state for comparison guards
+        storeIsAuthenticated,
+        storeLoading,
+        storeError,
+        user,
+        // Functions are stable and don't need to be dependencies:
+        // navigate, setter functions, and getIdToken are stable/memoized
     ]);
 
     /**
