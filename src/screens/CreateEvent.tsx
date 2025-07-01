@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { isValidUrl, normalizeWebUrl } from "../utils/urlValidation";
+import { useSimpleImageUpload, ImageValidation } from "../hooks/useSimpleImageUpload";
 
 import {
   XIcon,
@@ -145,6 +146,8 @@ export const CreateEvent: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedBannerImage, setSelectedBannerImage] = useState<string>(generateBestGeometricImage(400, 400));
   const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isTagEventDialogOpen, setIsTagEventDialogOpen] = useState(false);
   const [eventSearchQuery, setEventSearchQuery] = useState("");
   const [selectedTaggedEvents, setSelectedTaggedEvents] = useState<string[]>([]);
@@ -156,6 +159,7 @@ export const CreateEvent: React.FC = () => {
 
   // API mutation
   const createEventMutation = useCreateEventApiV1EventsPost();
+  const imageUploadMutation = useSimpleImageUpload();
 
   // Helper function to get next rounded hour and 2 hours later
   const getDefaultDates = () => {
@@ -214,24 +218,15 @@ export const CreateEvent: React.FC = () => {
   /**
    * Handle image upload
    */
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Check file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
+      // Use the hook's validation
+      const validationErrors = ImageValidation.validateFile(file);
+      if (validationErrors.length > 0) {
         toast({
-          title: "File too large",
-          description: "Please select an image under 5MB.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid file type",
-          description: "Please select an image file (PNG, JPG, etc.).",
+          title: "Invalid file",
+          description: validationErrors[0],
           variant: "destructive",
         });
         return;
@@ -239,19 +234,42 @@ export const CreateEvent: React.FC = () => {
 
       setBannerImageFile(file);
 
-      // Create preview URL
+      // Create preview URL for immediate feedback
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
         setSelectedBannerImage(result);
-        form.setValue("bannerImage", result);
       };
       reader.readAsDataURL(file);
 
-      toast({
-        title: "Image uploaded",
-        description: "Banner image has been added to your event.",
-      });
+      // Upload to R2 in the background
+      setIsUploadingImage(true);
+      try {
+        const uploadResult = await imageUploadMutation.mutateAsync({
+          file,
+          contentType: 'event',
+          contentId: `temp-${Date.now()}`, // Temporary ID until event is created
+        });
+
+        if (uploadResult.image_url) {
+          setUploadedImageUrl(uploadResult.image_url);
+          form.setValue("bannerImage", uploadResult.image_url);
+          
+          toast({
+            title: "Image uploaded",
+            description: "Banner image has been uploaded successfully.",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload image. Please try again.",
+          variant: "destructive",
+        });
+        // Keep the local preview even if upload fails
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 
@@ -261,6 +279,7 @@ export const CreateEvent: React.FC = () => {
   const removeBannerImage = () => {
     setSelectedBannerImage("");
     setBannerImageFile(null);
+    setUploadedImageUrl("");
     form.setValue("bannerImage", "");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -376,6 +395,7 @@ export const CreateEvent: React.FC = () => {
         end_date: data.endDateTime,
         parent_event_id: null,
         creator_id: user.id,
+        image_url: uploadedImageUrl || undefined, // Add the uploaded image URL
       };
 
       // Log normalized URLs for debugging
@@ -397,7 +417,6 @@ export const CreateEvent: React.FC = () => {
       afterEventCreate(response.data?.id);
 
       // TODO: In a real app, you would also:
-      // - Upload banner image to storage service
       // - Create event tags
       // - Create event relationships for tagged events
       // - Send invitations to co-hosts
@@ -489,6 +508,11 @@ export const CreateEvent: React.FC = () => {
                                 className="w-80 h-80 md:w-96 md:h-96 object-cover rounded-2xl transition-all duration-200 group-hover:brightness-75"
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-2xl"></div>
+                              {isUploadingImage && (
+                                <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
+                                  <div className="text-white text-sm">Uploading...</div>
+                                </div>
+                              )}
                               <Button
                                 type="button"
                                 variant="outline"
