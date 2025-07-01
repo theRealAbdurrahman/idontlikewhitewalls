@@ -234,7 +234,13 @@ export const Events: React.FC = () => {
         attendeeCount: Math.floor(Math.random() * 500) + 50,
         isCheckedIn: false,
         isJoined: Math.random() > 0.5,
-        tags: [],
+        tags: [
+          ['#Tech', '#Innovation'], 
+          ['#AI', '#Startup'], 
+          ['#Business', '#Networking'], 
+          ['#Community', '#Social'], 
+          ['#Workshop', '#Learning']
+        ][index % 5],
         category: "General",
         status: "upcoming" as const,
         communityName: ["Dublin Tech Community", "Lisbon Startup Hub", "Women in Tech Europe"][index % 3],
@@ -440,92 +446,158 @@ export const Events: React.FC = () => {
           </Card>
         )}
 
-        {/* Simplified Events List */}
+        {/* Responsive Gallery Events Grid */}
         {!eventsLoading && !eventsError && events.length > 0 && (
-          <div className="space-y-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {events.map((event) => {
               const eventStatus = getEventStatus(event);
               
               return (
                 <Card
                   key={event.id}
-                  className="event-card bg-white rounded-2xl border border-gray-100 shadow-sm cursor-pointer overflow-hidden relative"
+                  className="event-card bg-white rounded-2xl border border-gray-100 shadow-sm cursor-pointer overflow-hidden relative group"
                   onClick={() => handleEventClick(event.id)}
                 >
                   <CardContent className="p-0">
-                    <div className="flex h-32 relative">
-                      {/* Event Image - 33% width */}
-                      <div className="w-1/3 min-w-[120px] relative overflow-hidden bg-gray-100">
-                        <img
-                          src={event.bannerImage || `https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&dpr=1`}
-                          alt={event.name}
-                          className="event-image w-full h-full object-cover"
+                    {/* Event Image - Square Aspect Ratio */}
+                    <div className="relative w-full aspect-square overflow-hidden bg-gray-100">
+                      <img
+                        src={event.bannerImage || `https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1`}
+                        alt={event.name}
+                        className="event-image w-full h-full object-cover transition-transform duration-300"
+                      />
+                      
+                      {/* Gradient Overlay for Text Readability */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      
+                      {/* Bookmark Button - Top Right */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => handleBookmarkToggle(e, event.id)}
+                        className={`bookmark-button absolute top-3 right-3 w-8 h-8 p-0 rounded-full bg-white/90 hover:bg-white transition-all duration-200 ${
+                          event.isBookmarked 
+                            ? "text-yellow-500" 
+                            : "text-gray-400 hover:text-gray-600"
+                        }`}
+                      >
+                        <BookmarkIcon 
+                          className="w-4 h-4" 
+                          fill={event.isBookmarked ? "currentColor" : "none"} 
                         />
-                      </div>
+                      </Button>
 
-                      {/* Event Content - 67% width */}
-                      <div className="flex-1 p-4 relative">
-                        <div className="flex flex-col justify-between h-full">
-                          {/* Top Section */}
-                          <div>
-                            {/* Community Name */}
-                            {event.communityName && (
-                              <p className="text-xs text-[#3ec6c6] font-semibold mb-1 truncate">
-                                {event.communityName}
-                              </p>
-                            )}
-                            
-                            {/* Event Name */}
-                            <h3 className="font-bold text-base text-black mb-2 line-clamp-2 leading-tight pr-8">
-                              {event.name}
-                            </h3>
+                      {/* Status Badge */}
+                      {eventStatus === 'ongoing' && (
+                        <div className="absolute top-3 left-3">
+                          <Badge className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                            LIVE
+                          </Badge>
+                        </div>
+                      )}
 
-                            {/* Simplified Date & Time */}
-                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                              <span className="font-medium">
-                                {formatEventDateTime(event.date)}
-                              </span>
-                            </div>
-                            
-                            {/* Location */}
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <MapPinIcon className="w-3 h-3 flex-shrink-0" />
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent event card navigation
-                                  openLocationInGoogleMaps(event.location);
-                                }}
-                                className="line-clamp-2 leading-tight hover:text-blue-600 transition-colors text-left cursor-pointer underline-offset-2 hover:underline"
-                                title="Click to open in Google Maps"
-                              >
-                                {event.location}
-                              </button>
-                            </div>
+                      {/* Floating Tags at Bottom */}
+                      {event.tags && event.tags.length > 0 && (
+                        <div className="absolute bottom-3 left-3 right-3">
+                          <div className="flex flex-col gap-1">
+                            {/* Render tags in rows, max 2 rows */}
+                            {(() => {
+                              const maxTagsPerRow = 3; // Approximate, will depend on tag length
+                              const maxRows = 2;
+                              const maxVisibleTags = maxTagsPerRow * maxRows;
+                              const visibleTags = event.tags.slice(0, maxVisibleTags);
+                              const hasMoreTags = event.tags.length > maxVisibleTags;
+                              
+                              // Split tags into rows
+                              const rows: string[][] = [];
+                              for (let i = 0; i < visibleTags.length; i += maxTagsPerRow) {
+                                rows.push(visibleTags.slice(i, i + maxTagsPerRow));
+                              }
+                              
+                              // Reverse rows to show bottom to top
+                              const reversedRows = rows.reverse();
+                              
+                              return reversedRows.map((row, rowIndex) => (
+                                <div key={rowIndex} className="flex flex-wrap gap-1 justify-start">
+                                  {row.map((tag, tagIndex) => {
+                                    const isLastTag = rowIndex === 0 && tagIndex === row.length - 1 && hasMoreTags;
+                                    return (
+                                      <div
+                                        key={tagIndex}
+                                        className={`
+                                          relative bg-black/70 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm
+                                          ${isLastTag ? 'overflow-hidden' : ''}
+                                        `}
+                                      >
+                                        <span className="relative z-10">{tag}</span>
+                                        {/* Gradient overlay for last tag if there are more */}
+                                        {isLastTag && (
+                                          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/50 rounded-full flex items-center justify-end pr-1">
+                                            <span className="text-white/80">+{event.tags.length - maxVisibleTags}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ));
+                            })()}
                           </div>
                         </div>
+                      )}
+                    </div>
 
-                        {/* Bookmark Button - Top Right */}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => handleBookmarkToggle(e, event.id)}
-                          className={`bookmark-button absolute top-2 right-2 w-8 h-8 p-0 rounded-full ${
-                            event.isBookmarked 
-                              ? "text-yellow-500 bg-yellow-50 hover:bg-yellow-100" 
-                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                          }`}
+                    {/* Event Content Below Image */}
+                    <div className="p-4 relative">
+                      {/* Attendee Count - Top Right Corner */}
+                      <div className="absolute top-3 right-3 flex items-center gap-1 text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
+                        <UsersIcon className="w-3 h-3 flex-shrink-0" />
+                        <span className="font-medium">
+                          {event.attendeeCount}
+                        </span>
+                      </div>
+
+                      {/* Community Name */}
+                      {event.communityName && (
+                        <p className="text-xs text-[#3ec6c6] font-semibold mb-1 truncate pr-16">
+                          {event.communityName}
+                        </p>
+                      )}
+                      
+                      {/* Event Name */}
+                      <h3 className="font-bold text-base text-black mb-2 line-clamp-2 leading-tight pr-16">
+                        {event.name}
+                      </h3>
+
+                      {/* Date & Time */}
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                        <CalendarIcon className="w-3 h-3 flex-shrink-0" />
+                        <span className="font-medium truncate">
+                          {formatEventDateTime(event.date)}
+                        </span>
+                      </div>
+                      
+                      {/* Location */}
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <MapPinIcon className="w-3 h-3 flex-shrink-0" />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent event card navigation
+                            openLocationInGoogleMaps(event.location);
+                          }}
+                          className="line-clamp-1 hover:text-blue-600 transition-colors text-left cursor-pointer underline-offset-2 hover:underline truncate"
+                          title={`${event.location} - Click to open in Google Maps`}
                         >
-                          <BookmarkIcon 
-                            className="w-4 h-4" 
-                            fill={event.isBookmarked ? "currentColor" : "none"} 
-                          />
-                        </Button>
+                          {event.location}
+                        </button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               );
             })}
+            </div>
           </div>
         )}
       </div>

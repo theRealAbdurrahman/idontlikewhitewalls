@@ -380,6 +380,45 @@ export const CreateEvent: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      // Handle auto-generated image upload if needed
+      let finalImageUrl = uploadedImageUrl;
+      
+      if (!uploadedImageUrl && selectedBannerImage && selectedBannerImage.startsWith('data:')) {
+        toast({
+          title: "Uploading banner image...",
+          description: "Please wait while we upload your auto-generated banner.",
+        });
+        
+        try {
+          // Convert data URL to blob
+          const response = await fetch(selectedBannerImage);
+          const blob = await response.blob();
+          
+          // Create file from blob
+          const file = new File([blob], `event-banner-${Date.now()}.svg`, { type: 'image/svg+xml' });
+          
+          // Upload to R2
+          const uploadResult = await imageUploadMutation.mutateAsync({
+            file,
+            contentType: 'event',
+            contentId: `auto-${Date.now()}`,
+          });
+          
+          if (uploadResult.image_url) {
+            finalImageUrl = uploadResult.image_url;
+            setUploadedImageUrl(uploadResult.image_url);
+          }
+        } catch (uploadError) {
+          console.error('Failed to upload auto-generated image:', uploadError);
+          // Continue without image rather than failing the whole event creation
+          toast({
+            title: "Image upload failed",
+            description: "Continuing without banner image.",
+            variant: "destructive",
+          });
+        }
+      }
+
       // Normalize URLs before sending to API (https-only)
       const normalizedEventUrl = data.eventUrl ?
         normalizeWebUrl(data.eventUrl) : null;
@@ -388,14 +427,12 @@ export const CreateEvent: React.FC = () => {
       const eventData = {
         name: data.name,
         description: data.description,
-        // location: data.location.displayName,
-        // event_url: normalizedEventUrl,
         location: data.location.displayName,
         start_date: data.startDateTime,
         end_date: data.endDateTime,
         parent_event_id: null,
         creator_id: user.id,
-        image_url: uploadedImageUrl || undefined, // Add the uploaded image URL
+        image_url: finalImageUrl || undefined, // Use final image URL (uploaded or user-provided)
       };
 
       // Log normalized URLs for debugging
@@ -463,7 +500,55 @@ export const CreateEvent: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#f0efeb] min-h-screen flex flex-col">
+    <>
+      {/* Pixelated Animation Styles */}
+      <style>{`
+        .pixelated-grid {
+          background-image: 
+            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+          background-size: 8px 8px;
+          animation: pixelate-wave 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pixelate-wave {
+          0%, 100% { 
+            background-position: 0 0, 0 0;
+            opacity: 0.3; 
+          }
+          50% { 
+            background-position: 8px 8px, 8px 8px;
+            opacity: 0.7; 
+          }
+        }
+        
+        .pixel-spinner {
+          width: 16px;
+          height: 16px;
+          background: #3ec6c6;
+          animation: pixel-spin 0.8s linear infinite;
+        }
+        
+        @keyframes pixel-spin {
+          0% { 
+            clip-path: polygon(0% 0%, 100% 0%, 100% 25%, 0% 25%);
+          }
+          25% { 
+            clip-path: polygon(75% 0%, 100% 0%, 100% 100%, 75% 100%);
+          }
+          50% { 
+            clip-path: polygon(0% 75%, 100% 75%, 100% 100%, 0% 100%);
+          }
+          75% { 
+            clip-path: polygon(0% 0%, 25% 0%, 25% 100%, 0% 100%);
+          }
+          100% { 
+            clip-path: polygon(0% 0%, 100% 0%, 100% 25%, 0% 25%);
+          }
+        }
+      `}</style>
+      
+      <div className="bg-[#f0efeb] min-h-screen flex flex-col">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-4 bg-[#f0efeb]/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
         <div className="flex items-center gap-3">
@@ -510,7 +595,18 @@ export const CreateEvent: React.FC = () => {
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-2xl"></div>
                               {isUploadingImage && (
                                 <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
-                                  <div className="text-white text-sm">Uploading...</div>
+                                  <div className="relative">
+                                    {/* Pixelated Animation Background */}
+                                    <div className="absolute inset-0 opacity-30">
+                                      <div className="pixelated-grid w-64 h-16 mx-auto"></div>
+                                    </div>
+                                    
+                                    {/* Main Upload Text */}
+                                    <div className="relative z-10 text-white text-sm font-medium flex items-center gap-3 px-6 py-3 bg-black/40 rounded-lg backdrop-blur-sm">
+                                      <div className="pixel-spinner"></div>
+                                      Uploading...
+                                    </div>
+                                  </div>
                                 </div>
                               )}
                               <Button
@@ -1283,7 +1379,7 @@ export const CreateEvent: React.FC = () => {
 
               {/* Submit Section */}
               <div className="fixed bottom-0 left-0 right-0 bg-[#f0efeb]/95 backdrop-blur-lg shadow-lg border-t border-gray-200">
-                <div className="max-w-2xl mx-auto p-4">
+                <div className="max-w-2xl mx-auto p-6">
                   <div className="flex gap-3">
                     <Button
                       type="button"
@@ -1320,5 +1416,6 @@ export const CreateEvent: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
