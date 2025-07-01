@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   CalendarIcon, 
@@ -10,7 +10,8 @@ import {
   PhoneIcon,
   MailIcon,
   BookmarkIcon,
-  KeyIcon
+  KeyIcon,
+  EditIcon
 } from "lucide-react";
 import { format, parseISO, isAfter, isBefore, isToday } from "date-fns";
 import { Button } from "../components/ui/button";
@@ -30,6 +31,9 @@ import { useAppStore } from "../stores/appStore";
 import { useAuth } from "../providers";
 import { useToast } from "../hooks/use-toast";
 import { openLocationInGoogleMaps } from "../utils/googleMaps";
+import { EventImageUploadSimple } from "../components/EventImageUploadSimple";
+import { generateBestGeometricImage } from "../utils/geometricImageGenerator";
+import { useSimpleImageUpload } from "../hooks/useSimpleImageUpload";
 
 /**
  * Custom styles for enhanced visual effects and animations
@@ -139,17 +143,144 @@ export const EventDetails: React.FC = () => {
   const [inviteCode, setInviteCode] = useState("");
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [inviteCodeError, setInviteCodeError] = useState("");
+  const [isImageEditDialogOpen, setIsImageEditDialogOpen] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>("");
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  
+  // Track which events have had image generation attempted (persistent across component mounts)
+  const getGenerationAttempted = (): Set<string> => {
+    try {
+      const stored = localStorage.getItem('eventImageGenerationAttempted');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  };
+  
+  const setGenerationAttempted = (eventId: string) => {
+    try {
+      const current = getGenerationAttempted();
+      current.add(eventId);
+      localStorage.setItem('eventImageGenerationAttempted', JSON.stringify([...current]));
+    } catch (error) {
+      console.warn('Failed to persist generation attempt:', error);
+    }
+  };
+  
+  // Utility function to detect if an image URL/data URL is SVG
+  const isSvgImage = (imageUrl: string): boolean => {
+    if (!imageUrl) return false;
+    
+    // Check for data URL with SVG
+    if (imageUrl.startsWith('data:image/svg+xml')) {
+      return true;
+    }
+    
+    // Check for file extension
+    if (imageUrl.includes('.svg')) {
+      return true;
+    }
+    
+    // Check for SVG content type in URL
+    if (imageUrl.includes('svg')) {
+      return true;
+    }
+    
+    return false;
+  };
+  
+  // Image upload hook
+  const imageUploadMutation = useSimpleImageUpload();
 
   const event = events.find(e => e.id === id);
 
-  // Initialize attendee count and bookmark status
+  /**
+   * Auto-generate and upload image when event has no image
+   */
+  const handleAutoGenerateImage = useCallback(async () => {
+    if (!event || isGeneratingImage) return;
+    
+    setIsGeneratingImage(true);
+    
+    try {
+      // Generate geometric image
+      const generatedImageDataUrl = generateBestGeometricImage(400, 400);
+      
+      // Convert data URL to blob for upload
+      const response = await fetch(generatedImageDataUrl);
+      const blob = await response.blob();
+      
+      // Create file from blob
+      const file = new File([blob], `event-${event.id}-banner.svg`, { type: 'image/svg+xml' });
+      
+      // Upload to R2
+      const uploadResult = await imageUploadMutation.mutateAsync({
+        file,
+        contentType: 'event',
+        contentId: event.id,
+      });
+      
+      if (uploadResult.image_url) {
+        setCurrentImageUrl(uploadResult.image_url);
+        
+        toast({
+          title: "Banner generated",
+          description: "A unique banner image has been created for this event.",
+        });
+        
+        // TODO: In real app, update the event in store/API with new image URL
+        // updateEvent(event.id, { image_url: uploadResult.image_url });
+      }
+    } catch (error) {
+      console.error('Failed to generate and upload image:', error);
+      
+      // Fallback to data URL for display only
+      const fallbackImage = generateBestGeometricImage(400, 400);
+      setCurrentImageUrl(fallbackImage);
+      
+      toast({
+        title: "Using generated image",
+        description: "Generated a banner image for display.",
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  }, [event, isGeneratingImage, imageUploadMutation, toast]);
+
+  // Initialize attendee count, bookmark status, and handle auto image generation
   useEffect(() => {
     if (event) {
       setAttendeeCount(event.attendeeCount || 0);
       // TODO: In real app, fetch bookmark status from API
       setIsBookmarked(Math.random() > 0.7); // Mock random bookmark status
+      
+      // Check image fields - prioritize the same way as display logic
+      // Try all possible image fields from different data sources
+      const eventImageUrl = event.bannerImage || event.image_url || event.image || "";
+      setCurrentImageUrl(eventImageUrl);
+      
+      console.log('EventDetails Debug:', {
+        eventId: event.id,
+        bannerImage: event.bannerImage,
+        image_url: event.image_url,  
+        image: event.image,
+        finalImageUrl: eventImageUrl,
+        hasAttempted: getGenerationAttempted().has(event.id),
+        isGenerating: isGeneratingImage
+      });
+      
+      // Only auto-generate if NO image exists anywhere
+      const hasAnyImage = eventImageUrl && eventImageUrl.trim() !== "";
+      
+      if (!hasAnyImage && !isGeneratingImage && !getGenerationAttempted().has(event.id)) {
+        console.log('No image found, starting auto-generation for event:', event.id);
+        setGenerationAttempted(event.id);
+        handleAutoGenerateImage();
+      } else if (hasAnyImage) {
+        console.log('Event has image, skipping generation:', eventImageUrl);
+      }
     }
-  }, [event]);
+  }, [event?.id, isGeneratingImage]); // Minimal dependencies
 
   /**
    * Determine event status based on dates
@@ -208,6 +339,35 @@ export const EventDetails: React.FC = () => {
    */
   const handleBack = () => {
     navigate(-1);
+  };
+
+  /**
+   * Handle image editing
+   */
+  const handleImageUpdate = (newImageUrl: string) => {
+    setCurrentImageUrl(newImageUrl);
+    setIsImageEditDialogOpen(false);
+    
+    toast({
+      title: "Event image updated",
+      description: "The event image has been updated successfully.",
+    });
+    
+    // TODO: In real app, update the event in the store/API
+    // updateEvent(event.id, { image_url: newImageUrl });
+  };
+
+  const handleImageRemove = () => {
+    setCurrentImageUrl("");
+    setIsImageEditDialogOpen(false);
+    
+    toast({
+      title: "Event image removed",
+      description: "The event image has been removed.",
+    });
+    
+    // TODO: In real app, update the event in the store/API
+    // updateEvent(event.id, { image_url: "" });
   };
 
   const handleShare = async () => {
@@ -465,16 +625,87 @@ export const EventDetails: React.FC = () => {
         </header>
 
         {/* Event Banner Image */}
-        <div >
+        <div>
           <div className="flex justify-center items-center p-6">
-            <div className="relative w-80 h-80 overflow-hidden rounded-2xl shadow-lg">
-            <img
-                src={event.bannerImage || event.image || "https://cdn.discordapp.com/attachments/1379799133451325582/1389316221626749019/Unicorn_Summit.png?ex=68642d0f&is=6862db8f&hm=c8ec879be7aa03620d11396bbe662cca85b072c6035171f9942bcc3cd8707c0c&"}
-              alt={event.name}
-              className="w-full h-full object-cover rounded-2xl"
-            />
-            <div className="event-image-overlay absolute inset-0 rounded-2xl"></div>
-            </div>
+            {user && !isGeneratingImage ? (
+              <Dialog open={isImageEditDialogOpen} onOpenChange={setIsImageEditDialogOpen}>
+                <DialogTrigger asChild>
+                  <div className="relative w-80 h-80 overflow-hidden rounded-2xl shadow-lg group cursor-pointer">
+                    {isGeneratingImage ? (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="w-8 h-8 border-2 border-[#3ec6c6] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                          <p className="text-sm text-gray-600">Generating banner...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <img
+                          src={currentImageUrl || event.bannerImage || event.image_url || event.image || generateBestGeometricImage(400, 400)}
+                          alt={event.name}
+                          className="w-full h-full object-cover rounded-2xl transition-all duration-200 group-hover:brightness-75"
+                        />
+                        {/* Only apply gradient overlay for non-SVG images */}
+                        {!isSvgImage(currentImageUrl || event.bannerImage || event.image_url || event.image || generateBestGeometricImage(400, 400)) && (
+                          <div className="event-image-overlay absolute inset-0 rounded-2xl"></div>
+                        )}
+                      </>
+                    )}
+                    
+                    {/* Edit Button - Pencil Icon Only (CreateEvent Style) */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="absolute bottom-3 right-3 rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white group-hover:bg-black group-hover:text-white group-hover:border-black transition-all duration-200"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <EditIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Update Event Image</DialogTitle>
+                    <DialogDescription>
+                      Upload a new image for this event. This will replace the current event banner.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <EventImageUploadSimple
+                    eventId={event.id}
+                    currentImageUrl={currentImageUrl}
+                    onImageUpdate={handleImageUpdate}
+                    onImageRemove={handleImageRemove}
+                    disabled={false}
+                    showRemoveOption={!!currentImageUrl}
+                  />
+                </DialogContent>
+                </Dialog>
+              ) : (
+                <div className="relative w-80 h-80 overflow-hidden rounded-2xl shadow-lg group">
+                  {isGeneratingImage ? (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="w-8 h-8 border-2 border-[#3ec6c6] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-600">Generating banner...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <img
+                        src={currentImageUrl || event.bannerImage || event.image_url || event.image || generateBestGeometricImage(400, 400)}
+                        alt={event.name}
+                        className="w-full h-full object-cover rounded-2xl transition-all duration-200 group-hover:brightness-75"
+                      />
+                      {/* Only apply gradient overlay for non-SVG images */}
+                      {!isSvgImage(currentImageUrl || event.bannerImage || event.image_url || event.image || generateBestGeometricImage(400, 400)) && (
+                        <div className="event-image-overlay absolute inset-0 rounded-2xl"></div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
           </div>
         </div>
 
@@ -517,26 +748,24 @@ export const EventDetails: React.FC = () => {
                 </div>
 
 
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="flex items-start gap-4 group">
+                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-purple-100 transition-colors">
                     <MapPinIcon className="w-5 h-5 text-purple-600" />
                   </div>
                   <div className="flex-1">
                     <button
                       onClick={() => openLocationInGoogleMaps(event.location)}
-                      className="font-semibold text-gray-900 hover:text-blue-600 transition-colors text-left cursor-pointer underline-offset-2 hover:underline"
+                      className="text-left cursor-pointer w-full p-3 -m-3 rounded-lg hover:shadow-md hover:bg-gray-50 transition-all duration-200"
                       title="Click to open in Google Maps"
                     >
-                      {event.location}
+                      <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors underline-offset-2 group-hover:underline">
+                        {event.location}
+                      </p>
+                      <div className="flex items-center gap-1 text-sm text-blue-600 group-hover:text-blue-800 transition-colors mt-1">
+                        <MapPinIcon className="w-3 h-3" />
+                        <span>View on Google Maps</span>
+                      </div>
                     </button>
-                    <Button
-                      variant="link"
-                      className="p-0 h-auto text-sm text-blue-600 hover:text-blue-800 mt-1"
-                      onClick={() => openLocationInGoogleMaps(event.location)}
-                    >
-                      <MapPinIcon className="w-3 h-3 mr-1" />
-                      View on Google Maps
-                    </Button>
                   </div>
                 </div>
               </div>

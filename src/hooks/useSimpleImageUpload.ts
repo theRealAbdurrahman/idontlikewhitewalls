@@ -63,6 +63,7 @@ export const ImageValidation = {
     'image/png', 
     'image/gif',
     'image/webp',
+    'image/svg+xml',
   ],
   
   MAX_SIZE: 10 * 1024 * 1024, // 10MB
