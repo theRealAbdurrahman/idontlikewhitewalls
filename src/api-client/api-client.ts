@@ -374,8 +374,8 @@ export const useUserProfile = (
       return fetchUserProfile(userId);
     },
     enabled: !!userId && userId.trim() !== '', // Only run query if userId is provided and not empty
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache
     retry: (failureCount, error: any) => {
       // Don't retry on 404 (user not found) or 403 (access denied)
       if (error?.message?.includes('not found') || error?.message?.includes('Access denied')) {
@@ -575,6 +575,8 @@ export const useReadEventsApiV1EventsGet = (
   return useQuery({
     queryKey: ['events', params],
     queryFn: () => readEventsApiV1EventsGet(params),
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache
     ...options,
   });
 };
@@ -586,6 +588,8 @@ export const useReadQuestionsApiV1QuestionsGet = (
   return useQuery({
     queryKey: ['questions', params],
     queryFn: () => readQuestionsApiV1QuestionsGet(params),
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache
     ...options,
   });
 };
@@ -597,6 +601,8 @@ export const useReadInteractionsApiV1InteractionsGet = (
   return useQuery({
     queryKey: ['interactions', params],
     queryFn: () => readInteractionsApiV1InteractionsGet(params),
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache
     ...options,
   });
 };
@@ -673,6 +679,8 @@ export const useGetIcanHelptInteractionByQuestionId = (
       return getIcanHelpInteractionByQuestionId(questionID);
     },
     enabled: !!questionID,
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache
     ...options,
   });
 };
@@ -719,6 +727,8 @@ export const useReadAnswersApiV1AnswersGet = (
   return useQuery({
     queryKey: ['answers', params],
     queryFn: () => readAnswersApiV1AnswersGet(params),
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache
     ...options,
   });
 };
@@ -730,6 +740,8 @@ export const useReadUsersApiV1UsersGet = (
   return useQuery({
     queryKey: ['users', params],
     queryFn: () => readUsersApiV1UsersGet(params),
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache
     ...options,
   });
 };
