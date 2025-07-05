@@ -7,16 +7,15 @@
  */
 import type { EventCreateDescription } from './eventCreateDescription';
 import type { EventCreateLocation } from './eventCreateLocation';
-import type { EventCreateGoogleMapsUrl } from './eventCreateGoogleMapsUrl';
 import type { EventCreateParentEventId } from './eventCreateParentEventId';
 
 export interface EventCreate {
   name: string;
   description: EventCreateDescription;
   location: EventCreateLocation;
-  google_maps_url: EventCreateGoogleMapsUrl;
   start_date: string;
   end_date: string;
   parent_event_id: EventCreateParentEventId;
   creator_id: string;
+  image_url?: string | null;
 }

@@ -47,6 +47,7 @@ import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
 import { useToast } from "../hooks/use-toast";
 import { UserProfileResponse } from "../models";
+import { ProfileImageUploadSimple } from "../components/ProfileImageUploadSimple";
 
 /**
  * Interface for user profile data used in the component
@@ -769,21 +770,36 @@ const SwipeableProfile: React.FC<SwipeableProfileProps> = ({
             <Card className="bg-white rounded-2xl border border-gray-100 shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4 mb-6">
-                  <div className="relative">
-                    <Avatar className="w-20 h-20 ring-4 ring-gray-100">
-                      <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
-                      <AvatarFallback className="text-2xl bg-gradient-to-br from-gray-100 to-gray-200">
-                        {profileUser.name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white border-2 border-gray-200 hover:bg-gray-50"
-                    >
-                      <EditIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  {isOwnProfile ? (
+                    <ProfileImageUploadSimple
+                      userId={profileUser.id}
+                      currentImageUrl={profileUser.avatar}
+                      fallbackText={profileUser.name[0]}
+                      onImageUpdate={(newImageUrl) => {
+                        // Update local state
+                        setProfileUser(prev => prev ? { ...prev, avatar: newImageUrl } : null);
+                        // Refetch profile to get updated data
+                        refetchProfile();
+                      }}
+                      onImageRemove={() => {
+                        // Update local state to remove image
+                        setProfileUser(prev => prev ? { ...prev, avatar: undefined } : null);
+                        // Refetch profile to get updated data
+                        refetchProfile();
+                      }}
+                      size="lg"
+                      disabled={false}
+                    />
+                  ) : (
+                    <div className="relative">
+                      <Avatar className="w-20 h-20 ring-4 ring-gray-100">
+                        <AvatarImage src={profileUser.avatar} alt={profileUser.name} />
+                        <AvatarFallback className="text-2xl bg-gradient-to-br from-gray-100 to-gray-200">
+                          {profileUser.name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  )}
 
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">

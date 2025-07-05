@@ -80,6 +80,12 @@ export class CacheManager {
     
     // Also invalidate specific event if provided
     if (options.eventId) {
+      // Invalidate single event query (used by EventDetails)
+      this.queryClient.invalidateQueries({ 
+        queryKey: ['event', options.eventId],
+        exact: options.exact 
+      });
+      // Also invalidate the old plural key format just in case
       this.queryClient.invalidateQueries({ 
         queryKey: ['events', options.eventId],
         exact: options.exact 

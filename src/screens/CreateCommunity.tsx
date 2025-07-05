@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { isValidUrl, normalizeWebUrl } from "../utils/urlValidation";
+import { useSimpleImageUpload, ImageValidation } from "../hooks/useSimpleImageUpload";
 import { 
   XIcon, 
   MapPinIcon, 
@@ -13,7 +14,9 @@ import {
   SearchIcon,
   GlobeIcon,
   LockIcon,
-  PlusIcon
+  PlusIcon,
+  ImageIcon,
+  Edit2Icon
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -109,11 +112,16 @@ export const CreateCommunity: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedLogo, setSelectedLogo] = useState<string>("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [countrySearchQuery, setCountrySearchQuery] = useState("");
   const [isCountryDialogOpen, setIsCountryDialogOpen] = useState(false);
   
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Image upload mutation
+  const { imageUploadMutation } = useSimpleImageUpload();
 
   // Form setup
   const form = useForm<CommunityFormData>({
@@ -140,24 +148,15 @@ export const CreateCommunity: React.FC = () => {
   /**
    * Handle logo upload
    */
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Check file size (2MB limit for logos)
-      if (file.size > 2 * 1024 * 1024) {
+      // Use the hook's validation
+      const validationErrors = ImageValidation.validateFile(file);
+      if (validationErrors.length > 0) {
         toast({
-          title: "File too large",
-          description: "Please select a logo under 2MB.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid file type",
-          description: "Please select an image file (PNG, JPG, etc.).",
+          title: "Invalid file",
+          description: validationErrors[0],
           variant: "destructive",
         });
         return;
@@ -165,19 +164,42 @@ export const CreateCommunity: React.FC = () => {
 
       setLogoFile(file);
 
-      // Create preview URL
+      // Create preview URL for immediate feedback
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
         setSelectedLogo(result);
-        form.setValue("logo", result);
       };
       reader.readAsDataURL(file);
 
-      toast({
-        title: "Logo uploaded",
-        description: "Community logo has been added.",
-      });
+      // Upload to R2 in the background
+      setIsUploadingImage(true);
+      try {
+        const uploadResult = await imageUploadMutation.mutateAsync({
+          file,
+          contentType: 'event', // Communities are events
+          contentId: `temp-community-${Date.now()}`, // Temporary ID until community is created
+        });
+
+        if (uploadResult.image_url) {
+          setUploadedImageUrl(uploadResult.image_url);
+          form.setValue("logo", uploadResult.image_url);
+          
+          toast({
+            title: "Logo uploaded",
+            description: "Community logo has been uploaded successfully.",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload logo. Please try again.",
+          variant: "destructive",
+        });
+        // Keep the local preview even if upload fails
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 
@@ -187,6 +209,7 @@ export const CreateCommunity: React.FC = () => {
   const removeLogo = () => {
     setSelectedLogo("");
     setLogoFile(null);
+    setUploadedImageUrl("");
     form.setValue("logo", "");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -257,7 +280,7 @@ export const CreateCommunity: React.FC = () => {
         createdBy: user.id,
         createdAt: new Date().toISOString(),
         memberCount: 1, // Creator is first member
-        logoUrl: selectedLogo,
+        logoUrl: uploadedImageUrl || selectedLogo,
       });
 
       toast({
@@ -328,18 +351,38 @@ export const CreateCommunity: React.FC = () => {
                           <div className="space-y-4">
                             <div className="flex justify-center">
                               {selectedLogo ? (
-                                <div className="relative">
+                                <div 
+                                  className="relative group cursor-pointer"
+                                  onClick={() => fileInputRef.current?.click()}
+                                >
                                   <img
-                                    src={selectedLogo}
+                                    src={uploadedImageUrl || selectedLogo}
                                     alt="Community logo preview"
-                                    className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
+                                    className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200 shadow-sm transition-all duration-200 group-hover:brightness-75"
                                   />
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-lg"></div>
+                                  {isUploadingImage && (
+                                    <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                                      <div className="text-center">
+                                        <UploadIcon className="w-6 h-6 text-white animate-pulse mb-1" />
+                                        <p className="text-xs text-white">Uploading...</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {!isUploadingImage && (
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                      <Edit2Icon className="w-6 h-6 text-white drop-shadow-lg" />
+                                    </div>
+                                  )}
                                   <Button
                                     type="button"
                                     variant="destructive"
                                     size="sm"
-                                    onClick={removeLogo}
-                                    className="absolute -top-2 -right-2 w-8 h-8 p-0 rounded-full"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removeLogo();
+                                    }}
+                                    className="absolute -top-2 -right-2 w-8 h-8 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                   >
                                     <XIcon className="w-4 h-4" />
                                   </Button>

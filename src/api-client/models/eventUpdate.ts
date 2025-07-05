@@ -7,15 +7,17 @@
  */
 import type { EventUpdateDescription } from './eventUpdateDescription';
 import type { EventUpdateLocation } from './eventUpdateLocation';
-import type { EventUpdateGoogleMapsUrl } from './eventUpdateGoogleMapsUrl';
 import type { EventUpdateParentEventId } from './eventUpdateParentEventId';
 
 export interface EventUpdate {
   name: string;
   description: EventUpdateDescription;
   location: EventUpdateLocation;
-  google_maps_url: EventUpdateGoogleMapsUrl;
   start_date: string;
   end_date: string;
   parent_event_id: EventUpdateParentEventId;
+  image_url?: string | null;
+  is_active?: boolean;
+  is_cancelled?: boolean;
+  is_postponed?: boolean;
 }

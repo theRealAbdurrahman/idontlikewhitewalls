@@ -327,6 +327,17 @@ export const readEventsApiV1EventsGet = (
   });
 };
 
+export const readEventApiV1EventsEventIdGet = (
+  eventId: string,
+  options?: AxiosRequestConfig
+): Promise<AxiosResponse<EventRead>> => {
+  return customInstance<EventRead>({
+    url: `/api/v1/events/${eventId}`,
+    method: 'GET',
+    ...options,
+  });
+};
+
 export const createEventApiV1EventsPost = (
   data: EventCreate,
   options?: AxiosRequestConfig
@@ -334,6 +345,19 @@ export const createEventApiV1EventsPost = (
   return customInstance<EventRead>({
     url: '/api/v1/events',
     method: 'POST',
+    data,
+    ...options,
+  });
+};
+
+export const updateEventApiV1EventsEventIdPut = (
+  eventId: string,
+  data: EventUpdate,
+  options?: AxiosRequestConfig
+): Promise<AxiosResponse<EventRead>> => {
+  return customInstance<EventRead>({
+    url: `/api/v1/events/${eventId}`,
+    method: 'PUT',
     data,
     ...options,
   });
@@ -537,6 +561,15 @@ export const useCreateEventApiV1EventsPost = (
   });
 };
 
+export const useUpdateEventApiV1EventsEventIdPut = (
+  options?: UseMutationOptions<AxiosResponse<EventRead>, Error, { eventId: string; data: EventUpdate }>
+) => {
+  return useMutation({
+    mutationFn: ({ eventId, data }) => updateEventApiV1EventsEventIdPut(eventId, data),
+    ...options,
+  });
+};
+
 export const useCreateAnswerApiV1AnswersPost = (
   options?: UseMutationOptions<AxiosResponse<AnswerRead>, Error, { data: AnswerCreate }>
 ) => {
@@ -573,6 +606,18 @@ export const useReadUsersApiV1UsersGet = (
   return useQuery({
     queryKey: ['users', params],
     queryFn: () => readUsersApiV1UsersGet(params),
+    ...options,
+  });
+};
+
+export const useReadEventApiV1EventsEventIdGet = (
+  eventId: string,
+  options?: UseQueryOptions<AxiosResponse<EventRead>, Error>
+) => {
+  return useQuery({
+    queryKey: ['event', eventId],
+    queryFn: () => readEventApiV1EventsEventIdGet(eventId),
+    enabled: !!eventId,
     ...options,
   });
 };

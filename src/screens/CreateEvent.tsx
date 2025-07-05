@@ -275,6 +275,7 @@ export const CreateEvent: React.FC = () => {
 
   /**
    * Remove banner image
+   * TODO: This function is not currently used. Either implement remove functionality or delete this function.
    */
   const removeBannerImage = () => {
     setSelectedBannerImage("");
