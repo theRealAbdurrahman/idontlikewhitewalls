@@ -33,7 +33,10 @@ import { useToast } from "../hooks/use-toast";
 import { openLocationInGoogleMaps } from "../utils/googleMaps";
 import { EventImageUploadSimple } from "../components/EventImageUploadSimple";
 import { generateBestGeometricImage } from "../utils/geometricImageGenerator";
-import { useSimpleImageUpload } from "../hooks/useSimpleImageUpload";
+import { useSimpleImageUpload, ImageValidation } from "../hooks/useSimpleImageUpload";
+import { PencilIcon, UploadIcon } from "lucide-react";
+import { useReadEventApiV1EventsEventIdGet, useUpdateEventApiV1EventsEventIdPut } from "../api-client/api-client";
+import { useCacheManager } from "../hooks/useCacheManager";
 
 /**
  * Custom styles for enhanced visual effects and animations
@@ -123,6 +126,50 @@ const customStyles = `
     font-weight: bold;
     font-size: 1.5rem;
   }
+  
+  .pixelated-grid {
+    background-image: 
+      linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 8px 8px;
+    animation: pixelate-wave 1.5s ease-in-out infinite;
+  }
+  
+  @keyframes pixelate-wave {
+    0%, 100% { 
+      background-position: 0 0, 0 0;
+      opacity: 0.3; 
+    }
+    50% { 
+      background-position: 8px 8px, 8px 8px;
+      opacity: 0.7; 
+    }
+  }
+  
+  .pixel-spinner {
+    width: 16px;
+    height: 16px;
+    background: #3ec6c6;
+    animation: pixel-spin 0.8s linear infinite;
+  }
+  
+  @keyframes pixel-spin {
+    0% { 
+      clip-path: polygon(0% 0%, 100% 0%, 100% 25%, 0% 25%);
+    }
+    25% { 
+      clip-path: polygon(75% 0%, 100% 0%, 100% 100%, 75% 100%);
+    }
+    50% { 
+      clip-path: polygon(0% 75%, 100% 75%, 100% 100%, 0% 100%);
+    }
+    75% { 
+      clip-path: polygon(0% 0%, 25% 0%, 25% 100%, 0% 100%);
+    }
+    100% { 
+      clip-path: polygon(0% 0%, 100% 0%, 100% 25%, 0% 25%);
+    }
+  }
 `;
 
 /**
@@ -131,156 +178,252 @@ const customStyles = `
 export const EventDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { events, joinEvent, checkInEvent, setActiveFilters } = useAppStore();
+  const { joinEvent, checkInEvent, setActiveFilters } = useAppStore();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { afterEventUpdate } = useCacheManager();
+  
+  // Fetch event from API
+  const { 
+    data: eventData, 
+    isLoading: eventLoading, 
+    error: eventError 
+  } = useReadEventApiV1EventsEventIdGet(id || "", { enabled: !!id });
   
   // Local state
   const [isLoading, setIsLoading] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [attendeeCount, setAttendeeCount] = useState(0);
+  const [isJoined, setIsJoined] = useState(false);
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [isInviteCodeDialogOpen, setIsInviteCodeDialogOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [inviteCodeError, setInviteCodeError] = useState("");
-  const [isImageEditDialogOpen, setIsImageEditDialogOpen] = useState(false);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string>("");
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   
-  // Track which events have had image generation attempted (persistent across component mounts)
-  const getGenerationAttempted = (): Set<string> => {
-    try {
-      const stored = localStorage.getItem('eventImageGenerationAttempted');
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
-    }
-  };
+  // Image state matching CreateEvent pattern
+  const [selectedBannerImage, setSelectedBannerImage] = useState<string>("");
+  const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   
-  const setGenerationAttempted = (eventId: string) => {
-    try {
-      const current = getGenerationAttempted();
-      current.add(eventId);
-      localStorage.setItem('eventImageGenerationAttempted', JSON.stringify([...current]));
-    } catch (error) {
-      console.warn('Failed to persist generation attempt:', error);
-    }
-  };
+  // Refs
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Utility function to detect if an image URL/data URL is SVG
-  const isSvgImage = (imageUrl: string): boolean => {
-    if (!imageUrl) return false;
-    
-    // Check for data URL with SVG
-    if (imageUrl.startsWith('data:image/svg+xml')) {
-      return true;
-    }
-    
-    // Check for file extension
-    if (imageUrl.includes('.svg')) {
-      return true;
-    }
-    
-    // Check for SVG content type in URL
-    if (imageUrl.includes('svg')) {
-      return true;
-    }
-    
-    return false;
-  };
-  
-  // Image upload hook
+  // Image upload mutation  
   const imageUploadMutation = useSimpleImageUpload();
+  const updateEventMutation = useUpdateEventApiV1EventsEventIdPut();
 
-  const event = events.find(e => e.id === id);
+  const event = eventData?.data;
+  
+  // Debug logging to see the actual data structure
+  useEffect(() => {
+    if (eventData) {
+      console.log('EventData structure:', eventData);
+      console.log('Event from eventData?.data:', event);
+    }
+  }, [eventData, event]);
 
   /**
-   * Auto-generate and upload image when event has no image
+   * Upload geometric image to R2 and save to event
    */
-  const handleAutoGenerateImage = useCallback(async () => {
-    if (!event || isGeneratingImage) return;
-    
-    setIsGeneratingImage(true);
+  const uploadGeometricImage = async (geometricImageDataUrl: string) => {
+    if (!event || !id) return;
     
     try {
-      // Generate geometric image
-      const generatedImageDataUrl = generateBestGeometricImage(400, 400);
-      
-      // Convert data URL to blob for upload
-      const response = await fetch(generatedImageDataUrl);
+      // Convert data URL to blob (same as CreateEvent)
+      const response = await fetch(geometricImageDataUrl);
       const blob = await response.blob();
       
       // Create file from blob
-      const file = new File([blob], `event-${event.id}-banner.svg`, { type: 'image/svg+xml' });
+      const file = new File([blob], `event-banner-${Date.now()}.svg`, { type: 'image/svg+xml' });
       
       // Upload to R2
       const uploadResult = await imageUploadMutation.mutateAsync({
         file,
         contentType: 'event',
-        contentId: event.id,
+        contentId: `auto-${Date.now()}`,
       });
       
       if (uploadResult.image_url) {
-        setCurrentImageUrl(uploadResult.image_url);
+        setUploadedImageUrl(uploadResult.image_url);
         
-        toast({
-          title: "Banner generated",
-          description: "A unique banner image has been created for this event.",
+        // Update the event with the new geometric image URL
+        const updateData = {
+          name: event.name,
+          description: event.description || "",
+          location: event.location || "",
+          start_date: event.start_date,
+          end_date: event.end_date,
+          parent_event_id: event.parent_event_id || null,
+          image_url: uploadResult.image_url,
+          is_active: event.is_active ?? true,
+          is_cancelled: event.is_cancelled ?? false,
+          is_postponed: event.is_postponed ?? false,
+        };
+        
+        await updateEventMutation.mutateAsync({
+          eventId: id,
+          data: updateData
         });
         
-        // TODO: In real app, update the event in store/API with new image URL
-        // updateEvent(event.id, { image_url: uploadResult.image_url });
+        // Invalidate cache so the UI updates
+        afterEventUpdate(id);
+        
+        console.log('EventDetails: Geometric image uploaded and saved:', uploadResult.image_url);
       }
     } catch (error) {
-      console.error('Failed to generate and upload image:', error);
-      
-      // Fallback to data URL for display only
-      const fallbackImage = generateBestGeometricImage(400, 400);
-      setCurrentImageUrl(fallbackImage);
-      
-      toast({
-        title: "Using generated image",
-        description: "Generated a banner image for display.",
-      });
-    } finally {
-      setIsGeneratingImage(false);
+      console.error('Failed to upload geometric image:', error);
+      // Don't show error toast for automatic upload, just log it
     }
-  }, [event, isGeneratingImage, imageUploadMutation, toast]);
+  };
 
-  // Initialize attendee count, bookmark status, and handle auto image generation
-  useEffect(() => {
-    if (event) {
-      setAttendeeCount(event.attendeeCount || 0);
-      // TODO: In real app, fetch bookmark status from API
-      setIsBookmarked(Math.random() > 0.7); // Mock random bookmark status
-      
-      // Check image fields - prioritize the same way as display logic
-      // Try all possible image fields from different data sources
-      const eventImageUrl = event.bannerImage || event.image_url || event.image || "";
-      setCurrentImageUrl(eventImageUrl);
-      
-      console.log('EventDetails Debug:', {
-        eventId: event.id,
-        bannerImage: event.bannerImage,
-        image_url: event.image_url,  
-        image: event.image,
-        finalImageUrl: eventImageUrl,
-        hasAttempted: getGenerationAttempted().has(event.id),
-        isGenerating: isGeneratingImage
-      });
-      
-      // Only auto-generate if NO image exists anywhere
-      const hasAnyImage = eventImageUrl && eventImageUrl.trim() !== "";
-      
-      if (!hasAnyImage && !isGeneratingImage && !getGenerationAttempted().has(event.id)) {
-        console.log('No image found, starting auto-generation for event:', event.id);
-        setGenerationAttempted(event.id);
-        handleAutoGenerateImage();
-      } else if (hasAnyImage) {
-        console.log('Event has image, skipping generation:', eventImageUrl);
+  /**
+   * Handle image upload (similar to CreateEvent)
+   */
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Use the hook's validation
+      const validationErrors = ImageValidation.validateFile(file);
+      if (validationErrors.length > 0) {
+        toast({
+          title: "Invalid file",
+          description: validationErrors[0],
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setBannerImageFile(file);
+
+      // Create preview URL for immediate feedback
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setSelectedBannerImage(result);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to R2 in the background
+      setIsUploadingImage(true);
+      try {
+        const uploadResult = await imageUploadMutation.mutateAsync({
+          file,
+          contentType: 'event',
+          contentId: `temp-${Date.now()}`,
+        });
+
+        if (uploadResult.image_url) {
+          setUploadedImageUrl(uploadResult.image_url);
+          
+          // Update the event with the new image URL
+          if (event && id) {
+            console.log('Updating event with ID:', id, 'and image URL:', uploadResult.image_url);
+            console.log('Event object:', event);
+            
+            // Validate required fields
+            if (!event.name || !event.start_date || !event.end_date) {
+              console.error('Missing required event fields:', {
+                name: event.name,
+                start_date: event.start_date,
+                end_date: event.end_date,
+                description: event.description,
+                location: event.location
+              });
+              toast({
+                title: "Image uploaded but not saved",
+                description: "Event data is incomplete, cannot save image.",
+                variant: "destructive",
+              });
+              return;
+            }
+
+            try {
+              const updateData = {
+                name: event.name,
+                description: event.description || "",
+                location: event.location || "",
+                start_date: event.start_date,
+                end_date: event.end_date,
+                parent_event_id: event.parent_event_id || null,
+                image_url: uploadResult.image_url,
+                is_active: event.is_active ?? true,
+                is_cancelled: event.is_cancelled ?? false,
+                is_postponed: event.is_postponed ?? false,
+              };
+              
+              console.log('Update data being sent:', updateData);
+              
+              await updateEventMutation.mutateAsync({
+                eventId: id,
+                data: updateData
+              });
+              
+              // Invalidate cache so the UI updates
+              afterEventUpdate(id);
+              
+              toast({
+                title: "Image uploaded",
+                description: "Event image has been uploaded and saved successfully.",
+              });
+            } catch (updateError) {
+              console.error('Failed to update event with new image:', updateError);
+              toast({
+                title: "Image uploaded but not saved",
+                description: "Image was uploaded but couldn't be saved to the event.",
+                variant: "destructive",
+              });
+            }
+          } else {
+            console.log('Cannot update event - event:', !!event, 'id:', id);
+            toast({
+              title: "Image uploaded",
+              description: "Event image has been uploaded successfully.",
+            });
+          }
+        }
+      } catch (error) {
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload image. Please try again.",
+          variant: "destructive",
+        });
+        // Keep the local preview even if upload fails
+      } finally {
+        setIsUploadingImage(false);
       }
     }
-  }, [event?.id, isGeneratingImage]); // Minimal dependencies
+  };
+
+  // Initialize attendee count, bookmark status, and image from event data
+  useEffect(() => {
+    if (event) {
+      setAttendeeCount(Math.floor(Math.random() * 500) + 50); // Mock attendee count for now
+      // TODO: In real app, fetch bookmark status from API
+      setIsBookmarked(Math.random() > 0.7); // Mock random bookmark status
+      setIsJoined(Math.random() > 0.5); // Mock join status for now
+      setIsCheckedIn(false); // Initially not checked in
+      
+      // Set image from event data - use image_url from API
+      const eventImageUrl = event.image_url;
+      
+      if (eventImageUrl && eventImageUrl.trim() !== "") {
+        // If we have an image URL, use it directly
+        setSelectedBannerImage(eventImageUrl);
+        setUploadedImageUrl(eventImageUrl);
+        console.log('EventDetails: Using image from API:', eventImageUrl);
+      } else {
+        // If no image, generate a geometric fallback and upload it
+        const fallbackImage = generateBestGeometricImage(400, 400);
+        setSelectedBannerImage(fallbackImage);
+        console.log('EventDetails: No image found, generating and uploading geometric fallback');
+        
+        // Upload the generated image to R2 and save to event (similar to CreateEvent)
+        uploadGeometricImage(fallbackImage);
+      }
+    }
+  }, [event?.id]);
 
   /**
    * Determine event status based on dates
@@ -289,8 +432,8 @@ export const EventDetails: React.FC = () => {
     if (!event) return "upcoming";
     
     const now = new Date();
-    const startDate = parseISO(event.date);
-    const endDate = event.endDate ? parseISO(event.endDate) : startDate;
+    const startDate = parseISO(event.start_date);
+    const endDate = parseISO(event.end_date);
     
     if (isBefore(now, startDate)) {
       return "upcoming";
@@ -307,8 +450,8 @@ export const EventDetails: React.FC = () => {
   const formatEventDateTime = () => {
     if (!event) return "";
     
-    const start = parseISO(event.date);
-    const end = event.endDate ? parseISO(event.endDate) : null;
+    const start = parseISO(event.start_date);
+    const end = parseISO(event.end_date);
     
     if (end && format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
       // Same day event
@@ -341,34 +484,6 @@ export const EventDetails: React.FC = () => {
     navigate(-1);
   };
 
-  /**
-   * Handle image editing
-   */
-  const handleImageUpdate = (newImageUrl: string) => {
-    setCurrentImageUrl(newImageUrl);
-    setIsImageEditDialogOpen(false);
-    
-    toast({
-      title: "Event image updated",
-      description: "The event image has been updated successfully.",
-    });
-    
-    // TODO: In real app, update the event in the store/API
-    // updateEvent(event.id, { image_url: newImageUrl });
-  };
-
-  const handleImageRemove = () => {
-    setCurrentImageUrl("");
-    setIsImageEditDialogOpen(false);
-    
-    toast({
-      title: "Event image removed",
-      description: "The event image has been removed.",
-    });
-    
-    // TODO: In real app, update the event in the store/API
-    // updateEvent(event.id, { image_url: "" });
-  };
 
   const handleShare = async () => {
     if (navigator.share && event) {
@@ -405,7 +520,7 @@ export const EventDetails: React.FC = () => {
     
     try {
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      joinEvent(event.id);
+      setIsJoined(true);
       setAttendeeCount(prev => prev + 1);
       
       // toast({
@@ -427,7 +542,7 @@ export const EventDetails: React.FC = () => {
     if (!event || !user) return;
     
     // Check if event is private and we haven't validated the code yet
-    const isPrivateEvent = event.maxAttendees === 50; // Mock: events with 50 max attendees are private
+    const isPrivateEvent = false; // Mock: no private events for now
     
     if (isPrivateEvent && !skipDialog) {
       // Show invite code dialog for private events
@@ -440,15 +555,14 @@ export const EventDetails: React.FC = () => {
     
     try {
       await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
-      checkInEvent(event.id);
       
       // toast({
       //   title: "Checked in!",
       //   description: `Welcome to ${event.name}!`,
       // });
       
-      // Update the event state to mark as checked in
-      checkInEvent(event.id);
+      // Update the local state to mark as checked in
+      setIsCheckedIn(true);
       
       // Close dialog if it was open
       if (isInviteCodeDialogOpen) {
@@ -543,6 +657,54 @@ export const EventDetails: React.FC = () => {
     }
   };
 
+  // Handle loading state
+  if (eventLoading) {
+    return (
+      <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
+        <Card className="w-full max-w-md event-info-card">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="pixel-spinner"></div>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Loading event...
+            </h2>
+            <p className="text-gray-600">
+              Please wait while we fetch the event details.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (eventError) {
+    return (
+      <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
+        <Card className="w-full max-w-md event-info-card">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CalendarIcon className="w-8 h-8 text-red-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Failed to load event
+            </h2>
+            <p className="text-gray-600 mb-6">
+              There was a problem loading the event details. Please try again.
+            </p>
+            <Button 
+              onClick={handleBack}
+              className="w-full bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white event-action-button"
+            >
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Handle edge cases
   if (!event) {
     return (
@@ -624,89 +786,70 @@ export const EventDetails: React.FC = () => {
           </div>
         </header>
 
-        {/* Event Banner Image */}
-        <div>
-          <div className="flex justify-center items-center p-6">
-            {user && !isGeneratingImage ? (
-              <Dialog open={isImageEditDialogOpen} onOpenChange={setIsImageEditDialogOpen}>
-                <DialogTrigger asChild>
-                  <div className="relative w-80 h-80 overflow-hidden rounded-2xl shadow-lg group cursor-pointer">
-                    {isGeneratingImage ? (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="w-8 h-8 border-2 border-[#3ec6c6] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                          <p className="text-sm text-gray-600">Generating banner...</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <img
-                          src={currentImageUrl || event.bannerImage || event.image_url || event.image || generateBestGeometricImage(400, 400)}
-                          alt={event.name}
-                          className="w-full h-full object-cover rounded-2xl transition-all duration-200 group-hover:brightness-75"
-                        />
-                        {/* Only apply gradient overlay for non-SVG images */}
-                        {!isSvgImage(currentImageUrl || event.bannerImage || event.image_url || event.image || generateBestGeometricImage(400, 400)) && (
-                          <div className="event-image-overlay absolute inset-0 rounded-2xl"></div>
-                        )}
-                      </>
-                    )}
-                    
-                    {/* Edit Button - Pencil Icon Only (CreateEvent Style) */}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="absolute bottom-3 right-3 rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white group-hover:bg-black group-hover:text-white group-hover:border-black transition-all duration-200"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <EditIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Update Event Image</DialogTitle>
-                    <DialogDescription>
-                      Upload a new image for this event. This will replace the current event banner.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <EventImageUploadSimple
-                    eventId={event.id}
-                    currentImageUrl={currentImageUrl}
-                    onImageUpdate={handleImageUpdate}
-                    onImageRemove={handleImageRemove}
-                    disabled={false}
-                    showRemoveOption={!!currentImageUrl}
-                  />
-                </DialogContent>
-                </Dialog>
-              ) : (
-                <div className="relative w-80 h-80 overflow-hidden rounded-2xl shadow-lg group">
-                  {isGeneratingImage ? (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-8 h-8 border-2 border-[#3ec6c6] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                        <p className="text-sm text-gray-600">Generating banner...</p>
-                      </div>
+        {/* Event Banner Image - CreateEvent Style */}
+        <div className="flex flex-col items-center space-y-3 p-6">
+          {selectedBannerImage ? (
+            <div
+              className="relative group cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <img
+                src={uploadedImageUrl || selectedBannerImage}
+                alt="Event banner"
+                className="w-80 h-80 md:w-96 md:h-96 object-cover rounded-2xl transition-all duration-200 group-hover:brightness-75"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 rounded-2xl"></div>
+              {isUploadingImage && (
+                <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
+                  <div className="relative">
+                    {/* Pixelated Animation Background */}
+                    <div className="absolute inset-0 opacity-30">
+                      <div className="pixelated-grid w-64 h-16 mx-auto"></div>
                     </div>
-                  ) : (
-                    <>
-                      <img
-                        src={currentImageUrl || event.bannerImage || event.image_url || event.image || generateBestGeometricImage(400, 400)}
-                        alt={event.name}
-                        className="w-full h-full object-cover rounded-2xl transition-all duration-200 group-hover:brightness-75"
-                      />
-                      {/* Only apply gradient overlay for non-SVG images */}
-                      {!isSvgImage(currentImageUrl || event.bannerImage || event.image_url || event.image || generateBestGeometricImage(400, 400)) && (
-                        <div className="event-image-overlay absolute inset-0 rounded-2xl"></div>
-                      )}
-                    </>
-                  )}
+                    
+                    {/* Main Upload Text */}
+                    <div className="relative z-10 text-white text-sm font-medium flex items-center gap-3 px-6 py-3 bg-black/40 rounded-lg backdrop-blur-sm">
+                      <div className="pixel-spinner"></div>
+                      Uploading...
+                    </div>
+                  </div>
                 </div>
               )}
-          </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+                className="absolute bottom-3 right-3 rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white group-hover:bg-black group-hover:text-white group-hover:border-black transition-all duration-200"
+              >
+                <PencilIcon className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div
+              className="w-64 h-64 border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-gray-400 transition-colors cursor-pointer flex flex-col items-center justify-center"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <UploadIcon className="w-8 h-8 text-gray-400 mb-3" />
+              <p className="text-sm text-gray-600 mb-2">
+                Click to upload or drag and drop
+              </p>
+              <p className="text-xs text-gray-500">
+                PNG, JPG up to 5MB
+              </p>
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
         </div>
 
         {/* Event Content */}
@@ -720,12 +863,10 @@ export const EventDetails: React.FC = () => {
                   <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2 w-full">
                     {event.name}
                   </h1>
-                  {event.organizerName && (
-                    <p className="text-gray-600 flex items-center gap-2">
-                      <BuildingIcon className="w-4 h-4" />
-                      <span>{event.organizerName}</span>
-                    </p>
-                  )}
+                  <p className="text-gray-600 flex items-center gap-2">
+                    <BuildingIcon className="w-4 h-4" />
+                    <span>Event Organizer</span>
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -844,25 +985,23 @@ export const EventDetails: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Tags */}
-          {event.tags && event.tags.length > 0 && (
-            <Card className="event-info-card bg-white rounded-2xl border border-gray-100 shadow-sm">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Topics</h2>
-                <div className="flex flex-wrap gap-2">
-                  {event.tags.map((tag, index) => (
-                    <Badge 
-                      key={index} 
-                      variant="outline" 
-                      className="event-tag px-3 py-1 text-sm bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-500 hover:text-white cursor-pointer"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Tags - Mock data for now since API doesn't provide tags */}
+          <Card className="event-info-card bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <CardContent className="p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Topics</h2>
+              <div className="flex flex-wrap gap-2">
+                {["#Networking", "#Tech", "#Community"].map((tag, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="outline" 
+                    className="event-tag px-3 py-1 text-sm bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-500 hover:text-white cursor-pointer"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Organizer Info */}
           <Card className="event-info-card bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -874,7 +1013,7 @@ export const EventDetails: React.FC = () => {
                     <BuildingIcon className="w-6 h-6 text-gray-600" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{event.organizerName}</p>
+                    <p className="font-semibold text-gray-900">Event Organizer</p>
                     <p className="text-sm text-gray-600">Event Organizer</p>
                   </div>
                 </div>
@@ -897,16 +1036,6 @@ export const EventDetails: React.FC = () => {
                 </div>
               </div>
               
-              {event.website && (
-                <Button
-                  variant="outline"
-                  className="w-full mt-4"
-                  onClick={() => window.open(event.website, "_blank")}
-                >
-                  <ExternalLinkIcon className="w-4 h-4 mr-2" />
-                  Visit Organizer Website
-                </Button>
-              )}
             </CardContent>
           </Card>
         </div>
@@ -914,9 +1043,9 @@ export const EventDetails: React.FC = () => {
         {/* Floating Action Buttons - Modified: Removed "Preview Event Q&A" button */}
         <div className="fixed bottom-0 left-0 right-0 floating-action-section shadow-lg">
           <div className="p-6">
-            {event.isJoined ? (
+            {isJoined ? (
               <div className="space-y-3">
-                {!event.isCheckedIn && eventStatus === "live" && (
+                {!isCheckedIn && eventStatus === "live" && (
                   <Button
                     onClick={handleCheckIn}
                     disabled={isLoading}
@@ -962,7 +1091,7 @@ export const EventDetails: React.FC = () => {
                 </Button>
                 
                 {/* Check In Button for Joined Users */}
-                {event.isJoined && !event.isCheckedIn && eventStatus === "live" && (
+                {isJoined && !isCheckedIn && eventStatus === "live" && (
                   <Button
                     onClick={() => handleCheckIn()}
                     disabled={isLoading}
