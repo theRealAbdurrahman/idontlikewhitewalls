@@ -1,21 +1,22 @@
 export interface UserProfileResponse {
-    full_name: string;
-    fields_of_expertise: string[];
-    profile_picture: string;
-    professional_background: string;
-    bio: string;
-    can_help_with: string;
-    is_active: boolean;
-    interests: string[];
-    linkedin_url: string;
-    created_at: string;
-    personality_traits: string[];
     id: string;
-    updated_at: string;
-    skills: string[];
+    linkedin_url?: string;
     auth_id: string;
-    last_active_at: string | null;
     email: string;
+    full_name: string;
+    profile_picture?: string;
+    uploaded_profile_image_url?: string | null;
+    bio?: string;
+    is_active: boolean;
+    created_at: string; // ISO date string
+    updated_at: string; // ISO date string
+    last_active_at?: string | null; // ISO date string
+    fields_of_expertise: string[];
+    professional_background?: string;
+    can_help_with?: string;
+    interests: string[];
+    personality_traits: string[];
+    skills: string[];
 }
 
 export interface LogtoDecodedUser {

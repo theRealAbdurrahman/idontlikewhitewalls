@@ -11,32 +11,80 @@ import { apiConfig, shouldLogApiRequests } from '../config/api';
 import { UserProfileApiResponse, UserProfileResponse } from '../models';
 import { isWebcontainerEnv, getMockToken } from '../utils/webcontainer';
 
+// Global token accessor - will be set by AuthProvider
+let globalGetAccessToken: (() => Promise<string | null>) | null = null;
+
+/**
+ * Set the global access token getter function
+ * This will be called by AuthProvider when it initializes
+ */
+export const setGlobalAccessTokenGetter = (getter: () => Promise<string | null>) => {
+  globalGetAccessToken = getter;
+};
+
 /**
  * Configure axios instance with base URL and interceptors
  */
 const axiosInstance = Axios.create({
   baseURL: apiConfig.baseURL,
   timeout: apiConfig.timeout,
-  headers: apiConfig.headers,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
 });
 
-// Request interceptor for webcontainer auth and debugging
+// Enhanced request interceptor for authentication and debugging
 axiosInstance.interceptors.request.use(
-  (config) => {
-    // Inject webcontainer token if in webcontainer environment and no auth header exists
+  async (config) => {
+    console.log(`🚀 API Request interceptor for: ${config.method?.toUpperCase()} ${config.url}`);
+    console.log('🔍 Current headers:', config.headers);
+    console.log('🔍 globalGetAccessToken available:', !!globalGetAccessToken);
+    console.log('🔍 isWebcontainerEnv:', isWebcontainerEnv());
+
+  // Handle webcontainer environment first
     if (isWebcontainerEnv() && !config.headers?.Authorization) {
       const mockToken = getMockToken();
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${mockToken}`;
       console.log('🔧 Webcontainer: Injected mock auth token');
+    } 
+    // Handle real authentication for non-webcontainer environments
+    else if (!isWebcontainerEnv() && globalGetAccessToken && !config.headers?.Authorization) {
+      try {
+        console.log('🔐 Attempting to get access token...');
+        const token = await globalGetAccessToken();
+        if (token) {
+          config.headers = config.headers || {};
+          config.headers.Authorization = `Bearer ${token}`;
+          console.log('🔐 Auth: Injected real access token');
+        } else {
+          console.warn('⚠️ Auth: No access token available');
+        }
+      } catch (error) {
+        console.error('❌ Auth: Failed to get access token:', error);
+        // Continue with request even if token fetch fails
+        // The backend will handle unauthorized requests appropriately
+      }
+    } else {
+      console.log('🔍 Skipping token injection:', {
+        isWebcontainer: isWebcontainerEnv(),
+        hasGlobalGetAccessToken: !!globalGetAccessToken,
+        hasExistingAuth: !!config.headers?.Authorization
+      });
     }
+
+    console.log('🔍 Final headers:', config.headers);
 
     // Debug logging in development
     if (shouldLogApiRequests) {
       console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
         data: config.data,
         params: config.params,
-        headers: config.headers,
+        headers: {
+          ...config.headers,
+          Authorization: config.headers?.Authorization ? '[REDACTED]' : undefined,
+        },
       });
     }
     
@@ -48,19 +96,45 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor for debugging in development
-if (shouldLogApiRequests) {
-  axiosInstance.interceptors.response.use(
-    (response) => {
+// Enhanced response interceptor for token refresh and error handling
+axiosInstance.interceptors.response.use(
+  (response) => {
+    if (shouldLogApiRequests) {
       console.log(`✅ API Response: ${response.status} ${response.config.url}`, response.data);
-      return response;
-    },
-    (error) => {
-      console.error('❌ API Response Error:', error.response?.status, error.response?.data);
-      return Promise.reject(error);
     }
-  );
-}
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Handle 401 Unauthorized responses
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      console.warn('🔄 Auth: Received 401, attempting token refresh...');
+      originalRequest._retry = true;
+
+      if (!isWebcontainerEnv() && globalGetAccessToken) {
+        try {
+          // Try to get a fresh token
+          const newToken = await globalGetAccessToken();
+          if (newToken) {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            console.log('🔐 Auth: Retrying request with refreshed token');
+            return axiosInstance(originalRequest);
+          }
+        } catch (refreshError) {
+          console.error('❌ Auth: Token refresh failed:', refreshError);
+          // Let the error fall through to trigger logout/redirect
+        }
+      }
+    }
+
+    if (shouldLogApiRequests) {
+      console.error('❌ API Response Error:', error.response?.status, error.response?.data);
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 /**
  * Custom axios instance for API calls
@@ -363,6 +437,7 @@ export const createQuestionApiV1QuestionsPost = (
   });
 };
 
+
 export const createInteractionApiV1InteractionsPost = (
   data: InteractionCreate,
   options?: AxiosRequestConfig
@@ -382,6 +457,38 @@ export const deleteInteractionApiV1InteractionsInteractionIdDelete = (
   return customInstance<void>({
     url: `/api/v1/interactions/${interactionId}`,
     method: 'DELETE',
+    ...options,
+  });
+};
+export const getQuestionByID = (
+  questionID: string,
+  options?: AxiosRequestConfig
+): Promise<AxiosResponse<void>> => {
+  return customInstance<void>({
+    url: `/api/v1/questions/${questionID}`,
+    method: 'GET',
+    ...options,
+  });
+};
+
+export const getMeTooInteractionByQuestionId = (
+  questionID: string,
+  options?: AxiosRequestConfig
+): Promise<AxiosResponse<void>> => {
+  return customInstance<void>({
+    url: `/api/v1/questions/${questionID}/me_too`,
+    method: 'GET',
+    ...options,
+  });
+};
+
+export const getIcanHelpInteractionByQuestionId = (
+  questionID: string,
+  options?: AxiosRequestConfig
+): Promise<AxiosResponse<void>> => {
+  return customInstance<void>({
+    url: `/api/v1/questions/${questionID}/i_can_help`,
+    method: 'GET',
     ...options,
   });
 };
@@ -518,7 +625,51 @@ export const useDeleteInteractionApiV1InteractionsInteractionIdDelete = (
     ...options,
   });
 };
-
+export const useGetQuestionByID = (questionID: string | undefined,
+) => {
+  return useQuery({
+    queryKey: ['question', questionID],
+    queryFn: () => {
+      if (!questionID) {
+        throw new Error('Question ID is required');
+      }
+      return getQuestionByID(questionID);
+    },
+    // enabled: !!questionID,
+  });
+};
+export const useGetMeTootInteractionByQuestionId = (
+  questionID: string | undefined,
+  options?: UseQueryOptions<AxiosResponse<void>, Error>
+) => {
+  return useQuery({
+    queryKey: ['meTooInteraction', questionID],
+    queryFn: () => {
+      if (!questionID) {
+        throw new Error('Question ID is required');
+      }
+      return getMeTooInteractionByQuestionId(questionID);
+    },
+    enabled: !!questionID,
+    ...options,
+  });
+};
+export const useGetIcanHelptInteractionByQuestionId = (
+  questionID: string | undefined,
+  options?: UseQueryOptions<AxiosResponse<void>, Error>
+) => {
+  return useQuery({
+    queryKey: ['iCanHelpInteraction', questionID],
+    queryFn: () => {
+      if (!questionID) {
+        throw new Error('Question ID is required');
+      }
+      return getIcanHelpInteractionByQuestionId(questionID);
+    },
+    enabled: !!questionID,
+    ...options,
+  });
+};
 export const useCreateEventParticipantApiV1EventParticipantsPost = (
   options?: UseMutationOptions<AxiosResponse<EventParticipantRead>, Error, { data: EventParticipantCreate }>
 ) => {

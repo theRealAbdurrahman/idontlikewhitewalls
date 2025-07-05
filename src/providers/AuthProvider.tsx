@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useEffect, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useRef, ReactNode, useCallback } from 'react';
 import { useLogto } from '@logto/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { getApiBaseUrl } from '../config/api';
-import { LogtoUserData, getCurrentUserProfile } from '../api-client/api-client';
+import { customInstance, getCurrentUserProfile, LogtoUserData, setGlobalAccessTokenGetter } from '../api-client/api-client';
 import { UserProfileResponse } from '../models';
+import { getApiBaseUrl } from '../config/api';
 import { getAuthCallbackUrl, getLogoutRedirectUrl } from '../utils/auth';
-import { isWebcontainerEnv, getMockUser, getMockToken, logWebcontainerInfo } from '../utils/webcontainer';
+import { isWebcontainerEnv, logWebcontainerInfo, getMockUser, getMockToken } from '../utils/webcontainer';
 
 /**
  * Centralized Authentication Context Interface
@@ -92,6 +92,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setLoading,
         setError
     } = useAuthStore();
+
+    /**
+     * Get access token for API calls (with webcontainer mock)
+     */
+    const getAccessToken = useCallback(async (): Promise<string | null> => {
+        if (isWebcontainer) {
+            console.log('🔧 Webcontainer mode: Returning mock token');
+            return getMockToken();
+        }
+
+        try {
+            const token = await logtoGetAccessToken?.();
+            return token || null;
+        } catch (error) {
+            console.error('Failed to get access token:', error);
+            return null;
+        }
+    }, [isWebcontainer, logtoGetAccessToken]);
+
+    /**
+     * Register the access token getter with the API client
+     * This ensures every HTTP request will include the Authorization header
+     */
+    useEffect(() => {
+        console.log('🔐 Auth: Registering access token getter with API client');
+        setGlobalAccessTokenGetter(getAccessToken);
+
+        // Cleanup function
+        return () => {
+            console.log('🔐 Auth: Unregistering access token getter');
+            setGlobalAccessTokenGetter(() => Promise.resolve(null));
+        };
+    }, [getAccessToken]); // Re-register if environment changes
 
     // Initial cleanup for webcontainer mode
     useEffect(() => {
@@ -284,21 +317,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
      */
     const checkIfUserSignedUp = async (logtoUserData: LogtoUserData): Promise<boolean> => {
         try {
-            const baseUrl = getApiBaseUrl();
-            const response = await fetch(`${baseUrl}api/v1/users/is_new/${logtoUserData.sub}`, {
+            const response = await customInstance<{ user: any }>({
+                url: `/api/v1/users/is_new/${logtoUserData.sub}`,
                 method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${logtoUserData.jwt}`,
-                    'Content-Type': 'application/json'
-                }
+                // headers: {
+                //     'Authorization': `Bearer ${logtoUserData.jwt}`,
+                //     'Content-Type': 'application/json'
+                // }
             });
 
-            if (!response.ok) {
-                throw new Error(`Failed to check user signup status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            const user = data.user;
+            const user = response.data.user;
             // If we got user data back, the user exists/is signed up
             return !!user;
         } catch (error) {
@@ -348,24 +376,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // Sign out from Logto
         logtoSignOut?.(logoutUrl);
-    };
-
-    /**
-     * Get access token for API calls (with webcontainer mock)
-     */
-    const getAccessToken = async (): Promise<string | null> => {
-        if (isWebcontainer) {
-            console.log('🔧 Webcontainer mode: Returning mock token');
-            return getMockToken();
-        }
-        
-        try {
-            const token = await logtoGetAccessToken?.();
-            return token || null;
-        } catch (error) {
-            console.error('Failed to get access token:', error);
-            return null;
-        }
     };
 
     /**

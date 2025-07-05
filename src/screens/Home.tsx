@@ -6,7 +6,6 @@ import { Button } from "../components/ui/button";
 import { QuestionCard } from "../components/QuestionCard";
 import { useAppStore } from "../stores/appStore";
 import { QuestionRead } from '../api-client/models/questionRead';
-import { EnvDebug } from '../components/EnvDebug';
 import { useAuth } from "../providers";
 
 /**

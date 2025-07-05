@@ -1,21 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { 
+import {
   MoreVerticalIcon,
   ArrowLeftIcon,
-  BookmarkIcon, 
+  BookmarkIcon,
   ArrowUpIcon,
   MessageCircleIcon,
   HandIcon,
   UsersIcon,
-  FlagIcon 
+  FlagIcon
 } from "lucide-react";
-import { 
-  useCreateInteractionApiV1InteractionsPost, 
-  useDeleteInteractionApiV1InteractionsInteractionIdDelete 
+import {
+  useCreateInteractionApiV1InteractionsPost,
+  useDeleteInteractionApiV1InteractionsInteractionIdDelete,
+  useGetIcanHelptInteractionByQuestionId,
+  useGetMeTootInteractionByQuestionId,
+  useGetQuestionByID
 } from "../api-client/api-client";
-import { InteractionTarget, InteractionType } from "../api-client/models";
+import { InteractionTarget, InteractionType, QuestionRead } from "../api-client/models";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -39,6 +42,8 @@ import {
 import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
 import { useCacheManager } from "../hooks/useCacheManager";
+import { useEvents } from "../hooks/useEvents";
+import { UserProfileResponse } from "../models";
 
 /**
  * Interface for users who interacted with the question
@@ -107,104 +112,46 @@ export const QuestionDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { questions, chatThreads, messages } = useAppStore();
+  const { chatThreads, messages } = useAppStore();
   const { afterInteraction } = useCacheManager();
-  
+  const { getEventByID } = useEvents();
+
   // Local state
   const [activeTab, setActiveTab] = useState<"me_too" | "can_help">("me_too");
   const [isTabsSticky, setIsTabsSticky] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [reportText, setReportText] = useState("");
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-  
+  const [question, setQuestion] = useState<QuestionRead | null>(null);
+  const [meTooInteractions, setMeTooInteractions] = useState<UserProfileResponse | null>(null);
+  const [iCanHelpInteractions, setIcanHelpInteractions] = useState<UserProfileResponse | null>(null);
+
   // Refs for sticky functionality
   const tabsRef = useRef<HTMLDivElement>(null);
   const tabsPlaceholderRef = useRef<HTMLDivElement>(null);
-  
+
   // API mutations for interactions
   const createInteractionMutation = useCreateInteractionApiV1InteractionsPost();
   const deleteInteractionMutation = useDeleteInteractionApiV1InteractionsInteractionIdDelete();
 
   // Find the question
-  const question = questions.find(q => q.id === id);
+
+  // Use queries to check current user's interaction status
+  const getMeTooInteractionQuery = useGetMeTootInteractionByQuestionId(question?.id);
+  const getIcanHelpQuery = useGetIcanHelptInteractionByQuestionId(question?.id);
+
+  const getQuestionQuery = useGetQuestionByID(id);
+
+  // Get counts from the question object directly
+  const meTooCount = question?.me_too_count || 0;
+  const iCanHelpCount = question?.i_can_help_count || 0;
+  const event = getEventByID(question?.event_id!);
+
+  console.log({ question, event });
+
 
   // Check if this is the current user's own question
-  const isOwnQuestion = question?.authorId === user?.id;
-  // Enhanced mock interaction data
-  const mockInteractions: QuestionInteraction[] = [
-    {
-      id: "int-1",
-      userId: "user-789",
-      userName: "Sara Timóteo",
-      userAvatar: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-      interactionType: "me_too",
-      isPublicVisible: true,
-      allowsContact: true,
-      isConnected: false,
-      labels: ["#Remember", "#WeMet"],
-      createdAt: "2025-01-15T11:30:00Z",
-    },
-    {
-      id: "int-2", 
-      userId: "user-101",
-      userName: "Adrian Silva",
-      userAvatar: "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-      interactionType: "me_too",
-      isPublicVisible: true,
-      allowsContact: true,
-      isConnected: false,
-      labels: ["#Remember", "#WeMet"],
-      createdAt: "2025-01-15T10:45:00Z",
-    },
-    {
-      id: "int-3",
-      userId: "user-202",
-      userName: "André Duarte",
-      userAvatar: "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-      interactionType: "can_help",
-      isPublicVisible: true,
-      allowsContact: true,
-      isConnected: false,
-      labels: ["#Remember", "#WeMet"],
-      createdAt: "2025-01-15T09:20:00Z",
-    },
-    {
-      id: "int-4",
-      userId: "user-303",
-      userName: "Eric Martinez",
-      userAvatar: "https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-      interactionType: "can_help",
-      isPublicVisible: true,
-      allowsContact: false,
-      isConnected: false,
-      labels: ["#Remember", "#WeMet"],
-      createdAt: "2025-01-15T08:15:00Z",
-    },
-    {
-      id: "int-5",
-      userId: "user-404",
-      userName: "Luis Roquette Valdez",
-      userAvatar: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1",
-      interactionType: "can_help",
-      isPublicVisible: true,
-      allowsContact: true,
-      isConnected: true,
-      labels: ["#Remember", "#WeMet"],
-      createdAt: "2025-01-15T07:30:00Z",
-    },
-  ];
-
-  // Count of private help offers
-  const privateHelpCount = 3;
-
-  // Filter interactions by type
-  const meTooInteractions = mockInteractions.filter(
-    interaction => interaction.interactionType === "me_too"
-  );
-  
-  const canHelpInteractions = mockInteractions.filter(
-    interaction => interaction.interactionType === "can_help" && interaction.isPublicVisible
-  );
+  const isOwnQuestion = question?.user_id === user?.id;
 
   /**
    * Enhanced scroll handling for sticky tabs
@@ -214,7 +161,7 @@ export const QuestionDetails: React.FC = () => {
       if (tabsRef.current && tabsPlaceholderRef.current) {
         const tabsTop = tabsPlaceholderRef.current.getBoundingClientRect().top;
         const shouldBeSticky = tabsTop <= 100; // Account for header height + padding
-        
+
         if (shouldBeSticky !== isTabsSticky) {
           setIsTabsSticky(shouldBeSticky);
         }
@@ -224,6 +171,28 @@ export const QuestionDetails: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isTabsSticky]);
+
+
+  useEffect(() => {
+    if (!getQuestionQuery.isLoading && getQuestionQuery.data) {
+      // @ts-ignore
+      setQuestion(getQuestionQuery.data.data);
+    }
+  }, [getQuestionQuery.isLoading]);
+
+  useEffect(() => {
+    if (!getMeTooInteractionQuery.isLoading && getMeTooInteractionQuery.data) {
+      // @ts-ignore
+      setMeTooInteractions(getMeTooInteractionQuery.data.data);
+    }
+  }, [getMeTooInteractionQuery.isLoading]);
+
+  useEffect(() => {
+    if (!getIcanHelpQuery.isLoading && getIcanHelpQuery.data) {
+      // @ts-ignore
+      setIcanHelpInteractions(getIcanHelpQuery.data.data);
+    }
+  }, [getIcanHelpQuery.isLoading]);
 
   /**
    * Handle back navigation
@@ -237,26 +206,26 @@ export const QuestionDetails: React.FC = () => {
    */
   const handleReportSubmit = async () => {
     if (!reportText.trim()) return;
-    
+
     setIsSubmittingReport(true);
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       console.log("Report submitted:", {
         questionId: question?.id,
         reportText: reportText.trim(),
         reportedBy: user?.id,
         timestamp: new Date().toISOString(),
       });
-      
+
       setReportText("");
       setIsReportDialogOpen(false);
-      
+
       // TODO: Show toast notification instead of alert
       alert("Report submitted successfully. Thank you for helping keep our community safe.");
-      
+
     } catch (error) {
       console.error("Failed to submit report:", error);
       alert("Failed to submit report. Please try again.");
@@ -270,7 +239,7 @@ export const QuestionDetails: React.FC = () => {
    */
   const handleUpvote = () => {
     if (!user || !question) return;
-    
+
     if (question.isUpvoted) {
       console.log("Delete upvote interaction for question:", question.id);
     } else {
@@ -295,7 +264,7 @@ export const QuestionDetails: React.FC = () => {
 
   const handleMeToo = () => {
     if (!user || !question) return;
-    
+
     if (question.isMeToo) {
       console.log("Delete me too interaction for question:", question.id);
     } else {
@@ -320,7 +289,7 @@ export const QuestionDetails: React.FC = () => {
 
   const handleBookmark = () => {
     if (!user || !question) return;
-    
+
     if (question.isBookmarked) {
       console.log("Delete bookmark interaction for question:", question.id);
     } else {
@@ -345,15 +314,15 @@ export const QuestionDetails: React.FC = () => {
 
   const handleCanHelp = () => {
     if (!user || !question) return;
-    
+
     // Generate thread ID for this help conversation
     const threadId = `help-${question.id}-${user.id}`;
-    
+
     // Check if there's already a thread with messages (not just preview)
     const existingThread = chatThreads.find(thread => thread.id === threadId);
     const threadMessages = messages[threadId] || [];
     const hasActualMessages = threadMessages.some(msg => msg.type !== "preview" && msg.senderId === user.id);
-    
+
     if (existingThread && hasActualMessages) {
       // Navigate to existing chat thread without question parameter
       navigate(`/chat/${threadId}`);
@@ -374,12 +343,12 @@ export const QuestionDetails: React.FC = () => {
 
   const handleChatClick = (interaction: QuestionInteraction) => {
     if (!user || !question) return;
-    
-    const existingThread = chatThreads.find(thread => 
-      thread.participants.includes(user.id) && 
+
+    const existingThread = chatThreads.find(thread =>
+      thread.participants.includes(user.id) &&
       thread.participants.includes(interaction.userId)
     );
-    
+
     if (existingThread) {
       navigate(`/chat/${existingThread.id}`);
     } else {
@@ -398,11 +367,11 @@ export const QuestionDetails: React.FC = () => {
    * Enhanced user interaction item renderer
    */
   const renderUserInteraction = (interaction: QuestionInteraction) => (
-    <div 
+    <div
       key={interaction.id}
       className="interaction-card flex items-center justify-between p-4 hover:bg-gray-50/80 transition-all duration-200 ease-out border-b border-gray-100/50 last:border-b-0"
     >
-      <div 
+      <div
         className="flex items-center gap-3 flex-1 cursor-pointer group"
         onClick={() => handleUserProfileClick(interaction.userId)}
       >
@@ -418,16 +387,16 @@ export const QuestionDetails: React.FC = () => {
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
           )}
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="font-semibold text-gray-900 group-hover:text-gray-700 transition-colors truncate">
               {interaction.userName}
             </span>
             {interaction.labels.map((label, index) => (
-              <Badge 
+              <Badge
                 key={index}
-                variant="outline" 
+                variant="outline"
                 className="text-xs bg-blue-50 border-blue-200 text-blue-700 px-2 py-0.5"
               >
                 {label}
@@ -439,7 +408,7 @@ export const QuestionDetails: React.FC = () => {
           </p>
         </div>
       </div>
-      
+
       {/* Enhanced chat button */}
       {interaction.allowsContact && (
         <Button
@@ -469,7 +438,7 @@ export const QuestionDetails: React.FC = () => {
             <p className="text-gray-600 mb-6">
               This question may have been removed or doesn't exist.
             </p>
-            <Button 
+            <Button
               onClick={handleBackClick}
               className="w-full bg-[#3ec6c6] hover:bg-[#2ea5a5] text-white"
             >
@@ -481,14 +450,14 @@ export const QuestionDetails: React.FC = () => {
     );
   }
 
-  const timeAgo = formatDistanceToNow(new Date(question.createdAt), { addSuffix: true });
+  const timeAgo = formatDistanceToNow(new Date(question.created_at), { addSuffix: true });
 
   return (
     <>
       <style>{customStyles}</style>
-      <div className="bg-[#f0efeb] min-h-screen">
+      <div className="bg-[#f0efeb] min-h-screen px-2">
         {/* Enhanced Header with better shadows and typography */}
-        <header className="fixed top-0 left-0 right-0 z-40 flex w-full h-[100px] items-center justify-between pt-12 pb-4 px-4 bg-[#f0efeb]/95 backdrop-blur-lg border-b border-gray-200/50">
+        <header className="flex w-full h-[90px] items-center justify-between pt-5 pb-0 bg-[#f0efeb]">
           <Button
             variant="ghost"
             size="icon"
@@ -497,23 +466,23 @@ export const QuestionDetails: React.FC = () => {
           >
             <ArrowLeftIcon className="w-5 h-5 text-gray-700" />
           </Button>
-          
+
           <div className="flex-1" />
-          
+
           <div className="flex items-center gap-2">
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               onClick={handleBookmark}
               className={`w-10 h-10 rounded-full p-0 transition-all duration-200 ${
-                question?.isBookmarked 
-                  ? "text-yellow-600 bg-yellow-50 hover:bg-yellow-100" 
+                question?.is_
+                  ? "text-yellow-600 bg-yellow-50 hover:bg-yellow-100"
                   : "text-gray-600 hover:bg-gray-100/80"
               }`}
             >
               <BookmarkIcon className="w-5 h-5" fill={question?.isBookmarked ? "currentColor" : "none"} />
             </Button>
-            
+             */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -527,7 +496,7 @@ export const QuestionDetails: React.FC = () => {
               <DropdownMenuContent align="end" className="w-48 shadow-lg border-gray-200">
                 <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
                   <DialogTrigger asChild>
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onSelect={(e) => e.preventDefault()}
                       className="text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer"
                     >
@@ -542,7 +511,7 @@ export const QuestionDetails: React.FC = () => {
                         Help us maintain a safe and respectful community. Please provide details about why you're reporting this question.
                       </DialogDescription>
                     </DialogHeader>
-                    
+
                     <div className="px-6 pb-4">
                       <textarea
                         value={reportText}
@@ -561,7 +530,7 @@ export const QuestionDetails: React.FC = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     <DialogFooter className="px-6 py-4 bg-gray-50 border-t border-gray-100 gap-3">
                       <Button
                         variant="outline"
@@ -597,7 +566,7 @@ export const QuestionDetails: React.FC = () => {
         </header>
 
         {/* Enhanced Question Content with better spacing and shadows */}
-        <div className="question-details-card pt-[100px]">
+        <div className="question-details-card">
           <Card className="w-full bg-white border-none question-content-shadow">
             <CardContent className="pt-[20px] px-4 pb-4 space-y-[10px]">
               {/* Enhanced Header with better typography */}
@@ -605,23 +574,23 @@ export const QuestionDetails: React.FC = () => {
                 <div className="flex items-center gap-3 flex-1">
                   <Avatar className="w-10 h-10 ring-2 ring-gray-100" onClick={handleAuthorClick}>
                     <AvatarImage
-                      src={question.isAnonymous ? undefined : (question.authorAvatar || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1")}
-                      alt={question.isAnonymous ? "Anonymous" : question.authorName}
+                      src={question.is_anonymous ? undefined : (question.user.profile_picture || "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1")}
+                      alt={question.is_anonymous ? "Anonymous" : question.user.full_name}
                       className="object-cover"
                     />
                     <AvatarFallback className="bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 font-semibold">
-                      {question.isAnonymous ? "?" : question.authorName[0]}
+                      {question.is_anonymous ? "?" : question.user.full_name[0]}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="flex flex-col">
                     <span className="font-semibold text-gray-900 text-base" style={{ fontSize: '16px' }}>
-                      {question.isAnonymous ? "Anonymous" : question.authorName}
+                      {question.is_anonymous ? "Anonymous" : question.user.full_name}
                     </span>
                     <div className="flex items-center gap-1.5 text-gray-500" style={{ fontSize: '12px' }}>
-                      {question.eventName && (
+                      {event?.name && (
                         <>
-                          <span className="font-medium">{question.eventName}</span>
+                          <span className="font-medium">{event.name}</span>
                           <span>•</span>
                         </>
                       )}
@@ -638,46 +607,13 @@ export const QuestionDetails: React.FC = () => {
                     {question.title}
                   </h1>
                   <p className="text-gray-700 text-base leading-relaxed">
-                    {question.description}
+                    {question.content}
                   </p>
                 </div>
 
-                {/* Tags with specific styling */}
-                <div className="flex items-start gap-2 flex-wrap">
-                  <span 
-                    className="text-[#5B5B5B]" 
-                    style={{ 
-                      fontFamily: 'Fira Sans, sans-serif', 
-                      fontSize: '12px',
-                      fontWeight: 'normal'
-                    }}
-                  >
-                    #Tech
-                  </span>
-                  <span 
-                    className="text-[#5B5B5B]" 
-                    style={{ 
-                      fontFamily: 'Fira Sans, sans-serif', 
-                      fontSize: '12px',
-                      fontWeight: 'normal'
-                    }}
-                  >
-                    #AI
-                  </span>
-                  <span 
-                    className="text-[#5B5B5B]" 
-                    style={{ 
-                      fontFamily: 'Fira Sans, sans-serif', 
-                      fontSize: '12px',
-                      fontWeight: 'normal'
-                    }}
-                  >
-                    #BuildInPublic
-                  </span>
-                </div>
 
                 {/* Enhanced Image with better aspect ratio and shadows */}
-                {question.image && (
+                {/* {question.image && (
                   <div className="relative h-64 w-full rounded-xl overflow-hidden shadow-md">
                     <img
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
@@ -685,61 +621,59 @@ export const QuestionDetails: React.FC = () => {
                       src={question.image}
                     />
                   </div>
-                )}
+                )} */}
               </div>
-                {/* Action Buttons - Only show for other users' questions */}
-                {!isOwnQuestion && (
-                  <div className="flex items-center justify-between gap-3 pt-2">
-                    {/* Upvote */}
-                    <Button
-                      variant="outline"
-                      onClick={handleUpvote}
-                      disabled={createInteractionMutation.isPending}
-                      className={`action-button h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${
-                        question.isUpvoted ? "bg-blue-50 border-blue-200 text-blue-600" : ""
+              {/* Action Buttons - Only show for other users' questions */}
+              {!isOwnQuestion && (
+                <div className="flex items-center justify-between gap-3 pt-2">
+                  {/* Upvote */}
+                  <Button
+                    variant="outline"
+                    onClick={handleUpvote}
+                    disabled={createInteractionMutation.isPending}
+                    className={`action-button h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${question.uplifts_count > 0 ? "bg-blue-50 border-blue-200 text-blue-600" : ""
                       }`}
-                    >
-                      <ArrowUpIcon className={`w-4 h-4 mr-2 ${question.isUpvoted ? "text-blue-600" : ""}`} />
-                      <span className="font-medium text-sm">
-                        {question.upvotes}
-                      </span>
-                    </Button>
+                  >
+                    <ArrowUpIcon className={`w-4 h-4 mr-2 ${question.uplifts_count > 0 ? "text-blue-600" : ""}`} />
+                    <span className="font-medium text-sm">
+                      {question.uplifts_count}
+                    </span>
+                  </Button>
 
-                    {/* Me Too */}
-                    <Button
-                      variant="outline"
-                      onClick={handleMeToo}
-                      disabled={createInteractionMutation.isPending}
-                      className={`action-button h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${
-                        question.isMeToo ? "bg-orange-50 text-orange-600" : ""
+                  {/* Me Too */}
+                  <Button
+                    variant="outline"
+                    onClick={handleMeToo}
+                    disabled={createInteractionMutation.isPending}
+                    className={`action-button h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 transition-colors ${question.me_too_count > 0 ? "bg-orange-50 text-orange-600" : ""
                       }`}
-                    >
-                      <img 
-                      src="/Metoo (1).svg" 
-                        alt="Me too" 
-                        className={`w-6 h-6 mr-1 ${question.isMeToo ? "filter-orange" : ""}`} 
-                      />
-                      <span className="font-normal text-sm mr-1">Me too</span>
-                      <span className="font-medium text-sm">{question.meTooCount}</span>
-                    </Button>
+                  >
+                    <img
+                      src="/Metoo (1).svg"
+                      alt="Me too"
+                      className={`w-6 h-6 mr-1 ${question.me_too_count > 0 ? "filter-orange" : ""}`}
+                    />
+                    <span className="font-normal text-sm mr-1">Me too</span>
+                    <span className="font-medium text-sm">{question.me_too_count}</span>
+                  </Button>
 
-                    {/* I Can Help */}
-                    <Button
-                      variant="outline"
-                      onClick={handleCanHelp}
-                      disabled={createInteractionMutation.isPending}
-                      className="action-button h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors"
-                    >
-                      <img 
-                      src="./I Can Help.svg" 
-                        alt="I can help" 
-                        className="w-6 h-6 mr-1" 
-                      />
-                      <span className="font-normal text-sm mr-1">I can help</span>
-                      <span className="font-medium text-sm">{question.canHelpCount}</span>
-                    </Button>
-                  </div>
-                )}
+                  {/* I Can Help */}
+                  <Button
+                    variant="outline"
+                    onClick={handleCanHelp}
+                    disabled={createInteractionMutation.isPending}
+                    className="action-button h-[38px] px-3 py-[5px] rounded-[25px] bg-white shadow-[0px_2px_4px_#0000001a] border-0 hover:bg-green-50 hover:text-green-600 transition-colors"
+                  >
+                    <img
+                      src=" /I Can Help.svg"
+                      alt="I can help"
+                      className="w-6 h-6 mr-1"
+                    />
+                    <span className="font-normal text-sm mr-1">I can help</span>
+                    <span className="font-medium text-sm">{question.i_can_help_count}</span>
+                  </Button>
+                </div>
+              )}
 
             </CardContent>
           </Card>
@@ -748,56 +682,55 @@ export const QuestionDetails: React.FC = () => {
         {/* Enhanced Tabs with better sticky behavior and design */}
         <div ref={tabsPlaceholderRef} className="h-0" />
 
-        <div 
+        <div
           ref={tabsRef}
-          className={`${
-            isTabsSticky 
-              ? 'fixed top-[100px] left-0 right-0 z-30 sticky-tabs shadow-sm' 
-              : 'relative bg-[#f0efeb] px-4'
-          } transition-all duration-300 pt-[10px]`}
+          className={`${isTabsSticky
+            ? 'fixed top-[100px] left-0 right-0 z-30 sticky-tabs shadow-sm'
+            : 'relative bg-[#f0efeb] px-4'
+            } transition-all duration-300 pt-[10px]`}
         >
-          <Tabs 
-            value={activeTab} 
+          <Tabs
+            value={activeTab}
             onValueChange={(value) => setActiveTab(value as "me_too" | "can_help")}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-2 bg-white rounded-[50px] shadow-sm border border-gray-100 p-1" style={{ marginLeft: '20px', marginRight: '20px', width: 'calc(100% - 40px)', margin: '0 auto' }}>
-              <TabsTrigger 
-                value="me_too" 
+            <TabsList className="grid grid-cols-2 bg-white rounded-[50px] shadow-sm border border-gray-100 p-0 px-1 mx-5" >
+              <TabsTrigger
+                value="me_too"
                 className="flex items-center justify-center data-[state=active]:bg-[#F9DF8E] data-[state=active]:text-gray-900 data-[state=active]:shadow-sm rounded-[50px] font-semibold transition-all duration-200"
                 style={{ fontSize: 'min(14px, 3.5vw)', gap: '10px' }}
               >
-                <img 
-                  src="/Metoo (1).svg" 
-                  alt="Me too" 
-                  className="w-8 h-8" 
-                  style={{ 
-                    width: activeTab === "me_too" ? "16.16px" : "16px", 
-                    height: activeTab === "me_too" ? "16.16px" : "16px" 
-                  }} 
+                <img
+                  src="/Metoo (1).svg"
+                  alt="Me too"
+                  className="w-8 h-8"
+                  style={{
+                    width: activeTab === "me_too" ? "16.16px" : "16px",
+                    height: activeTab === "me_too" ? "16.16px" : "16px"
+                  }}
                 />
                 <span>Me too</span>
                 <Badge variant="secondary" className="ml-1 bg-gray-100 text-gray-700 text-xs px-2">
-                  {meTooInteractions.length}
+                  {meTooCount}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="can_help"
                 className="flex items-center justify-center data-[state=active]:bg-[#F9DF8E] data-[state=active]:text-gray-900 data-[state=active]:shadow-sm rounded-[50px] font-semibold transition-all duration-200"
                 style={{ fontSize: 'min(14px, 3.5vw)', gap: '10px' }}
               >
-                <img 
-                  src="./I Can Help.svg" 
-                  alt="I can help" 
-                  className="w-4 h-4" 
-                  style={{ 
-                    width: activeTab === "can_help" ? "16.16px" : "16px", 
-                    height: activeTab === "can_help" ? "16.16px" : "16px" 
-                  }} 
+                <img
+                  src="/I Can Help.svg"
+                  alt="I can help"
+                  className="w-4 h-4"
+                  style={{
+                    width: activeTab === "can_help" ? "16.16px" : "16px",
+                    height: activeTab === "can_help" ? "16.16px" : "16px"
+                  }}
                 />
                 <span>I can help</span>
                 <Badge variant="secondary" className="ml-1 bg-gray-100 text-gray-700 text-xs px-2">
-                  {canHelpInteractions.length + privateHelpCount}
+                  {iCanHelpCount}
                 </Badge>
               </TabsTrigger>
             </TabsList>
@@ -806,243 +739,103 @@ export const QuestionDetails: React.FC = () => {
 
         {/* Enhanced Content with better empty states and animations */}
         <div className="pb-[30px]">
-          <div className="mt-4 bg-white overflow-hidden">
+          <div className="mt-4 bg-white overflow-hidden rounded-2xl">
             <CardContent className="p-0">
               {activeTab === "me_too" && (
                 <div>
-                  {/* Display 4 rows of people who clicked "Me too" */}
+                  {/* Display people who clicked "Me too" */}
                   <div>
-                    {/* Row 1 - Sara Timóteo with #Remember tag */}
-                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-11 h-11">
-                          <AvatarImage src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Sara Timóteo" />
-                          <AvatarFallback>ST</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">Sara Timóteo</div>
-                          <div 
-                            className="text-[#5B5B5B]" 
-                            style={{ 
-                              fontFamily: 'Fira Sans, sans-serif', 
-                              fontSize: '12px',
-                              fontWeight: 'normal'
-                            }}
-                          >
-                            #Remember
+                    {Array.isArray(meTooInteractions) && meTooInteractions.length > 0 ? (
+                      meTooInteractions.map((user, idx) => (
+                        <div
+                          key={user.id || idx}
+                          className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100"
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <Avatar className="w-11 h-11">
+                              <AvatarImage src={user.profile_picture} alt={user.full_name} />
+                              <AvatarFallback>
+                                {user.full_name
+                                  ? user.full_name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .toUpperCase()
+                                  : ""}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="font-semibold text-gray-900">{user.full_name}</div>
+                              <div
+                                className="text-[#5B5B5B]"
+                                style={{
+                                  fontFamily: 'Fira Sans, sans-serif',
+                                  fontSize: '12px',
+                                  fontWeight: 'normal'
+                                }}
+                              >
+                                {user.labels ? user.labels.join(" ") : ""}
+                              </div>
+                            </div>
                           </div>
+                          <img
+                            src="/message-question.svg"
+                            alt="Message"
+                            className="w-5 h-5 cursor-pointer"
+                            // Optionally add onClick to start chat
+                          />
                         </div>
-                      </div>
-                      <img 
-                        src="/message-question.svg" 
-                        alt="Message" 
-                        className="w-5 h-5 cursor-pointer" 
-                      />
-                    </div>
-
-                    {/* Row 2 - Adrian Silva with #WeMet tag */}
-                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-11 h-11">
-                          <AvatarImage src="https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Adrian Silva" />
-                          <AvatarFallback>AS</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">Adrian Silva</div>
-                          <div 
-                            className="text-[#5B5B5B]" 
-                            style={{ 
-                              fontFamily: 'Fira Sans, sans-serif', 
-                              fontSize: '12px',
-                              fontWeight: 'normal'
-                            }}
-                          >
-                            #WeMet
-                          </div>
-                        </div>
-                      </div>
-                      <img 
-                        src="/message-question.svg" 
-                        alt="Message" 
-                        className="w-5 h-5 cursor-pointer" 
-                      />
-                    </div>
-
-                    {/* Row 3 - André Duarte with #Remember #WeMet tags */}
-                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-11 h-11">
-                          <AvatarImage src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="André Duarte" />
-                          <AvatarFallback>AD</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">André Duarte</div>
-                          <div 
-                            className="text-[#5B5B5B]" 
-                            style={{ 
-                              fontFamily: 'Fira Sans, sans-serif', 
-                              fontSize: '12px',
-                              fontWeight: 'normal'
-                            }}
-                          >
-                            #Remember #WeMet
-                          </div>
-                        </div>
-                      </div>
-                      <img 
-                        src="/message-question.svg" 
-                        alt="Message" 
-                        className="w-5 h-5 cursor-pointer" 
-                      />
-                    </div>
-
-                    {/* Row 4 - Eric Martinez with #Remember tag */}
-                    <div className="flex items-center justify-between py-3.5 px-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-11 h-11">
-                          <AvatarImage src="https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Eric Martinez" />
-                          <AvatarFallback>EM</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">Eric Martinez</div>
-                          <div 
-                            className="text-[#5B5B5B]" 
-                            style={{ 
-                              fontFamily: 'Fira Sans, sans-serif', 
-                              fontSize: '12px',
-                              fontWeight: 'normal'
-                            }}
-                          >
-                            #Remember
-                          </div>
-                        </div>
-                      </div>
-                      <img 
-                        src="/message-question.svg" 
-                        alt="Message" 
-                        className="w-5 h-5 cursor-pointer" 
-                      />
-                    </div>
+                      ))
+                    ) : (
+                      <div className="p-12 text-center text-gray-500">No one has clicked "Me too" yet.</div>
+                    )}
                   </div>
                 </div>
               )}
 
               {activeTab === "can_help" && (
                 <div>
-                  {canHelpInteractions.length > 0 ? (
-                    <div>
-                    {/* Row 1 - Luis Roquette Valdez with #Remember tag */}
-                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-11 h-11">
-                          <AvatarImage src="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Luis Roquette Valdez" />
-                          <AvatarFallback>LV</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">Luis Roquette Valdez</div>
-                          <div 
-                            className="text-[#5B5B5B]" 
-                            style={{ 
-                              fontFamily: 'Fira Sans, sans-serif', 
-                              fontSize: '12px',
-                              fontWeight: 'normal'
-                            }}
-                          >
-                            #Remember
+                  {Array.isArray(iCanHelpInteractions) && iCanHelpInteractions.length > 0 ? (
+                    iCanHelpInteractions.map((user, idx) => (
+                      <div
+                        key={user.id || idx}
+                        className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <Avatar className="w-11 h-11">
+                            <AvatarImage src={user.profile_picture} alt={user.full_name} />
+                            <AvatarFallback>
+                              {user.full_name
+                                ? user.full_name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                                : ""}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900">{user.full_name}</div>
+                            <div
+                              className="text-[#5B5B5B]"
+                              style={{
+                                fontFamily: 'Fira Sans, sans-serif',
+                                fontSize: '12px',
+                                fontWeight: 'normal'
+                              }}
+                            >
+                              {user.labels ? user.labels.join(" ") : ""}
+                            </div>
                           </div>
                         </div>
+                        <img
+                          src="/message-question.svg"
+                          alt="Message"
+                          className="w-5 h-5 cursor-pointer"
+                          // Optionally add onClick to start chat
+                        />
                       </div>
-                      <img 
-                        src="/message-question.svg" 
-                        alt="Message" 
-                        className="w-5 h-5 cursor-pointer" 
-                      />
-                    </div>
-
-                    {/* Row 2 - Maria Santos with #WeMet tag */}
-                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-11 h-11">
-                          <AvatarImage src="https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Maria Santos" />
-                          <AvatarFallback>MS</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">Maria Santos</div>
-                          <div 
-                            className="text-[#5B5B5B]" 
-                            style={{ 
-                              fontFamily: 'Fira Sans, sans-serif', 
-                              fontSize: '12px',
-                              fontWeight: 'normal'
-                            }}
-                          >
-                            #WeMet
-                          </div>
-                        </div>
-                      </div>
-                      <img 
-                        src="/message-question.svg" 
-                        alt="Message" 
-                        className="w-5 h-5 cursor-pointer" 
-                      />
-                    </div>
-
-                    {/* Row 3 - João Silva with #Remember #WeMet tags */}
-                    <div className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-11 h-11">
-                          <AvatarImage src="https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="João Silva" />
-                          <AvatarFallback>JS</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">João Silva</div>
-                          <div 
-                            className="text-[#5B5B5B]" 
-                            style={{ 
-                              fontFamily: 'Fira Sans, sans-serif', 
-                              fontSize: '12px',
-                              fontWeight: 'normal'
-                            }}
-                          >
-                            #Remember #WeMet
-                          </div>
-                        </div>
-                      </div>
-                      <img 
-                        src="/message-question.svg" 
-                        alt="Message" 
-                        className="w-5 h-5 cursor-pointer" 
-                      />
-                    </div>
-
-                    {/* Row 4 - Ana Costa with #Remember tag */}
-                    <div className="flex items-center justify-between py-3.5 px-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-11 h-11">
-                          <AvatarImage src="https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&dpr=1" alt="Ana Costa" />
-                          <AvatarFallback>AC</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">Ana Costa</div>
-                          <div 
-                            className="text-[#5B5B5B]" 
-                            style={{ 
-                              fontFamily: 'Fira Sans, sans-serif', 
-                              fontSize: '12px',
-                              fontWeight: 'normal'
-                            }}
-                          >
-                            #Remember
-                          </div>
-                        </div>
-                      </div>
-                      <img 
-                        src="/message-question.svg" 
-                        alt="Message" 
-                        className="w-5 h-5 cursor-pointer" 
-                      />
-                    </div>
-                    </div>
+                    ))
                   ) : (
                     <div className="p-12 text-center">
                       <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1052,7 +845,7 @@ export const QuestionDetails: React.FC = () => {
                       <p className="text-gray-600 max-w-sm mx-auto leading-relaxed">
                         It only takes one person to show up. For{" "}
                         <span className="font-semibold text-gray-900">
-                          {question.isAnonymous ? "them" : question.authorName}
+                            {question.is_anonymous ? "them" : question.user.full_name.split(" ")[0]}
                         </span>
                         , that might be you.
                       </p>
@@ -1071,15 +864,15 @@ export const QuestionDetails: React.FC = () => {
             variant="ghost"
             className="flex flex-col items-center justify-center p-3 hover:bg-gray-50 rounded-lg transition-colors"
           >
-            <img 
-              src="/Icon_suggest a feature.png" 
-              alt="Suggest a feature" 
-              className="w-6 h-6 mb-[5px]" 
+            <img
+              src="/Icon_suggest a feature.png"
+              alt="Suggest a feature"
+              className="w-6 h-6 mb-[5px]"
             />
-            <span 
+            <span
               className="text-[#404040]"
-              style={{ 
-                fontFamily: 'Livvic, sans-serif', 
+              style={{
+                fontFamily: 'Livvic, sans-serif',
                 fontSize: '14px'
               }}
             >

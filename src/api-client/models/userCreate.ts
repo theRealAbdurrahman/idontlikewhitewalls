@@ -17,6 +17,7 @@ export interface UserCreate {
   email: string;
   first_name: string;
   last_name: string;
+  full_name: string;
   profile_picture: UserCreateProfilePicture;
   bio: UserCreateBio;
   title: UserCreateTitle;
