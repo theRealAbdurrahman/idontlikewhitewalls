@@ -198,11 +198,12 @@ export const QuestionDetails: React.FC = () => {
   }, [getQuestionQuery.isLoading]);
 
   useEffect(() => {
+    // TODO: this fires when I click uplift,they should not depend on each other
     if (!getMeTooInteractionQuery.isLoading && getMeTooInteractionQuery.data) {
       // @ts-ignore
       setMeTooInteractions(getMeTooInteractionQuery.data.data);
     }
-  }, [getMeTooInteractionQuery.isLoading]);
+  }, [getMeTooInteractionQuery.isLoading, getMeTooInteractionQuery.isRefetching]);
 
   useEffect(() => {
     if (!getIcanHelpQuery.isLoading && getIcanHelpQuery.data) {
@@ -255,6 +256,7 @@ export const QuestionDetails: React.FC = () => {
    * Enhanced interaction handlers with animations
    */
   const handleUplift = () => {
+    debugger;
     if (!user || !question) return;
     // TODO: implement delete upvote?
     if (question.isUpvoted) {
@@ -385,7 +387,7 @@ export const QuestionDetails: React.FC = () => {
 
 
   // Handle edge cases
-  if (!question) {
+  if (!question && (!getQuestionQuery.isLoading && !getQuestionQuery.isRefetching)) {
     return (
       <div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
@@ -410,7 +412,23 @@ export const QuestionDetails: React.FC = () => {
       </div>
     );
   }
-
+  if (getQuestionQuery.isLoading || getQuestionQuery.isRefetching) {
+    return (<div className="min-h-screen bg-[#f0efeb] flex items-center justify-center p-6">
+      <Card className="w-full max-w-md">
+        <CardContent className="p-8 text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MessageCircleIcon className="w-8 h-8 text-gray-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Loading...
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Please wait while we getting the question details.
+          </p>
+        </CardContent>
+      </Card>
+    </div>);
+  }
   const timeAgo = formatDistanceToNow(new Date(question.created_at), { addSuffix: true });
 
   return (
@@ -592,7 +610,7 @@ export const QuestionDetails: React.FC = () => {
                     variant="outline"
                     onClick={handleUplift}
                     disabled={createInteractionMutation.isPending}
-                    className={`action-button h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${question.uplifts_count > 0 ? "bg-blue-50 border-blue-200 text-blue-600" : ""
+                    className={`action-button h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${upliftCount > 0 ? "bg-blue-50 border-blue-200 text-blue-600" : ""
                       }`}
                   >
                     <ArrowUpIcon className={`w-4 h-4 mr-2 ${upliftCount > 0 ? "text-blue-600" : ""}`} />
