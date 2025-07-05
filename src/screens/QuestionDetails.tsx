@@ -44,6 +44,7 @@ import { useAppStore } from "../stores/appStore";
 import { useCacheManager } from "../hooks/useCacheManager";
 import { useEvents } from "../hooks/useEvents";
 import { UserProfileResponse } from "../models";
+import { useQueryClient } from "@tanstack/react-query";
 
 /**
  * Interface for users who interacted with the question
@@ -105,6 +106,20 @@ const customStyles = `
   }
 `;
 
+
+
+
+/**
+ * 
+ * TODOS:
+ * - I can help button styles when user has already clicked it
+ * - toggle interactions (when user wants to change their mind)
+ * - improve loading states and error handling (now sometimes the interactions doesn't show and need to refresh)
+ * - or there is a delay until the interactions show (need loading state)
+ * - connect the message button to the chat (when someone interacts user should be able to start chat with them)
+ * - prevent same user to interact multiple times
+ * - update interactions in the UI immediately after they occur
+ */
 /**
  * QuestionDetails screen component with pixel-perfect design implementation
  */
@@ -115,6 +130,8 @@ export const QuestionDetails: React.FC = () => {
   const { chatThreads, messages } = useAppStore();
   const { afterInteraction } = useCacheManager();
   const { getEventByID } = useEvents();
+  const queryClient = useQueryClient();
+
 
   // Local state
   const [activeTab, setActiveTab] = useState<"me_too" | "can_help">("me_too");
@@ -123,8 +140,8 @@ export const QuestionDetails: React.FC = () => {
   const [reportText, setReportText] = useState("");
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [question, setQuestion] = useState<QuestionRead | null>(null);
-  const [meTooInteractions, setMeTooInteractions] = useState<UserProfileResponse | null>(null);
-  const [iCanHelpInteractions, setIcanHelpInteractions] = useState<UserProfileResponse | null>(null);
+  const [meTooInteractions, setMeTooInteractions] = useState<UserProfileResponse[] | null>(null);
+  const [iCanHelpInteractions, setIcanHelpInteractions] = useState<UserProfileResponse[] | null>(null);
 
   // Refs for sticky functionality
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -264,8 +281,9 @@ export const QuestionDetails: React.FC = () => {
 
   const handleMeToo = () => {
     if (!user || !question) return;
-
-    if (question.isMeToo) {
+    const currentUserInteraction = meTooInteractions?.find(interaction => interaction.userId === user.id);
+    if (currentUserInteraction) {
+    // TODO: if user has already clicked me too, then we should delete the interaction here
       console.log("Delete me too interaction for question:", question.id);
     } else {
       createInteractionMutation.mutate({
@@ -278,6 +296,8 @@ export const QuestionDetails: React.FC = () => {
       }, {
         onSuccess: () => {
           console.log("Me too created successfully");
+          queryClient.invalidateQueries({ queryKey: ['meTooInteraction', question.id] });
+
           afterInteraction(question.id);
         },
         onError: (error) => {
@@ -363,65 +383,7 @@ export const QuestionDetails: React.FC = () => {
     }
   };
 
-  /**
-   * Enhanced user interaction item renderer
-   */
-  const renderUserInteraction = (interaction: QuestionInteraction) => (
-    <div
-      key={interaction.id}
-      className="interaction-card flex items-center justify-between p-4 hover:bg-gray-50/80 transition-all duration-200 ease-out border-b border-gray-100/50 last:border-b-0"
-    >
-      <div
-        className="flex items-center gap-3 flex-1 cursor-pointer group"
-        onClick={() => handleUserProfileClick(interaction.userId)}
-      >
-        <div className="relative">
-          <Avatar className="w-12 h-12 ring-2 ring-transparent group-hover:ring-gray-200 transition-all duration-200" onClick={handleAuthorClick}
-          >
-            <AvatarImage src={interaction.userAvatar} alt={interaction.userName} />
-            <AvatarFallback className="bg-gradient-to-br from-gray-100 to-gray-200">
-              {interaction.userName[0]}
-            </AvatarFallback>
-          </Avatar>
-          {interaction.isConnected && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
-          )}
-        </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="font-semibold text-gray-900 group-hover:text-gray-700 transition-colors truncate">
-              {interaction.userName}
-            </span>
-            {interaction.labels.map((label, index) => (
-              <Badge
-                key={index}
-                variant="outline"
-                className="text-xs bg-blue-50 border-blue-200 text-blue-700 px-2 py-0.5"
-              >
-                {label}
-              </Badge>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 font-medium">
-            {formatDistanceToNow(new Date(interaction.createdAt), { addSuffix: true })}
-          </p>
-        </div>
-      </div>
-
-      {/* Enhanced chat button */}
-      {interaction.allowsContact && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handleChatClick(interaction)}
-          className="w-10 h-10 rounded-full text-[#3ec6c6] hover:bg-[#3ec6c6]/10 hover:text-[#2ea5a5] transition-all duration-200 hover:scale-105"
-        >
-          <MessageCircleIcon className="w-5 h-5" />
-        </Button>
-      )}
-    </div>
-  );
 
   // Handle edge cases
   if (!question) {
