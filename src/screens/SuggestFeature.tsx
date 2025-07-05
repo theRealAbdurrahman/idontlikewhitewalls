@@ -87,11 +87,11 @@ export const SuggestFeature: React.FC = () => {
       // Simulate API call to submit feature request
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log("Feature suggestion submitted:", {
-        message: message.trim(),
-        timestamp: new Date().toISOString(),
-        userId: "user-123", // Would come from auth context
-      });
+      // console.log("Feature suggestion submitted:", {
+      //   message: message.trim(),
+      //   timestamp: new Date().toISOString(),
+      //   userId: "user-123", // Would come from auth context
+      // });
       
       toast({
         title: "Thank you for your suggestion!",

@@ -346,7 +346,7 @@ export const Events: React.FC = () => {
       }
     }, {
       onSuccess: () => {
-        console.log("Successfully joined event:", eventId);
+        // console.log("Successfully joined event:", eventId);
         toast({
           title: "Joined event!",
           description: "You're now registered for this event.",
@@ -370,7 +370,7 @@ export const Events: React.FC = () => {
     e.stopPropagation();
     
     // TODO: Implement check-in API call
-    console.log("Toggle check-in for event:", eventId);
+    // console.log("Toggle check-in for event:", eventId);
     toast({
       title: "Checked in!",
       description: "Welcome to the event!",

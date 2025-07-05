@@ -50,7 +50,7 @@ export const useLogtoAuthBridge = () => {
   //         const jwt = await getIdToken();
   //         const claims = await getIdTokenClaims();
 
-  //         console.log('Logto user claims:', claims);
+  //         // console.log('Logto user claims:', claims);
 
   //         if (!claims) {
   //           throw new Error('Failed to get user claims');
@@ -62,12 +62,12 @@ export const useLogtoAuthBridge = () => {
   //           jwt: jwt || '',
   //         };
 
-  //         console.log('Fetching backend user for Logto data:', logtoUserData);
+  //         // console.log('Fetching backend user for Logto data:', logtoUserData);
 
   //         // Get or create user in backend
   //         const backendUser = await signUpAndfetchCurrentUser(logtoUserData);
 
-  //         console.log('Backend user received:', backendUser);
+  //         // console.log('Backend user received:', backendUser);
 
   //         // Store the backend user data in auth store
   //         setCurrentUser(backendUser.data);
@@ -89,7 +89,7 @@ export const useLogtoAuthBridge = () => {
     const jwt = await getIdToken();
     const claims = await getIdTokenClaims();
 
-    console.log('Logto user claims:', claims);
+    // console.log('Logto user claims:', claims);
 
     if (!claims) {
       throw new Error('Failed to get user claims');

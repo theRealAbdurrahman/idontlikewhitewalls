@@ -259,25 +259,25 @@ export const EventDetails: React.FC = () => {
       const eventImageUrl = event.bannerImage || event.image_url || event.image || "";
       setCurrentImageUrl(eventImageUrl);
       
-      console.log('EventDetails Debug:', {
-        eventId: event.id,
-        bannerImage: event.bannerImage,
-        image_url: event.image_url,  
-        image: event.image,
-        finalImageUrl: eventImageUrl,
-        hasAttempted: getGenerationAttempted().has(event.id),
-        isGenerating: isGeneratingImage
-      });
+      // console.log('EventDetails Debug:', {
+      //   eventId: event.id,
+      //   bannerImage: event.bannerImage,
+      //   image_url: event.image_url,
+      //   image: event.image,
+      //   finalImageUrl: eventImageUrl,
+      //   hasAttempted: getGenerationAttempted().has(event.id),
+      //   isGenerating: isGeneratingImage
+      // });
       
       // Only auto-generate if NO image exists anywhere
       const hasAnyImage = eventImageUrl && eventImageUrl.trim() !== "";
       
       if (!hasAnyImage && !isGeneratingImage && !getGenerationAttempted().has(event.id)) {
-        console.log('No image found, starting auto-generation for event:', event.id);
+        // console.log('No image found, starting auto-generation for event:', event.id);
         setGenerationAttempted(event.id);
         handleAutoGenerateImage();
       } else if (hasAnyImage) {
-        console.log('Event has image, skipping generation:', eventImageUrl);
+        // console.log('Event has image, skipping generation:', eventImageUrl);
       }
     }
   }, [event?.id, isGeneratingImage]); // Minimal dependencies
@@ -379,7 +379,7 @@ export const EventDetails: React.FC = () => {
           url: window.location.href,
         });
       } catch (error) {
-        console.log('Error sharing:', error);
+        // console.log('Error sharing:', error);
         handleCopyLink();
       }
     } else {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, set } from "date-fns";
 import {
   MoreVerticalIcon,
   ArrowLeftIcon,
@@ -41,7 +41,6 @@ import {
 } from "../components/ui/dropdown-menu";
 import { useAuth } from "../providers";
 import { useAppStore } from "../stores/appStore";
-import { useCacheManager } from "../hooks/useCacheManager";
 import { useEvents } from "../hooks/useEvents";
 import { UserProfileResponse } from "../models";
 import { useQueryClient } from "@tanstack/react-query";
@@ -128,7 +127,6 @@ export const QuestionDetails: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { chatThreads, messages } = useAppStore();
-  const { afterInteraction } = useCacheManager();
   const { getEventByID } = useEvents();
   const queryClient = useQueryClient();
 
@@ -142,6 +140,7 @@ export const QuestionDetails: React.FC = () => {
   const [question, setQuestion] = useState<QuestionRead | null>(null);
   const [meTooInteractions, setMeTooInteractions] = useState<UserProfileResponse[] | null>(null);
   const [iCanHelpInteractions, setIcanHelpInteractions] = useState<UserProfileResponse[] | null>(null);
+  const [upliftCount, setUpliftCount] = useState<number>(question?.uplifts_count || 0);
 
   // Refs for sticky functionality
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -164,7 +163,7 @@ export const QuestionDetails: React.FC = () => {
   const iCanHelpCount = question?.i_can_help_count || 0;
   const event = getEventByID(question?.event_id!);
 
-  console.log({ question, event });
+  // console.log({ question, event });
 
 
   // Check if this is the current user's own question
@@ -194,6 +193,7 @@ export const QuestionDetails: React.FC = () => {
     if (!getQuestionQuery.isLoading && getQuestionQuery.data) {
       // @ts-ignore
       setQuestion(getQuestionQuery.data.data);
+      setUpliftCount(getQuestionQuery.data.data.uplifts_count || 0);
     }
   }, [getQuestionQuery.isLoading]);
 
@@ -230,12 +230,12 @@ export const QuestionDetails: React.FC = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      console.log("Report submitted:", {
-        questionId: question?.id,
-        reportText: reportText.trim(),
-        reportedBy: user?.id,
-        timestamp: new Date().toISOString(),
-      });
+      // console.log("Report submitted:", {
+      // questionId: question?.id,
+      //   reportText: reportText.trim(),
+      //   reportedBy: user?.id,
+      //   timestamp: new Date().toISOString(),
+      // });
 
       setReportText("");
       setIsReportDialogOpen(false);
@@ -254,9 +254,9 @@ export const QuestionDetails: React.FC = () => {
   /**
    * Enhanced interaction handlers with animations
    */
-  const handleUpvote = () => {
+  const handleUplift = () => {
     if (!user || !question) return;
-
+    // TODO: implement delete upvote?
     if (question.isUpvoted) {
       console.log("Delete upvote interaction for question:", question.id);
     } else {
@@ -269,11 +269,11 @@ export const QuestionDetails: React.FC = () => {
         }
       }, {
         onSuccess: () => {
-          console.log("Upvote created successfully");
-          afterInteraction(question.id);
+          console.log("Uplift created successfully");
+          setUpliftCount((prevCount) => (prevCount || 0) + 1);
         },
         onError: (error) => {
-          console.error("Failed to create upvote:", error);
+          console.error("Failed to create uplift:", error);
         }
       });
     }
@@ -281,9 +281,11 @@ export const QuestionDetails: React.FC = () => {
 
   const handleMeToo = () => {
     if (!user || !question) return;
-    const currentUserInteraction = meTooInteractions?.find(interaction => interaction.userId === user.id);
+
+    // console.log('🚀 Starting MeToo interaction for question:', question.id);
+
+    const currentUserInteraction = meTooInteractions?.find(interaction => interaction.id === user.id);
     if (currentUserInteraction) {
-    // TODO: if user has already clicked me too, then we should delete the interaction here
       console.log("Delete me too interaction for question:", question.id);
     } else {
       createInteractionMutation.mutate({
@@ -294,14 +296,12 @@ export const QuestionDetails: React.FC = () => {
           interaction_type: InteractionType.me_too,
         }
       }, {
-        onSuccess: () => {
-          console.log("Me too created successfully");
-          queryClient.invalidateQueries({ queryKey: ['meTooInteraction', question.id] });
-
-          afterInteraction(question.id);
+        onSuccess: (response) => {
+          console.log("✅ Me too created successfully:", response);
+          getMeTooInteractionQuery.refetch();
         },
         onError: (error) => {
-          console.error("Failed to create me too:", error);
+          console.error("❌ Failed to create me too:", error);
         }
       });
     }
@@ -311,7 +311,7 @@ export const QuestionDetails: React.FC = () => {
     if (!user || !question) return;
 
     if (question.isBookmarked) {
-      console.log("Delete bookmark interaction for question:", question.id);
+      // console.log("Delete bookmark interaction for question:", question.id);
     } else {
       createInteractionMutation.mutate({
         data: {
@@ -322,8 +322,7 @@ export const QuestionDetails: React.FC = () => {
         }
       }, {
         onSuccess: () => {
-          console.log("Bookmark created successfully");
-          afterInteraction(question.id);
+          // console.log("Bookmark created successfully");
         },
         onError: (error) => {
           console.error("Failed to create bookmark:", error);
@@ -356,7 +355,7 @@ export const QuestionDetails: React.FC = () => {
    * Handle user interactions
    */
   const handleUserProfileClick = (userId: string) => {
-    console.log("User profile clicked:", userId);
+    // console.log("User profile clicked:", userId);
 
     navigate(`/profile/${userId}`);
   };
@@ -378,8 +377,8 @@ export const QuestionDetails: React.FC = () => {
   };
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent question click event
-    if (!question?.isAnonymous) {
-      navigate(`/profile/${question?.authorId}`);
+    if (!question?.is_anonymous) {
+      navigate(`/profile/${question?.user.id}`);
     }
   };
 
@@ -591,14 +590,14 @@ export const QuestionDetails: React.FC = () => {
                   {/* Upvote */}
                   <Button
                     variant="outline"
-                    onClick={handleUpvote}
+                    onClick={handleUplift}
                     disabled={createInteractionMutation.isPending}
                     className={`action-button h-[38px] px-3 py-[5px] rounded-[25px] border-2 border-[#f0efeb] bg-transparent transition-colors ${question.uplifts_count > 0 ? "bg-blue-50 border-blue-200 text-blue-600" : ""
                       }`}
                   >
-                    <ArrowUpIcon className={`w-4 h-4 mr-2 ${question.uplifts_count > 0 ? "text-blue-600" : ""}`} />
+                    <ArrowUpIcon className={`w-4 h-4 mr-2 ${upliftCount > 0 ? "text-blue-600" : ""}`} />
                     <span className="font-medium text-sm">
-                      {question.uplifts_count}
+                      {upliftCount}
                     </span>
                   </Button>
 
@@ -710,7 +709,8 @@ export const QuestionDetails: React.FC = () => {
                     {Array.isArray(meTooInteractions) && meTooInteractions.length > 0 ? (
                       meTooInteractions.map((user, idx) => (
                         <div
-                          key={user.id || idx}
+                          // todo: replace with user.id
+                          key={idx}
                           className="flex items-center justify-between py-3.5 px-4 border-b border-gray-100"
                         >
                           <div className="flex items-center gap-3 flex-1">

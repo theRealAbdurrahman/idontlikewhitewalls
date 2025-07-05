@@ -79,12 +79,12 @@ export const getMockToken = (): string => {
  */
 export const logWebcontainerInfo = () => {
   if (isWebcontainerEnv()) {
-    console.log('🔧 Webcontainer Environment Detected', {
-      hostname: window.location.hostname,
-      origin: window.location.origin,
-      href: window.location.href,
-      isDev: import.meta.env?.DEV,
-      nodeEnv: typeof process !== 'undefined' ? process.env?.NODE_ENV : 'browser',
-    });
+    // console.log('🔧 Webcontainer Environment Detected', {
+    //   hostname: window.location.hostname,
+    //   origin: window.location.origin,
+    //   href: window.location.href,
+    //   isDev: import.meta.env?.DEV,
+    //   nodeEnv: typeof process !== 'undefined' ? process.env?.NODE_ENV : 'browser',
+    // });
   }
 };

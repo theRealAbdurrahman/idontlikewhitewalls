@@ -16,7 +16,6 @@ import { Switch } from "../components/ui/switch";
 import { 
   useCreateInteractionApiV1InteractionsPost 
 } from "../api-client/api-client";
-import { useCacheManager } from "../hooks/useCacheManager";
 import { InteractionTarget, InteractionType } from "../api-client/models";
 import { useAppStore } from "../stores/appStore";
 import { useAuth } from "../providers";
@@ -30,7 +29,6 @@ export const Chat: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { chatThreads, messages, addMessage, setMessages, questions, incrementQuestionHelpCount } = useAppStore();
-  const { afterInteraction } = useCacheManager();
   
   const [newMessage, setNewMessage] = useState("");
   const [isPublicVisible, setIsPublicVisible] = useState(true); // Default: ON
@@ -163,10 +161,8 @@ export const Chat: React.FC = () => {
                 interaction_type: InteractionType.i_can_help,
               }
             });
-            console.log("Help interaction recorded successfully");
-            
-            // Invalidate caches to refresh question data and counts
-            afterInteraction(question.id);
+            // console.log("Help interaction recorded successfully");
+
           } catch (error) {
             console.error("Failed to record help interaction:", error);
             // Continue with the flow even if API fails

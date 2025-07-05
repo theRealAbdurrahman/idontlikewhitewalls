@@ -10,7 +10,7 @@ export const Callback = () => {
   useEffect(() => {
     // Only navigate when authentication is complete (not loading)
     if (!isLoading && isAuthenticated && !error) {
-      console.log("Authentication successful");
+      // console.log("Authentication successful");
       // Check if we have a stored path to redirect to
       const redirectPath = sessionStorage.getItem('redirectPath') || '/home';
       // Clear the stored path

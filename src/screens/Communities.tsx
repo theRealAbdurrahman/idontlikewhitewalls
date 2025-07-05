@@ -95,12 +95,12 @@ export const Communities: React.FC = () => {
 
   const handleJoinCommunity = (communityId: string) => {
     // TODO: Implement join community API call
-    console.log("Join community:", communityId);
+    // console.log("Join community:", communityId);
   };
 
   const handleViewCommunity = (communityId: string) => {
     // TODO: Navigate to community details page
-    console.log("View community:", communityId);
+    // console.log("View community:", communityId);
     navigate(`/communities/${communityId}`);
   };
 

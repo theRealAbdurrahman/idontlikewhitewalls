@@ -9,15 +9,15 @@ export const Logout: React.FC = () => {
 
   // Automatically sign out when component mounts
   useEffect(() => {
-    console.log('🚪 Logout page mounted, isAuthenticated:', isAuthenticated);
+    // console.log('🚪 Logout page mounted, isAuthenticated:', isAuthenticated);
 
     if (isAuthenticated && !logoutInitiated.current) {
-      console.log('🔄 Signing out user...');
+      // console.log('🔄 Signing out user...');
       logoutInitiated.current = true;
       signOut();
     } else if (!isAuthenticated && logoutInitiated.current) {
       // User has been signed out, redirect to login after a short delay
-      console.log('✅ User signed out successfully, redirecting to login...');
+      // console.log('✅ User signed out successfully, redirecting to login...');
       const timer = setTimeout(() => {
         navigate('/login');
       }, 1500);
@@ -25,7 +25,7 @@ export const Logout: React.FC = () => {
       return () => clearTimeout(timer);
     } else if (!isAuthenticated && !logoutInitiated.current) {
       // User is already not authenticated, redirect immediately
-      console.log('👤 User already not authenticated, redirecting to login...');
+      // console.log('👤 User already not authenticated, redirecting to login...');
       const timer = setTimeout(() => {
         navigate('/login');
       }, 1000);

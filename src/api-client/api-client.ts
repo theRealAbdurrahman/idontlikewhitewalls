@@ -37,27 +37,27 @@ const axiosInstance = Axios.create({
 // Enhanced request interceptor for authentication and debugging
 axiosInstance.interceptors.request.use(
   async (config) => {
-    console.log(`🚀 API Request interceptor for: ${config.method?.toUpperCase()} ${config.url}`);
-    console.log('🔍 Current headers:', config.headers);
-    console.log('🔍 globalGetAccessToken available:', !!globalGetAccessToken);
-    console.log('🔍 isWebcontainerEnv:', isWebcontainerEnv());
+    // // console.log(`🚀 API Request interceptor for: ${config.method?.toUpperCase()} ${config.url}`);
+    // // console.log('🔍 Current headers:', config.headers);
+    // // console.log('🔍 globalGetAccessToken available:', !!globalGetAccessToken);
+    // // console.log('🔍 isWebcontainerEnv:', isWebcontainerEnv());
 
   // Handle webcontainer environment first
     if (isWebcontainerEnv() && !config.headers?.Authorization) {
       const mockToken = getMockToken();
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${mockToken}`;
-      console.log('🔧 Webcontainer: Injected mock auth token');
+      // // console.log('🔧 Webcontainer: Injected mock auth token');
     } 
     // Handle real authentication for non-webcontainer environments
     else if (!isWebcontainerEnv() && globalGetAccessToken && !config.headers?.Authorization) {
       try {
-        console.log('🔐 Attempting to get access token...');
+        // // console.log('🔐 Attempting to get access token...');
         const token = await globalGetAccessToken();
         if (token) {
           config.headers = config.headers || {};
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('🔐 Auth: Injected real access token');
+          // console.log('🔐 Auth: Injected real access token');
         } else {
           console.warn('⚠️ Auth: No access token available');
         }
@@ -67,25 +67,25 @@ axiosInstance.interceptors.request.use(
         // The backend will handle unauthorized requests appropriately
       }
     } else {
-      console.log('🔍 Skipping token injection:', {
-        isWebcontainer: isWebcontainerEnv(),
-        hasGlobalGetAccessToken: !!globalGetAccessToken,
-        hasExistingAuth: !!config.headers?.Authorization
-      });
+      // console.log('🔍 Skipping token injection:', {
+      //   isWebcontainer: isWebcontainerEnv(),
+      //   hasGlobalGetAccessToken: !!globalGetAccessToken,
+      //   hasExistingAuth: !!config.headers?.Authorization
+      // });
     }
 
-    console.log('🔍 Final headers:', config.headers);
+    // console.log('🔍 Final headers:', config.headers);
 
     // Debug logging in development
     if (shouldLogApiRequests) {
-      console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-        data: config.data,
-        params: config.params,
-        headers: {
-          ...config.headers,
-          Authorization: config.headers?.Authorization ? '[REDACTED]' : undefined,
-        },
-      });
+      // console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+      //   data: config.data,
+      //   params: config.params,
+      //   headers: {
+      //     ...config.headers,
+      //     Authorization: config.headers?.Authorization ? '[REDACTED]' : undefined,
+      //   },
+      // });
     }
     
     return config;
@@ -100,7 +100,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => {
     if (shouldLogApiRequests) {
-      console.log(`✅ API Response: ${response.status} ${response.config.url}`, response.data);
+      // console.log(`✅ API Response: ${response.status} ${response.config.url}`, response.data);
     }
     return response;
   },
@@ -118,7 +118,7 @@ axiosInstance.interceptors.response.use(
           const newToken = await globalGetAccessToken();
           if (newToken) {
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            console.log('🔐 Auth: Retrying request with refreshed token');
+            // console.log('🔐 Auth: Retrying request with refreshed token');
             return axiosInstance(originalRequest);
           }
         } catch (refreshError) {
@@ -170,6 +170,7 @@ export type UserUpdate = import('./models').UserUpdate;
  * This represents the detailed user profile response from /api/v1/users/[user_id]
  */
 export interface UserProfile {
+  full_name: string;
   id: string;
   linkedin_url: string | null;
   auth_id: string;
@@ -463,8 +464,8 @@ export const deleteInteractionApiV1InteractionsInteractionIdDelete = (
 export const getQuestionByID = (
   questionID: string,
   options?: AxiosRequestConfig
-): Promise<AxiosResponse<void>> => {
-  return customInstance<void>({
+): Promise<AxiosResponse<QuestionRead>> => {
+  return customInstance<QuestionRead>({
     url: `/api/v1/questions/${questionID}`,
     method: 'GET',
     ...options,
@@ -474,8 +475,9 @@ export const getQuestionByID = (
 export const getMeTooInteractionByQuestionId = (
   questionID: string,
   options?: AxiosRequestConfig
-): Promise<AxiosResponse<void>> => {
-  return customInstance<void>({
+): Promise<AxiosResponse<UserProfileResponse[]>> => {
+  console.log('🌐 API: getMeTooInteractionByQuestionId called with:', questionID);
+  return customInstance<UserProfileResponse[]>({
     url: `/api/v1/questions/${questionID}/me_too`,
     method: 'GET',
     ...options,
@@ -635,12 +637,14 @@ export const useGetQuestionByID = (questionID: string | undefined,
       }
       return getQuestionByID(questionID);
     },
-    // enabled: !!questionID,
+    enabled: !!questionID,
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache
   });
 };
 export const useGetMeTootInteractionByQuestionId = (
   questionID: string | undefined,
-  options?: UseQueryOptions<AxiosResponse<void>, Error>
+  options?: UseQueryOptions<AxiosResponse<UserProfileResponse[]>, Error>
 ) => {
   return useQuery({
     queryKey: ['meTooInteraction', questionID],
@@ -651,6 +655,8 @@ export const useGetMeTootInteractionByQuestionId = (
       return getMeTooInteractionByQuestionId(questionID);
     },
     enabled: !!questionID,
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache
     ...options,
   });
 };

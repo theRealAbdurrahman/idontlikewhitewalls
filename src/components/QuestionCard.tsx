@@ -6,7 +6,6 @@ import {
   useCreateInteractionApiV1InteractionsPost,
   useDeleteInteractionApiV1InteractionsInteractionIdDelete
 } from "../api-client/api-client";
-import { useCacheManager } from "../hooks/useCacheManager";
 import { useQuestionInteractions } from "../hooks/useUserInteractions";
 import { InteractionTarget, InteractionType } from "../api-client/models";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -77,7 +76,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const { chatThreads, messages } = useAppStore();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { afterInteraction } = useCacheManager();
 
   // Local state for report modal
   const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
@@ -122,13 +120,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
       // Simulate API call to submit report
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      console.log("Report submitted:", {
-        questionId: question.id,
-        reasons: reportReasons,
-        details: reportDetails.trim(),
-        reportedBy: user?.id,
-        timestamp: new Date().toISOString(),
-      });
+      // console.log("Report submitted:", {
+      //   questionId: question.id,
+      //   reasons: reportReasons,
+      //   details: reportDetails.trim(),
+      //   reportedBy: user?.id,
+      //   timestamp: new Date().toISOString(),
+      // });
 
       // Reset form and close modal
       setReportReasons([]);
@@ -174,8 +172,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
         interactionId: upvoteId
       }, {
         onSuccess: () => {
-          console.log("Upvote removed successfully");
-          afterInteraction(question.id);
+          // console.log("Upvote removed successfully");
           toast({
             title: "Upvote removed",
             description: "Your upvote has been removed.",
@@ -201,8 +198,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
         }
       }, {
         onSuccess: () => {
-          console.log("Upvote created successfully");
-          afterInteraction(question.id);
+          // console.log("Upvote created successfully");
           toast({
             title: "Question uplifted!",
             description: "Your upvote has been recorded.",
@@ -231,8 +227,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
         interactionId: meTooId
       }, {
         onSuccess: () => {
-          console.log("Me too removed successfully");
-          afterInteraction(question.id);
+          // console.log("Me too removed successfully");
           toast({
             title: "Me too removed",
             description: "Your 'me too' has been removed.",
@@ -258,8 +253,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
         }
       }, {
         onSuccess: () => {
-          console.log("Me too created successfully");
-          afterInteraction(question.id);
+          // console.log("Me too created successfully");
           toast({
             title: "Me too recorded!",
             description: "You've indicated you have the same question.",
@@ -288,8 +282,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
         interactionId: bookmarkId
       }, {
         onSuccess: () => {
-          console.log("Bookmark removed successfully");
-          afterInteraction(question.id);
+          // console.log("Bookmark removed successfully");
           toast({
             title: "Bookmark removed",
             description: "Question removed from your bookmarks.",
@@ -315,8 +308,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
         }
       }, {
         onSuccess: () => {
-          console.log("Bookmark created successfully");
-          afterInteraction(question.id);
+          // console.log("Bookmark created successfully");
           toast({
             title: "Question bookmarked!",
             description: "Question saved to your bookmarks.",
@@ -336,7 +328,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
 
   const handleCanHelp = () => {
     // Don't allow offering help on own questions
-    console.log({ user, question, isOwnQuestion });
+    // console.log({ user, question, isOwnQuestion });
 
     if (!user || !question || isOwnQuestion) return;
 

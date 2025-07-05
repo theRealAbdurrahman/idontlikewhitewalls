@@ -43,7 +43,7 @@ export const UserProfile: React.FC = () => {
     if (!userProfileData) return;
 
     // TODO: Send connection request
-    console.log("Connect with:", userProfileData.id);
+    // console.log("Connect with:", userProfileData.id);
     toast({
       title: "Connection request sent",
       description: `Your request to connect with ${userProfileData.first_name} has been sent.`,

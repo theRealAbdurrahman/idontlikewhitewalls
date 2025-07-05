@@ -188,7 +188,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     }));
     */
     // TODO: Replace with API call to create event participant
-    console.log("joinEvent called for:", eventId, "- API integration needed");
+    // console.log("joinEvent called for:", eventId, "- API integration needed");
   },
   
   checkInEvent: (eventId) => {
@@ -223,7 +223,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     }));
     */
     // TODO: Replace with API call to create question
-    console.log("addQuestion called with:", questionData, "- API integration needed");
+    // console.log("addQuestion called with:", questionData, "- API integration needed");
   },
   
   updateQuestion: (questionId, updates) => {
@@ -252,7 +252,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     }));
     */
     // TODO: Replace with API call to create/delete interaction
-    console.log("toggleUpvote called for:", questionId, "- API integration needed");
+    // console.log("toggleUpvote called for:", questionId, "- API integration needed");
   },
   
   toggleMeToo: (questionId) => {
@@ -273,7 +273,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     }));
     */
     // TODO: Replace with API call to create/delete interaction
-    console.log("toggleMeToo called for:", questionId, "- API integration needed");
+    // console.log("toggleMeToo called for:", questionId, "- API integration needed");
   },
   
   toggleBookmark: (questionId) => {
@@ -288,7 +288,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     }));
     */
     // TODO: Replace with API call to create/delete interaction
-    console.log("toggleBookmark called for:", questionId, "- API integration needed");
+    // console.log("toggleBookmark called for:", questionId, "- API integration needed");
   },
 
   // Filter and sort actions
