@@ -1,3 +1,6 @@
+// import { useAuth } from "../providers";
+
+
 /**
  * API Configuration
  * Centralized configuration for API endpoints and settings
@@ -6,7 +9,12 @@
 /**
  * Get the API base URL from environment variables
  * Falls back to localhost for development if not set
+ * 
+ * 
  */
+
+// const { getAccessToken } = useAuth();
+
 export const getApiBaseUrl = (): string => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
   
@@ -28,8 +36,23 @@ export const apiConfig = {
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    // 'Authorization': `Bearer ${getAccessToken()}`, // Use the access token from the auth provider
   },
 } as const;
+// TODO: if the problem is getting a new token and we can refresh it, find a way to implement this
+// the current problem is we can't use hooks outside a component
+export const getApiConfig = async (getAccessToken: () => Promise<string | null>) => {
+  const token = await getAccessToken();
+  return {
+    baseURL: getApiBaseUrl(),
+    timeout: 10000,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  } as const;
+};
 
 /**
  * API endpoints configuration

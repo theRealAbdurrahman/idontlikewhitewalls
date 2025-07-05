@@ -1187,7 +1187,7 @@ export const ProfilePage: React.FC = () => {
    */
   useEffect(() => {
     if (userProfileData) {
-      console.log("✅ User profile loaded successfully:", userProfileData);
+      // console.log("✅ User profile loaded successfully:", userProfileData);
     }
   }, [userProfileData]);
 
@@ -1207,7 +1207,7 @@ export const ProfilePage: React.FC = () => {
     }
 
     if (profileLoading) {
-      console.log("🔄 Loading user profile from API...");
+      // console.log("🔄 Loading user profile from API...");
       return;
     }
 
@@ -1218,7 +1218,7 @@ export const ProfilePage: React.FC = () => {
     }
 
     if (userProfileData) {
-      console.log("📋 Transforming API user profile data:", userProfileData);
+      // console.log("📋 Transforming API user profile data:", userProfileData);
 
       // Transform API user data to our profile format
       const transformedProfile = transformApiUserToProfile(userProfileData);
@@ -1380,7 +1380,7 @@ export const ProfilePage: React.FC = () => {
     }
 
     // TODO: Implement connection API call
-    console.log("Connect with user:", profileUser.id);
+    // console.log("Connect with user:", profileUser.id);
 
     toast({
       title: "Connection request sent",
@@ -1402,7 +1402,7 @@ export const ProfilePage: React.FC = () => {
     }
 
     // TODO: Navigate to chat with user
-    console.log("Message user:", profileUser.id);
+    // console.log("Message user:", profileUser.id);
     navigate("/messages");
   };
 
@@ -1481,7 +1481,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleRetry = () => {
-    console.log("🔄 Retrying profile fetch...");
+    // console.log("🔄 Retrying profile fetch...");
     refetchProfile();
   };
 

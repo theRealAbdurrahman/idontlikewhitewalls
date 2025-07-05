@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { XIcon, ImageIcon, MicIcon, SparklesIcon, MessageCircleIcon, ChevronDownIcon } from "lucide-react";
 import { useCreateQuestionApiV1QuestionsPost, useReadEventsApiV1EventsGet } from "../api-client/api-client";
-import { useCacheManager } from "../hooks/useCacheManager";
 import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import {
@@ -40,7 +39,7 @@ export const CreateQuestion: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { afterQuestionCreate } = useCacheManager();
+
 
   
   // Fetch events data from API
@@ -297,12 +296,11 @@ export const CreateQuestion: React.FC = () => {
       // Wait for all questions to be created
       const createdQuestions = await Promise.all(questionPromises);
       
-      console.log("Questions created successfully:", createdQuestions);
+      // console.log("Questions created successfully:", createdQuestions);
 
       // Invalidate caches using centralized cache manager
       // Pass event ID if questions are event-specific
-      const eventId = validSelectedEvents.length === 1 ? validSelectedEvents[0] : undefined;
-      afterQuestionCreate(eventId);
+      const eventId = validSelectedEvents.length === 1 ? validSelectedEvents[0] : undefined;;
 
       // Show success message
       toast({

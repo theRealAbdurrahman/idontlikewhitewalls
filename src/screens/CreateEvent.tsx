@@ -26,7 +26,6 @@ import {
   FileTextIcon
 } from "lucide-react";
 import { useCreateEventApiV1EventsPost } from "../api-client/api-client";
-import { useCacheManager } from "../hooks/useCacheManager";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -137,7 +136,6 @@ export const CreateEvent: React.FC = () => {
   const { user } = useAuth();
   const { events } = useAppStore();
   const { toast } = useToast();
-  const { afterEventCreate } = useCacheManager();
 
   // Local state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -437,10 +435,10 @@ export const CreateEvent: React.FC = () => {
 
       // Log normalized URLs for debugging
       if (data.eventUrl && normalizedEventUrl !== data.eventUrl) {
-        console.log(`Normalized Event URL: "${data.eventUrl}" → "${normalizedEventUrl}"`);
+        // console.log(`Normalized Event URL: "${data.eventUrl}" → "${normalizedEventUrl}"`);
       }
       if (data.location.googleMapsUrl) {
-        console.log(`Auto-generated Google Maps URL: ${data.location.googleMapsUrl}`);
+        // console.log(`Auto-generated Google Maps URL: ${data.location.googleMapsUrl}`);
       }
 
       // Create event via API
@@ -448,10 +446,10 @@ export const CreateEvent: React.FC = () => {
         data: eventData
       });
 
-      console.log("Event created successfully:", response);
+      // console.log("Event created successfully:", response);
 
       // Invalidate events cache using centralized cache manager
-      afterEventCreate(response.data?.id);
+
 
       // TODO: In a real app, you would also:
       // - Create event tags

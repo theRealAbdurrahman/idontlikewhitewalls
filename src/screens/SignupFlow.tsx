@@ -998,7 +998,7 @@ export const SignupFlow: React.FC = () => {
    * Scroll to top when step changes
    */
   useEffect(() => {
-    console.log(`Current step changed to ${currentStep}`);
+    // console.log(`Current step changed to ${currentStep}`);
 
     // Scroll to top of form container when step changes
     if (formContainerRef.current) {
@@ -1136,10 +1136,10 @@ export const SignupFlow: React.FC = () => {
   const handleComplete = async () => {
     if (isAuthenticated) {
       const claims = await getIdTokenClaims();
-      console.log("Logto user claims:", claims);
+      // console.log("Logto user claims:", claims);
       const jwt = await getIdToken();
 
-      console.log("Signup flow completed:", signupData);
+      // console.log("Signup flow completed:", signupData);
       const body = {
         step1: {
           fields_of_expertise: signupData.step1?.connectWith,
@@ -1161,17 +1161,16 @@ export const SignupFlow: React.FC = () => {
         // title: user?.title,
         jwt,
       }
-      console.log("Submitting signup data:", body);
+      // console.log("Submitting signup data:", body);
 
 
 
 
       try {
-        debugger;
         const x = await signUpAndfetchCurrentUser(body);
         setCurrentUser(x.data);
         setAuthenticated(true);
-        console.log({ x });
+        // console.log({ x });
       }
       catch (error) {
         console.error("Error submitting signup data:", error);

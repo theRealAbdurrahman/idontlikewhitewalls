@@ -248,17 +248,17 @@ export const CreateCommunity: React.FC = () => {
 
       // Log normalized URL for debugging
       if (data.communityUrl && normalizedCommunityUrl !== data.communityUrl) {
-        console.log(`Normalized Community URL: "${data.communityUrl}" → "${normalizedCommunityUrl}"`);
+        // console.log(`Normalized Community URL: "${data.communityUrl}" → "${normalizedCommunityUrl}"`);
       }
 
-      console.log("Community created:", {
-        ...data,
-        communityUrl: normalizedCommunityUrl,
-        createdBy: user.id,
-        createdAt: new Date().toISOString(),
-        memberCount: 1, // Creator is first member
-        logoUrl: selectedLogo,
-      });
+      // console.log("Community created:", {
+      //   ...data,
+      //   communityUrl: normalizedCommunityUrl,
+      //   createdBy: user.id,
+      //   createdAt: new Date().toISOString(),
+      //   memberCount: 1, // Creator is first member
+      //   logoUrl: selectedLogo,
+      // });
 
       toast({
         title: "Your community has been created!",

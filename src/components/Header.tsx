@@ -131,7 +131,7 @@ export const Header: React.FC = () => {
             className="w-[46px] h-[46px] bg-[#e9e6d9] rounded-full p-0"
             onClick={() => {
               // TODO: Implement search functionality
-              console.log("Search clicked");
+              // console.log("Search clicked");
             }}
             title="Search"
           >

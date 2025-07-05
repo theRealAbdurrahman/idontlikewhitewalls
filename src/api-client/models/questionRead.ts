@@ -10,7 +10,7 @@ import type { QuestionReadIsAnonymous } from './questionReadIsAnonymous';
 import type { QuestionReadIsFeatured } from './questionReadIsFeatured';
 import type { QuestionReadCreatedAt } from './questionReadCreatedAt';
 import type { QuestionReadUpdatedAt } from './questionReadUpdatedAt';
-import { UserCreate } from '../api-client';
+import { UserProfile } from '../api-client';
 
 export interface QuestionRead {
   id: string;
@@ -26,5 +26,5 @@ export interface QuestionRead {
   i_can_help_count: number;
   me_too_count: number;
   uplifts_count: number;
-  user: UserCreate
+  user: UserProfile
 }

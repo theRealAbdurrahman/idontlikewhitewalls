@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useEffect, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useRef, ReactNode, useCallback } from 'react';
 import { useLogto } from '@logto/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { getApiBaseUrl } from '../config/api';
-import { LogtoUserData, getCurrentUserProfile } from '../api-client/api-client';
+import { customInstance, getCurrentUserProfile, LogtoUserData, setGlobalAccessTokenGetter } from '../api-client/api-client';
 import { UserProfileResponse } from '../models';
+import { getApiBaseUrl } from '../config/api';
 import { getAuthCallbackUrl, getLogoutRedirectUrl } from '../utils/auth';
-import { isWebcontainerEnv, getMockUser, getMockToken, logWebcontainerInfo } from '../utils/webcontainer';
+import { isWebcontainerEnv, logWebcontainerInfo, getMockUser, getMockToken } from '../utils/webcontainer';
 
 /**
  * Centralized Authentication Context Interface
@@ -93,6 +93,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setError
     } = useAuthStore();
 
+    /**
+     * Get access token for API calls (with webcontainer mock)
+     */
+    const getAccessToken = useCallback(async (): Promise<string | null> => {
+        if (isWebcontainer) {
+            // console.log('🔧 Webcontainer mode: Returning mock token');
+            return getMockToken();
+        }
+
+        // Only try to get access token if user is authenticated
+        if (!logtoIsAuthenticated) {
+            // console.log('🔍 User not authenticated, no access token available');
+            return null;
+        }
+
+        try {
+            const token = await logtoGetAccessToken?.();
+            return token || null;
+        } catch (error) {
+            console.error('Failed to get access token:', error);
+            return null;
+        }
+    }, [isWebcontainer, logtoGetAccessToken, logtoIsAuthenticated]);
+
+    /**
+     * Register the access token getter with the API client
+     * This ensures every HTTP request will include the Authorization header
+     */
+    useEffect(() => {
+        // console.log('🔐 Auth: Registering access token getter with API client');
+        setGlobalAccessTokenGetter(getAccessToken);
+
+        // Cleanup function
+        return () => {
+            // console.log('🔐 Auth: Unregistering access token getter');
+            setGlobalAccessTokenGetter(() => Promise.resolve(null));
+        };
+    }, [getAccessToken]); // Re-register if environment changes
+
     // Initial cleanup for webcontainer mode
     useEffect(() => {
         if (isWebcontainer) {
@@ -110,19 +149,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
      * Webcontainer mode authentication is now handled via signIn() method only
      */
     useEffect(() => {
-        // Reduced logging to prevent console spam - only log significant state changes
-        if (process.env.NODE_ENV === 'development' && !userSyncInProgress.current) {
-            console.log('🔄 AuthProvider: Authentication state change:', {
-                isWebcontainer,
-                logtoIsAuthenticated,
-                logtoIsLoading
-            });
-        }
+        // Debug logging to identify infinite loop cause
+        // console.log('🔄 AuthProvider useEffect triggered:', {
+        //     logtoIsAuthenticated,
+        //     logtoIsLoading,
+        //     logtoError: !!logtoError,
+        //     isWebcontainer,
+        //     storeIsAuthenticated,
+        //     storeLoading,
+        //     storeError: !!storeError,
+        //     userSyncInProgress: userSyncInProgress.current
+        // });
 
         // Skip automatic authentication in webcontainer mode
         // Users must explicitly click login to authenticate
         if (isWebcontainer) {
-            console.log('🔧 Webcontainer mode: Skipping auto-authentication, waiting for user action');
+            // console.log('🔧 Webcontainer mode: Skipping auto-authentication, waiting for user action');
 
             // Ensure we start with clean, unauthenticated state - only update if needed
             if (storeIsAuthenticated) setAuthenticated(false);
@@ -135,7 +177,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const authPages = ['/login', '/signup', '/callback', '/logout'];
 
             if (!authPages.includes(currentPath) && !navigationInProgress.current) {
-                console.log('🔀 Webcontainer mode: Redirecting to login from:', currentPath);
+                // console.log('🔀 Webcontainer mode: Redirecting to login from:', currentPath);
                 navigationInProgress.current = true;
 
                 setTimeout(() => {
@@ -175,7 +217,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 userSyncInProgress.current = true;
 
                 try {
-                    console.log('✅ User authenticated, fetching user profile...');
+                    // console.log('✅ User authenticated, fetching user profile...');
 
                     // Get JWT token from Logto
                     const jwt = await getIdToken?.();
@@ -185,11 +227,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     }
 
                     const userProfileResponse = await getCurrentUserProfile(jwt);
-                    console.log('✅ User profile fetched successfully', userProfileResponse);
+                    // console.log('✅ User profile fetched successfully', userProfileResponse);
 
                     // Store the user data in auth store
                     setCurrentUser(userProfileResponse);
-                    console.log('✅ User data stored in auth store:', user);
+                    // console.log('✅ User data stored in auth store:', user);
 
                     // Reset retry count on success
                     fetchRetryCount.current = 0;
@@ -219,7 +261,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     userSyncInProgress.current = false;
                 }
             } else if (!logtoIsAuthenticated && !logtoIsLoading) {
-                console.log('🚫 User not authenticated, clearing data...');
+                // console.log('🚫 User not authenticated, clearing data...');
 
                 // Clear user data when not authenticated
                 setCurrentUser(null);
@@ -232,7 +274,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 const authPages = ['/login', '/signup', '/callback', '/logout'];
 
                 if (!authPages.includes(currentPath) && !navigationInProgress.current) {
-                    console.log('🔀 Redirecting to login from:', currentPath);
+                    // console.log('🔀 Redirecting to login from:', currentPath);
                     navigationInProgress.current = true;
 
                     // Use setTimeout to avoid navigation during render
@@ -281,21 +323,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
      */
     const checkIfUserSignedUp = async (logtoUserData: LogtoUserData): Promise<boolean> => {
         try {
-            const baseUrl = getApiBaseUrl();
-            const response = await fetch(`${baseUrl}api/v1/users/is_new/${logtoUserData.sub}`, {
+            const response = await customInstance<{ user: any }>({
+                url: `/api/v1/users/is_new/${logtoUserData.sub}`,
                 method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${logtoUserData.jwt}`,
-                    'Content-Type': 'application/json'
-                }
+                // headers: {
+                //     'Authorization': `Bearer ${logtoUserData.jwt}`,
+                //     'Content-Type': 'application/json'
+                // }
             });
 
-            if (!response.ok) {
-                throw new Error(`Failed to check user signup status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            const user = data.user;
+            const user = response.data.user;
             // If we got user data back, the user exists/is signed up
             return !!user;
         } catch (error) {
@@ -310,7 +347,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const signIn = () => {
         if (isWebcontainer) {
             // In webcontainer mode, set up mock authentication when user clicks login
-            console.log('🔧 Webcontainer mode: Setting up mock authentication on user action');
+            // console.log('🔧 Webcontainer mode: Setting up mock authentication on user action');
             setAuthenticated(true);
             setLoading(false);
             setError(null);
@@ -329,7 +366,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const signOut = () => {
         if (isWebcontainer) {
             // In webcontainer mode, just clear state and go to login
-            console.log('🔧 Webcontainer mode: Mock sign out');
+            // console.log('🔧 Webcontainer mode: Mock sign out');
             setAuthenticated(false);
             setCurrentUser(null);
             navigate('/login');
@@ -345,24 +382,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // Sign out from Logto
         logtoSignOut?.(logoutUrl);
-    };
-
-    /**
-     * Get access token for API calls (with webcontainer mock)
-     */
-    const getAccessToken = async (): Promise<string | null> => {
-        if (isWebcontainer) {
-            console.log('🔧 Webcontainer mode: Returning mock token');
-            return getMockToken();
-        }
-        
-        try {
-            const token = await logtoGetAccessToken?.();
-            return token || null;
-        } catch (error) {
-            console.error('Failed to get access token:', error);
-            return null;
-        }
     };
 
     /**

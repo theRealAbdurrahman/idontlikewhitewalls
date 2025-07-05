@@ -10,7 +10,7 @@ export const Login: React.FC = () => {
   // Auto-redirect if already authenticated (including webcontainer)
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('✅ User already authenticated, redirecting to home');
+      // console.log('✅ User already authenticated, redirecting to home');
       navigate('/home');
     }
   }, [isAuthenticated, navigate]);
